@@ -1,0 +1,294 @@
+/* ============================================================================
+Auteur: Robbe Wulgaert / aiindeklas.be
+    Copyright 2025 — Gebruik vrij voor educatie (met bronvermelding)
+   ========================================================================== */
+
+:root {
+  --bg: #F9F8FC;
+  --bg-elev: #FFFFFF;
+  --fg: #111111;
+  --muted: #6B7280;
+  --brand: #5200FF;  /* primary */
+  --brand-strong: #3700B3;
+  --accent: #00FF99; /* secondary */
+  --danger: #DD4B39;
+  --info: #4D90FE;
+  --border: #E5E7EB;
+  --shadow: rgba(17,24,39,0.10);
+  --focus: rgba(82,0,255,0.45);
+  --radius: 12px;
+  --space: 12px;
+  --font: "Roboto", system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+
+  --btn-bg: #EEE;
+  --btn-fg: #111;
+  --btn-border: #DDD;
+
+  --code-bg: #EEEEEE;
+  --code-fg: #111111;
+
+  --card-bg: var(--bg-elev);
+  --card-border: var(--border);
+}
+
+:root.dark {
+  --bg: #0c0c12;
+  --bg-elev: #11131a;
+  --fg: #F5F7FA;
+  --muted: #A3A8B8;
+  --brand: #7E5FFF;        /* lighten brand in dark */
+  --brand-strong: #B09CFF;
+  --accent: #00E6A0;
+  --danger: #F26B5E;
+  --info: #78A9FF;
+  --border: #1F2430;
+  --shadow: rgba(0,0,0,0.25);
+
+  --btn-bg: #191C24;
+  --btn-fg: #F5F7FA;
+  --btn-border: #2A3242;
+
+  --code-bg: #161922;
+  --code-fg: #EAECEF;
+
+  --card-bg: var(--bg-elev);
+  --card-border: var(--border);
+}
+
+/* Base */
+* { box-sizing: border-box; }
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1, h2, h3 { font-weight: 600; margin: 0 0 calc(var(--space)*0.75); }
+p { line-height: 1.6; margin: 0 0 var(--space); }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: calc(var(--space)*1.5);
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 8px;
+  box-shadow: 0 2px 14px var(--shadow);
+}
+
+/* Buttons */
+button, .btn {
+  appearance: none;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform .06s ease, box-shadow .15s ease, background .2s ease;
+}
+button:disabled, .btn:disabled {
+  opacity: .6; cursor: not-allowed;
+}
+button:hover:not(:disabled), .btn:hover:not(:disabled) {
+  box-shadow: 0 2px 12px var(--shadow);
+}
+button:active:not(:disabled), .btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+button.primary, .btn.primary {
+  border-color: transparent;
+  background: var(--brand);
+  color: #fff;
+}
+button.secondary, .btn.secondary {
+  border-color: transparent;
+  background: var(--info);
+  color: #fff;
+}
+button.success, .btn.success {
+  border-color: transparent;
+  background: var(--accent);
+  color: #0b1f15;
+}
+button.danger, .btn.danger {
+  border-color: transparent;
+  background: var(--danger);
+  color: #fff;
+}
+
+/* Icon inside button alignment */
+button > img, .btn > img, button > svg, .btn > svg {
+  vertical-align: text-bottom;
+  margin-right: 6px;
+  opacity: .95;
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 14px var(--shadow);
+  padding: calc(var(--space)*1.25);
+}
+
+/* Code container (matches Blockly Games’ containerCode purpose) */
+#containerCode, .code-container {
+  direction: ltr;
+  background: var(--code-bg);
+  color: var(--code-fg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin: 6px 0;
+  font-size: 15px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  overflow: auto;
+  max-height: 240px;
+}
+
+/* Capacity bubble (remaining blocks) */
+#capacityBubble {
+  position: absolute;
+  left: 10px;
+  top: 375px;
+  width: 380px;
+  pointer-events: none;
+}
+html[dir="RTL"] #capacityBubble { left: auto; right: 10px; }
+#capacity {
+  display: none; /* set to flex when active via JS */
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 18px;
+  background: rgba(17,17,17,0.5);
+  font-size: 15px;
+}
+:root.dark #capacity {
+  background: rgba(0,0,0,0.55);
+}
+.capacityNumber { font-weight: 700; }
+
+/* Maze SVG holder */
+#svgMaze { overflow: hidden; }
+
+/* Dialogs (ported & restyled) */
+#dialogShadow {
+  visibility: hidden;
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: .35;
+  z-index: 1000;
+}
+#dialogBorder {
+  visibility: hidden;
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+}
+#dialog {
+  visibility: hidden;
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  min-width: min(680px, 92vw);
+  background: var(--card-bg);
+  color: var(--fg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px var(--shadow);
+  padding: 10px 10px 14px;
+  z-index: 1002;
+}
+#dialogHeader {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -10px -10px 10px;
+  padding: 8px 12px;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  background: linear-gradient(90deg, var(--brand) 0%, var(--accent) 100%);
+  color: #0a0a0a;
+  font-weight: 700;
+}
+#dialog .actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Helpers */
+.farSide { text-align: right; }
+html[dir="RTL"] .farSide { text-align: left; }
+.level_number, .level_dot {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--muted);
+}
+.level_number {
+  border-radius: 20px; padding: 6px 12px;
+}
+.level_dot {
+  border-radius: 50%; width: 16px; height: 16px;
+}
+.level_done, .level_dot:hover, .level_number:hover {
+  background: #ddd; color: #000;
+}
+:root.dark .level_done, :root.dark .level_dot:hover, :root.dark .level_number:hover {
+  background: #222; color: #fff;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* Focus ring */
+:where(a, button, input, select, textarea, .btn):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* Print to PDF
+   - Hide interactive chrome
+   - Ensure white background (printer-friendly)
+*/
+@media print {
+  html, body { background: #fff !important; color: #000 !important; }
+  .no-print, .toolbar, #capacityBubble, #dialog, #dialogShadow, #dialogBorder { display: none !important; }
+  .print-only { display: block !important; }
+  .card, .code-container, #containerCode {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  /* A4-friendly margins */
+  @page { size: A4; margin: 16mm; }
+}
