@@ -7,13 +7,13 @@ Auteur: Robbe Wulgaert · aiindeklas.be / robbewulgaert.be
 
 ## Doel
 
-**Deze webapp helpt leerlingen (10-13 jaar) om:**
+## Deze webapp helpt leerlingen (10-13 jaar) om:
 	•	Computationeel denken te oefenen met doolhoven (Maze) en tekenopdrachten (Turtle).
 	•	Zowel met blokken als met code te werken en stap-voor-stap uitvoering te volgen.
 	•	Hun resultaten netjes te exporteren naar PDF voor feedback of evaluatie.
 	•	Zonder accounts of installatie te werken; alles draait lokaal in de browser.
 
-**Belangrijkste functies:**
+## Belangrijkste functies:
 	•	Twee oefenwerelden:
 	•	Maze: levels met doel, stap-voor-stap animatie, snelheid instelbaar.
 	•	Turtle: raster met doelcontouren per level, blokkenset of vrije code.
@@ -28,7 +28,7 @@ Auteur: Robbe Wulgaert · aiindeklas.be / robbewulgaert.be
 	•	Korte uitleg, debugtips, kleurkiezer voor de turtle-pen.
 
 
-**Vereisten:**
+## Vereisten:
 	•	Geen installatie nodig; draait volledig in de browser.
 	•	Aanbevolen: recente Chromium-browser (Chrome, Edge).
 	•	Werkt in een SEB-omgeving mits standaard webtoegang tot de meegeleverde assets.
