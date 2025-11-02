@@ -1,37 +1,37 @@
-# JavaScript in de Klas — Maze & Turtle
+# JavaScript in de Klas: Maze & Turtle
 
 Auteur: Robbe Wulgaert · aiindeklas.be / robbewulgaert.be
 © 2025 Robbe Wulgaert
 
-**Demo:** wordt gepubliceerd via GitHub Pages (map met index.html)
+**Demo:** [Klik hier! ](https://robbew.github.io/Blockly/)
 
 ## Doel
 
 **Deze webapp helpt leerlingen (10-13 jaar) om:**
-	* Computationeel denken te oefenen met doolhoven (Maze) en tekenopdrachten (Turtle).
-	* Zowel met blokken als met code te werken en stap-voor-stap uitvoering te volgen.
-	* Hun resultaten netjes te exporteren naar PDF voor feedback of evaluatie.
-	* Zonder accounts of installatie te werken; alles draait lokaal in de browser.
+	•	Computationeel denken te oefenen met doolhoven (Maze) en tekenopdrachten (Turtle).
+	•	Zowel met blokken als met code te werken en stap-voor-stap uitvoering te volgen.
+	•	Hun resultaten netjes te exporteren naar PDF voor feedback of evaluatie.
+	•	Zonder accounts of installatie te werken; alles draait lokaal in de browser.
 
 **Belangrijkste functies:**
-	* Twee oefenwerelden:
-	* Maze: levels met doel, stap-voor-stap animatie, snelheid instelbaar.
-	* Turtle: raster met doelcontouren per level, blokkenset of vrije code.
-	* Dubbele modus per wereld:
-	*		Blokken: Blockly in het Nederlands met aangepaste toolbox.
-	*		Code: kleine code-editor met console en duidelijke foutkaders.
-	*	PDF-export:
-	*		Neemt automatisch een editor-snapshot en een Maze/Turtle-snapshot op.
-	*		Voegt in codemodi ook de geschreven code toe.
-	*		Optionele rubrieksectie voor leerkrachtfeedback.
-	* Formularium-zijpaneel:
-	*		Korte uitleg, debugtips, kleurkiezer voor de turtle-pen.
+	•	Twee oefenwerelden:
+	•	Maze: levels met doel, stap-voor-stap animatie, snelheid instelbaar.
+	•	Turtle: raster met doelcontouren per level, blokkenset of vrije code.
+	•	Dubbele modus per wereld:
+	•		Blokken: Blockly in het Nederlands met aangepaste toolbox.
+	•		Code: kleine code-editor met console en duidelijke foutkaders.
+	•	PDF-export:
+	•		Neemt automatisch een editor-snapshot en een Maze/Turtle-snapshot op.
+	•		Voegt in codemodi ook de geschreven code toe.
+	•		Optionele rubrieksectie voor leerkrachtfeedback.
+	•	Formularium-zijpaneel:
+	•	Korte uitleg, debugtips, kleurkiezer voor de turtle-pen.
 
 
 **Vereisten:**
-	* Geen installatie nodig; draait volledig in de browser.
-	* Aanbevolen: recente Chromium-browser (Chrome, Edge).
-	* Werkt in een SEB-omgeving mits standaard webtoegang tot de meegeleverde assets.
+	•	Geen installatie nodig; draait volledig in de browser.
+	•	Aanbevolen: recente Chromium-browser (Chrome, Edge).
+	•	Werkt in een SEB-omgeving mits standaard webtoegang tot de meegeleverde assets.
 
 
 ## Aan de slag: 
