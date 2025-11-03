@@ -15,10 +15,10 @@
       --card:#ffffff; --border:#ececf3;
     }
     html[data-theme="dark"]{
-  --brand-purple:#5200FF; --brand-green:#00FF99;
-  --bg:#F9F8FC; --ink:#1A224C; --muted:#9aa3b2;
-  --card:#ffffff; --border:#ececf3;
-}
+      --brand-purple:#5200FF; --brand-green:#00FF99;
+      --bg:#F9F8FC; --ink:#1A224C; --muted:#9aa3b2;
+      --card:#ffffff; --border:#ececf3;
+    }
     html[data-theme="dark"]{
       --bg:#181622; --ink:#F5F4FA; --muted:#b9b6cd;
       --card:#201d2e; --border:rgba(255,255,255,.12);
@@ -150,21 +150,21 @@
     .field input{flex:1;min-width:0;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--card);color:var(--ink)}
     .hint{font-size:12px;color:var(--muted)}
 
-#print-sheet{ display:none; }
-#print-sheet .print-wrap{ padding:16px; }
-#print-sheet h1{ margin:0 0 8px 0; font-size:18px; }
-#print-sheet .meta{ font-size:12px; color:var(--muted); margin-bottom:12px; }
-#print-sheet .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-#print-sheet .card{ border:1px solid var(--border); border-radius:12px; padding:10px; background:#fff; }
-#print-sheet img{ width:100%; height:auto; border:1px solid var(--border); border-radius:8px; background:#fff; }
-#print-sheet pre{ margin:0; white-space:pre-wrap; word-break:break-word; font:13px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace; background:#0f172a; color:#e2e8f0; border-radius:10px; padding:10px; }
+    #print-sheet{ display:none; }
+    #print-sheet .print-wrap{ padding:16px; }
+    #print-sheet h1{ margin:0 0 8px 0; font-size:18px; }
+    #print-sheet .meta{ font-size:12px; color:var(--muted); margin-bottom:12px; }
+    #print-sheet .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    #print-sheet .card{ border:1px solid var(--border); border-radius:12px; padding:10px; background:#fff; }
+    #print-sheet img{ width:100%; height:auto; border:1px solid var(--border); border-radius:8px; background:#fff; }
+    #print-sheet pre{ margin:0; white-space:pre-wrap; word-break:break-word; font:13px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace; background:#0f172a; color:#e2e8f0; border-radius:10px; padding:10px; }
 
-/* Show only the print sheet while printing */
-@media print{
-  header,.wrap,.notice,.modal-overlay,.form-drawer,#fab-help{ display:none !important; }
-  #print-sheet{ display:block !important; }
-  body{ background:#fff; }
-}
+    /* Show only the print sheet while printing */
+    @media print{
+      header,.wrap,.notice,.modal-overlay,.form-drawer,#fab-help{ display:none !important }
+      #print-sheet{ display:block !important }
+      body{ background:#fff }
+    }
   </style>
 
   <!-- Blockly core + Dutch locale -->
@@ -271,7 +271,7 @@
       <div class="canvas-wrap">
         <div id="turtle-stack" class="stack hidden">
           <canvas id="turtle-bg"></canvas>
-          <canvas id="turtle-draw"></canvas>
+          <canvas id="turtle-draw"></"></canvas>
           <canvas id="turtle-cur"></canvas>
         </div>
         <canvas id="mazeCanvas" width="640" height="640" aria-label="Maze"></canvas>
@@ -304,7 +304,7 @@
         <div>Programmeerconcepten</div>
         <ul>
           <li><b>Sequentie</b>, <b>draai links</b>, <b>draai rechts</b></li>
-          <li><b>Selectie</b> (voorwaarde), <b>niet klaar?</b></li>
+          <li><b>Selectie</b> (voorwaarde), <b>niet klaar?</b>, <b>pad voor mij?</b>, <b>pad links?</b>, <b>pad rechts?</b></li>
           <li><b>Voorwaardelijke herhaling</b>, <b>als ... dan ... anders</b></li>
         </ul>
         <div class="code">Voorbeeld: zolang <b>niet klaar</b> → als <b>pad voor mij</b> dan <b>stap vooruit</b> anders <b>draai links</b>.</div>
@@ -345,8 +345,8 @@
           <li>Beoordeling: <span class="kbd">functionaliteit</span>, <span class="kbd">leesbaarheid</span>, <span class="kbd">wiskundekennis</span>, <span class="kbd">programmeerkennis</span>, <span class="kbd">creativiteit</span>.</li>
         </ul>
       </div>
-        
-    <div class="form-card">
+
+      <div class="form-card">
         <h4>Credits en licentie</h4>
         <ul>
           <li>© 2025 Robbe Wulgaert, aiindeklas.be / robbewulgaert.be</li>
@@ -408,6 +408,8 @@
     </category>
     <category name="Voorwaarden" colour="#00bcd4">
       <block type="maze_path_ahead"></block>
+      <block type="maze_path_left"></block>
+      <block type="maze_path_right"></block>
       <block type="maze_not_done"></block>
     </category>
     <category name="Lussen" colour="#10b981">
@@ -437,13 +439,13 @@
         </div>
       </div>
       <div class="modal-actions">
-        <!--<button class="btn" id="copy-solution">Kopieer code</button>-->
-        <button class="btn primary" id="close-success">Sluiten</button>
+        <button class="btn" id="export-pdf-success">⤓ Exporteren naar PDF</button>
+        <button class="btn primary" id="close-success">Naar volgend level!</button>
       </div>
     </div>
   </div>
 
-  <!-- PDF Export Modal (simplified: no toggles, no exercise input) -->
+  <!-- PDF Export Modal -->
   <div id="pdf-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
     <div class="modal" style="max-width:740px">
       <div class="modal-header">⤓ Exporteren naar PDF</div>
@@ -485,12 +487,11 @@
     window.lastRunCode = '';
 
     // ---------- Theme
-    
     (function initTheme(){
-  const root = document.documentElement;
-  root.setAttribute('data-theme','light');        // altijd licht
-  try { localStorage.setItem('aik_theme','light'); } catch(_) {}
-})();
+      const root = document.documentElement;
+      root.setAttribute('data-theme','light');        // altijd licht
+      try { localStorage.setItem('aik_theme','light'); } catch(_) {}
+    })();
 
     // ---------- Formularium / informatie
     const formEl = $('formularium');
@@ -567,6 +568,149 @@
       return null;
     }
 
+    // ---------- Smart static analysis helpers (no fragile regex) ----------
+    function stripStringsAndComments(src){
+      let out = '', i = 0, n = src.length;
+      while (i < n){
+        const c = src[i], d = src[i+1];
+        // strings
+        if (c === "'" || c === '"' || c === '`'){
+          const q = c; out += ' '; i++;
+          while (i < n){
+            const ch = src[i], prev = src[i-1];
+            if (ch === '\\'){ out += ' '; i += 2; continue; }
+            if (ch === q && prev !== '\\'){ out += ' '; i++; break; }
+            out += (ch === '\n' ? '\n' : ' ');
+            i++;
+          }
+          continue;
+        }
+        // //comment
+        if (c === '/' && d === '/'){ out += '  '; i += 2; while (i < n && src[i] !== '\n'){ out += ' '; i++; } continue; }
+        // /* comment */
+        if (c === '/' && d === '*'){ out += '  '; i += 2; while (i < n-1 && !(src[i] === '*' && src[i+1] === '/')){ out += (src[i] === '\n' ? '\n' : ' '); i++; } i += 2; continue; }
+        out += c; i++;
+      }
+      return out;
+    }
+    function indexToLineCol(text, idx){
+      let line = 1, col = 1;
+      for (let i=0; i<idx; i++){
+        if (text[i] === '\n'){ line++; col = 1; }
+        else col++;
+      }
+      return { line, col };
+    }
+    function findSingleEqualsInIf(clean){
+      const hits = [];
+      const n = clean.length; let i = 0;
+      while (i < n){
+        if (clean[i] === 'i' && clean.slice(i, i+2) === 'if'){
+          const prev = clean[i-1] || '';
+          if (!/[A-Za-z0-9_$]/.test(prev)){
+            let j = i + 2;
+            while (j < n && /\s/.test(clean[j])) j++;
+            if (j >= n || clean[j] !== '('){ i += 2; continue; }
+            let depth = 0, start = j, k = j;
+            for (; k < n; k++){
+              const ch = clean[k];
+              if (ch === '(') depth++;
+              else if (ch === ')'){ depth--; if (depth === 0) break; }
+            }
+            if (depth !== 0){ i = j + 1; continue; }
+            const cond = clean.slice(start + 1, k);
+            for (let m = 0; m < cond.length; m++){
+              if (cond[m] === '='){
+                const pv = cond[m-1] || '', nx = cond[m+1] || '';
+                if (pv !== '=' && pv !== '!' && pv !== '<' && pv !== '>' && nx !== '=' && nx !== '>'){
+                  hits.push({ globalIndex: (start + 1 + m) });
+                  break;
+                }
+              }
+            }
+            i = k + 1; continue;
+          }
+        }
+        i++;
+      }
+      return hits;
+    }
+    function levenshtein(a,b){
+      a=String(a); b=String(b);
+      const m=a.length,n=b.length; const dp=Array.from({length:m+1},()=>Array(n+1).fill(0));
+      for(let i=0;i<=m;i++) dp[i][0]=i; for(let j=0;j<=n;j++) dp[0][j]=j;
+      for(let i=1;i<=m;i++){ for(let j=1;j<=n;j++){
+        const cost=(a[i-1]===b[j-1])?0:1;
+        dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+      }}
+      return dp[m][n];
+    }
+    function closestAllowed(name, allowedArr){
+      let best=null, bestD=1e9;
+      for (const x of allowedArr){
+        const d=levenshtein(name,x);
+        if (d<bestD){ bestD=d; best=x; }
+      }
+      return (bestD<=3)?best:null;
+    }
+    function makeAllowedSet(mode){
+      const base = new Set(['console','Math','Number','String','Boolean','Array','Object','let','const','var']);
+      const mazeAPI = ['moveForward','turnLeft','turnRight','pathAhead','pathLeft','pathRight','atGoal','notDone',
+                       'mazeMoveForward','mazeTurnLeft','mazeTurnRight','mazePathAhead','mazePathLeft','mazePathRight','mazeAtGoal'];
+      const turtleAPI = ['moveForward','moveBackward','turnLeft','turnRight','penUp','penDown',
+                         'setPenColour','setLineWidth','goTo','writeText','fitToDrawing','resetTurtle','clearCanvas',
+                         'showTurtle','hideTurtle'];
+      (mode && mode.startsWith('turtle') ? turtleAPI : mazeAPI).forEach(x => base.add(x));
+      return base;
+    }
+    function collectDeclaredNames(clean){
+      const set = new Set();
+      const declRe = /\bfunction\s+([A-Za-z_]\w*)\b|\b(?:const|let|var)\s+([A-Za-z_]\w*)\s*=\s*(?:function|\()/g;
+      let m; while ((m = declRe.exec(clean))){ set.add(m[1] || m[2]); }
+      return set;
+    }
+    function detectUnknownCalls(source, mode){
+      const clean = stripStringsAndComments(source);
+      const declared = collectDeclaredNames(clean);
+      const allowed = makeAllowedSet(mode);
+      const issues = [];
+      const re = new RegExp(String.raw`(?:^|[^.$\w])([A-Za-z_]\w*)\s*\(`, 'g');
+      const lines = clean.split('\n');
+      for (let li = 0; li < lines.length; li++){
+        let m; re.lastIndex = 0;
+        while ((m = re.exec(lines[li]))){
+          const name = m[1];
+          const col = m.index + m[0].lastIndexOf(name) + 1;
+          if (!allowed.has(name) && !declared.has(name) && name !== 'function'){
+            const suggestion = closestAllowed(name, Array.from(allowed));
+            issues.push({
+              type: 'unknown-call', name, line: li+1, col,
+              message: suggestion
+                ? `Onbekende functie ‘${name}()’. Bedoel je ‘${suggestion}()’?`
+                : `Onbekende functie ‘${name}()’. Kijk de naam na en gebruik alleen de toegelaten acties.`
+            });
+          }
+        }
+      }
+      return issues;
+    }
+    function detectCommonIssues(source, mode){
+      const clean = stripStringsAndComments(source);
+      const hints = [];
+      hints.push(...detectUnknownCalls(source, mode));
+      const eqHits = findSingleEqualsInIf(clean);
+      for (const h of eqHits){
+        const pos = indexToLineCol(source, h.globalIndex);
+        hints.push({
+          type: 'assignment-in-condition',
+          line: pos.line, col: pos.col,
+          message: "Je gebruikt '=' in een voorwaarde. Bedoel je '==' of '==='?",
+          remedy: "Vervang '=' door '==' (waarde) of '===' (type + waarde)."
+        });
+      }
+      return hints;
+    }
+
     // ---------- Blockly helpers (support old & new)
     function _getJSGen(){
       const legacy = Blockly.JavaScript || null;
@@ -622,7 +766,7 @@
       window.workspace = workspace;
     }
 
-    const MAX_BLOCKS_MAZE = [Infinity, Infinity, 3, 5, 5, 5, 5, 10, 7, 10];
+    const MAX_BLOCKS_MAZE = [Infinity, Infinity, 3, 5, 5, 6, 5, 10, 7, 10];
 
     function fitBlockly() {
       if (!workspace) return;
@@ -659,6 +803,8 @@
           { type:'maze_turn_left',    message0:'draai links',  previousStatement:null, nextStatement:null, colour:200 },
           { type:'maze_turn_right',   message0:'draai rechts', previousStatement:null, nextStatement:null, colour:200 },
           { type:'maze_path_ahead',   message0:'pad voor mij?', output:'Boolean', colour:0 },
+          { type:'maze_path_left',    message0:'pad links?',    output:'Boolean', colour:0 },
+          { type:'maze_path_right',   message0:'pad rechts?',   output:'Boolean', colour:0 },
           { type:'maze_not_done',     message0:'niet klaar?',   output:'Boolean', colour:0 }
         ]);
       }
@@ -702,12 +848,13 @@
     }
     function ensureMazeGenerators(){
       const ORDER_CALL = (Blockly.JavaScript && Blockly.JavaScript.ORDER_FUNCTION_CALL) || 0;
-      const ORDER_NOT  = (Blockly.JavaScript && Blockly.JavaScript.ORDER_LOGICAL_NOT) || 0;
-      _setGenStmt('maze_move_forward', ()=> `mazeMoveForward();\n`);
-      _setGenStmt('maze_turn_left',    ()=> `mazeTurnLeft();\n`);
-      _setGenStmt('maze_turn_right',   ()=> `mazeTurnRight();\n`);
-      _setGenExpr('maze_path_ahead',   ()=> [`mazePathAhead()`, ORDER_CALL]);
-      _setGenExpr('maze_not_done',     ()=> [`!mazeAtGoal()`,   ORDER_NOT]);
+      _setGenStmt('maze_move_forward', ()=> `moveForward();\n`);
+      _setGenStmt('maze_turn_left',    ()=> `turnLeft();\n`);
+      _setGenStmt('maze_turn_right',   ()=> `turnRight();\n`);
+      _setGenExpr('maze_path_ahead',   ()=> [`pathAhead()`, ORDER_CALL]);
+      _setGenExpr('maze_path_left',    ()=> [`pathLeft()`, ORDER_CALL]);
+      _setGenExpr('maze_path_right',   ()=> [`pathRight()`, ORDER_CALL]);
+      _setGenExpr('maze_not_done',     ()=> [`notDone()`, ORDER_CALL]);
     }
 
     registerBlocks();
@@ -753,10 +900,28 @@
       ctxDraw = drawCanvas.getContext('2d');
       ctxCur  = curCanvas.getContext('2d');
 
+      bindSpeedLabel(speed1, speedLbl1);
+      bindSpeedLabel(speed2, speedLbl2);
+
       setMode('maze1');
       loadAssets().then(()=>{
         populateLevelSelect(levelSel1);
         populateLevelSelect(levelSel2);
+
+        function setMazeLevel(idx){
+          const value = String(Math.max(1, Math.min(TOTAL_LEVELS, parseInt(idx || '1', 10))));
+          if (levelSel1) levelSel1.value = value;
+          if (levelSel2) levelSel2.value = value;
+          loadLevel(parseInt(value, 10));
+          mazeReset();
+          resizeMazeCanvas();
+          applyMaxBlocks();
+        }
+
+        // Bind dropdown changes for both Maze (Blokken) and Maze (Code)
+        if (levelSel1) levelSel1.addEventListener('change', () => setMazeLevel(levelSel1.value));
+        if (levelSel2) levelSel2.addEventListener('change', () => setMazeLevel(levelSel2.value));
+
         const INIT_LEVEL = Math.max(1, Math.min(TOTAL_LEVELS, parseInt(urlQS.get('level') || '1', 10) || 1));
         if (levelSel1) levelSel1.value = String(INIT_LEVEL);
         if (levelSel2) levelSel2.value = String(INIT_LEVEL);
@@ -796,6 +961,8 @@
     // ─────────────────────────────────────────────
     const mctx = mazeCanvas.getContext('2d');
 
+    // Allow optional hard-embedded data-URIs:
+    // window.AIK_EMBEDDED_ASSETS = { tiles:'data:image/png;base64,...', sprite:'data:...', marker:'data:...' }
     const SKIN = {
       tiles: 'assets/tiles_pegman.png',
       sprite: 'assets/pegman.png',
@@ -803,31 +970,69 @@
       win: 'assets/win.mp3',
       fail: 'assets/fail_pegman.mp3'
     };
+    (function maybeApplyEmbedded(){
+      const EMBED = window.AIK_EMBEDDED_ASSETS || null;
+      if (!EMBED) return;
+      if (EMBED.tiles)  SKIN.tiles  = EMBED.tiles;
+      if (EMBED.sprite) SKIN.sprite = EMBED.sprite;
+      if (EMBED.marker) SKIN.marker = EMBED.marker;
+    })();
+
+    // Only inline textures on http(s) to avoid file:// CORS errors.
+    const INLINE_TEXTURES_FOR_PDF = /^https?:$/.test(location.protocol);
+
+    // Fetch same-origin http(s) resource as data URI
+    async function fetchAsDataURI(url){
+      try{
+        const u = new URL(url, location.href);
+        const hereHttp = /^https?:$/.test(location.protocol);
+        const urlHttp  = /^https?:$/.test(u.protocol);
+        if (!hereHttp || !urlHttp) return null;
+        if (u.origin !== location.origin) return null;
+        const res = await fetch(u.href, { cache: 'force-cache' });
+        if (!res.ok) return null;
+        const blob = await res.blob();
+        return await new Promise((resolve)=>{
+          const fr = new FileReader();
+          fr.onload = () => resolve(fr.result);
+          fr.readAsDataURL(blob);
+        });
+      }catch(_){ return null; }
+    }
+
     const IMG = { tiles: new Image(), sprite: new Image(), marker: new Image() };
     let ASSETS_READY = false;
 
-    function loadAssets(){
-      return new Promise((resolve)=>{
-        // Reset images
-        IMG.tiles  = new Image();
-        IMG.sprite = new Image();
-        IMG.marker = new Image();
+    async function loadAssets(){
+      // Reset images
+      IMG.tiles  = new Image();
+      IMG.sprite = new Image();
+      IMG.marker = new Image();
 
-        // Apply crossOrigin only when loading from another origin (so same-origin remains simple)
-        [ [IMG.tiles,  SKIN.tiles],
-          [IMG.sprite, SKIN.sprite],
-          [IMG.marker, SKIN.marker]
-        ].forEach(([img, src])=>{
-          if (!isSameOrigin(src)) img.crossOrigin = 'anonymous';
-        });
+      // Apply crossOrigin only when loading from another origin (inline/data-URIs don't need it)
+      [ [IMG.tiles,  SKIN.tiles],
+        [IMG.sprite, SKIN.sprite],
+        [IMG.marker, SKIN.marker]
+      ].forEach(([img, src])=>{
+        if (!/^data:/.test(src) && !isSameOrigin(src)) img.crossOrigin = 'anonymous';
+      });
 
+      // Try to inline textures on http(s) for clean PDF canvas snapshots
+      let tilesSrc  = INLINE_TEXTURES_FOR_PDF ? (await fetchAsDataURI(SKIN.tiles))  : null;
+      let spriteSrc = INLINE_TEXTURES_FOR_PDF ? (await fetchAsDataURI(SKIN.sprite)) : null;
+      let markerSrc = INLINE_TEXTURES_FOR_PDF ? (await fetchAsDataURI(SKIN.marker)) : null;
+
+      IMG.tiles.src  = tilesSrc  || SKIN.tiles;
+      IMG.sprite.src = spriteSrc || SKIN.sprite;
+      IMG.marker.src = markerSrc || SKIN.marker;
+
+      await new Promise((resolve)=>{
         let left = 3;
         const done = () => { if (--left === 0) { ASSETS_READY = true; drawMaze(mazeState); resolve(); } };
-        const fail = (e) => { console.warn('Maze assets konden niet geladen worden', e); if (--left === 0) { drawMaze(mazeState); resolve(); } };
-
-        IMG.tiles.onload  = done; IMG.tiles.onerror  = fail; IMG.tiles.src  = SKIN.tiles;
-        IMG.sprite.onload = done; IMG.sprite.onerror = fail; IMG.sprite.src = SKIN.sprite;
-        IMG.marker.onload = done; IMG.marker.onerror = fail; IMG.marker.src = SKIN.marker;
+        const fail = (e)  => { console.warn('Maze assets konden niet geladen worden', e); if (--left === 0) { drawMaze(mazeState); resolve(); } };
+        IMG.tiles.onload  = done; IMG.tiles.onerror  = fail;
+        IMG.sprite.onload = done; IMG.sprite.onerror = fail;
+        IMG.marker.onload = done; IMG.marker.onerror = fail;
       });
     }
 
@@ -841,6 +1046,11 @@
       '11011':[2,1], '11101':[1,2], '11111':[2,2],
       'null0':[4,3], 'null1':[3,0], 'null2':[3,1], 'null3':[0,3], 'null4':[1,3],
     };
+
+    // ---- Pegman pose mapping (16 orientation frames within a 21-frame sheet)
+    // dir: 0=E, 1=N, 2=W, 3=S  → base pose indices (0-based) [E,N,W,S] => [4,0,12,8]
+    const ORIENT_TOTAL = 16;
+    const DIR_TO_BASE_POSE = [4, 0, 12, 8];
 
     function getOGLevel(index = 1){
       const src = window.AIK_GENERATED?.maze;
@@ -915,7 +1125,8 @@
       return {x:1,y:1};
     }
 
-    const mazeState = { x:1, y:1, dir:0 };
+    // Include pose index in state
+    const mazeState = { x:1, y:1, dir:0, pose: DIR_TO_BASE_POSE[0] };
     function degForDir(dir){ return [0, -90, 180, 90][dir] || 0; }
 
     function drawMaze(state){
@@ -935,6 +1146,7 @@
       ctx.clearRect(0,0,mazeCanvas.width,mazeCanvas.height);
       ctx.restore();
 
+      // Fallback when assets not ready: simple rotated arrow
       if (!ASSETS_READY) {
         for(let y=0;y<rows;y++){
           for(let x=0;x<cols;x++){
@@ -949,7 +1161,7 @@
         }
         const cx = offX + state.x*c + c/2, cy = offY + state.y*c + c/2;
         ctx.save(); ctx.translate(cx,cy);
-        const a = (typeof state.ang === 'number') ? state.ang : degForDir(state.dir);
+        const a = degForDir(state.dir);
         ctx.rotate(a * Math.PI/180);
         const tip = Math.max(12, Math.floor(c*0.32)), base = Math.max(7, Math.floor(c*0.18));
         ctx.beginPath(); ctx.moveTo(tip,0); ctx.lineTo(-base, base); ctx.lineTo(-base,-base); ctx.closePath();
@@ -994,33 +1206,36 @@
         }
       }
 
-      // Pegman
-      const baseIdx = 4;
+      // Pegman via pose frame (no canvas rotation)
       const pegW = Math.round(frameW * pegScale);
       const pegH = Math.round(frameH * pegScale);
       const px = offX + state.x*c + Math.floor(c/2);
       const py = offY + state.y*c + Math.floor(c/2);
-      const angleDeg = (typeof state.ang === 'number') ? state.ang : degForDir(state.dir);
 
-      ctx.save();
-      ctx.translate(px, py);
-      ctx.rotate(angleDeg * Math.PI/180);
-      ctx.drawImage(IMG.sprite, baseIdx*frameW, 0, frameW, frameH,
-                    Math.floor(-pegW/2), Math.floor(-pegH/2), pegW, pegH);
-      ctx.restore();
+      let poseIndex = (typeof state.pose === 'number') ? state.pose : DIR_TO_BASE_POSE[state.dir];
+      poseIndex = Math.max(0, Math.min(ORIENT_TOTAL - 1, poseIndex));
+
+      ctx.drawImage(
+        IMG.sprite,
+        poseIndex * frameW, 0, frameW, frameH,
+        Math.floor(px - pegW/2), Math.floor(py - pegH/2), pegW, pegH
+      );
     }
 
     function frontDelta(dir){ return [{dx:1,dy:0},{dx:0,dy:-1},{dx:-1,dy:0},{dx:0,dy:1}][dir]; }
+    function leftDelta(dir){ return frontDelta((dir+1)%4); }
+    function rightDelta(dir){ return frontDelta((dir+3)%4); }
     function isOpen(x,y){ const v=level.grid?.[y]?.[x]; return v===1 || v==='S' || v==='G'; }
 
     function mazeReset(){
       const s = findStart();
       mazeState.x=s.x; mazeState.y=s.y; mazeState.dir=0;
+      mazeState.pose = DIR_TO_BASE_POSE[mazeState.dir];
       drawMaze(mazeState);
     }
 
     let frames = []; let timer = null; let frameIdx = 0;
-    function pushFrame(angleDeg=null){ frames.push({ x:mazeState.x, y:mazeState.y, dir:mazeState.dir, ang: angleDeg }); }
+    function pushFrame(){ frames.push({ x:mazeState.x, y:mazeState.y, dir:mazeState.dir, pose: mazeState.pose }); }
     function stopPlayback(){ frames = []; frameIdx = 0; if (timer){ clearTimeout(timer); timer = null; } }
 
     function sliderDelay(input){
@@ -1043,14 +1258,17 @@
     function playNext(){
       if (frameIdx >= frames.length){
         timer = null;
-        if (mazeAtGoal()) {
-          try{ SND.win.currentTime = 0; SND.win.play(); }catch(_){}
-          showSuccessModal();
-        }
+        if (mazeAtGoal()) { try{ SND.win.currentTime = 0; SND.win.play(); }catch(_){} showSuccessModal(); }
         return;
       }
-      drawMaze(frames[frameIdx++]);
-      timer = setTimeout(playNext, currentSpeed());
+      const f = frames[frameIdx++];
+      drawMaze(f);
+
+      // faster tween when turning
+      const isTurnTween = typeof f.ang === 'number';
+      const delay = isTurnTween ? Math.max(10, currentSpeed() * 0.4) : currentSpeed();
+
+      timer = setTimeout(playNext, delay);
     }
 
     let stepCount = 0;
@@ -1059,17 +1277,12 @@
 
     let lastFailAt = 0;
 
-    function norm180(a){ let r = (a + 180) % 360; if (r < 0) r += 360; return r - 180; }
-    function tweenTurn(prevDir, nextDir, kind){
-      const start = [0,-90,180,90][prevDir]||0;
-      const end   = [0,-90,180,90][nextDir]||0;
-      let diff = norm180(end - start);
-      if (kind === 'L' && diff > 0) diff -= 360;
-      if (kind === 'R' && diff < 0) diff += 360;
-      const steps = 4;
-      for (let i=1;i<=steps;i++){
-        const ang = start + (diff * i/steps);
-        pushFrame(ang);
+    // Pose tween for quarter turns: 4 intermediate frames per turn.
+    function tweenTurn(kind){
+      const step = (kind === 'R') ? +1 : -1;
+      for (let i=0; i<4; i++){
+        mazeState.pose = (mazeState.pose + step + ORIENT_TOTAL) % ORIENT_TOTAL;
+        pushFrame();
       }
     }
 
@@ -1083,24 +1296,26 @@
     };
     window.mazeTurnLeft  = function(){
       _tick();
-      const prev = mazeState.dir;
       mazeState.dir = (mazeState.dir+1)%4;
-      tweenTurn(prev, mazeState.dir, 'L'); pushFrame();
+      tweenTurn('L'); pushFrame();
     };
     window.mazeTurnRight = function(){
       _tick();
-      const prev = mazeState.dir;
       mazeState.dir = (mazeState.dir+3)%4;
-      tweenTurn(prev, mazeState.dir, 'R'); pushFrame();
+      tweenTurn('R'); pushFrame();
     };
     window.mazePathAhead = function(){ const {dx,dy}=frontDelta(mazeState.dir); return isOpen(mazeState.x+dx, mazeState.y+dy); };
+    window.mazePathLeft  = function(){ const {dx,dy}=leftDelta(mazeState.dir);  return isOpen(mazeState.x+dx, mazeState.y+dy); };
+    window.mazePathRight = function(){ const {dx,dy}=rightDelta(mazeState.dir); return isOpen(mazeState.x+dx, mazeState.y+dy); };
     window.mazeAtGoal    = function(){ return level.grid[mazeState.y][mazeState.x]==='G'; };
 
-    // CLI aliases
+    // CLI & Blocks-friendly aliases
     window.moveForward = window.mazeMoveForward;
     window.turnLeft    = window.mazeTurnLeft;
     window.turnRight   = window.mazeTurnRight;
     window.pathAhead   = window.mazePathAhead;
+    window.pathLeft    = window.mazePathLeft;
+    window.pathRight   = window.mazePathRight;
     window.atGoal      = window.mazeAtGoal;
     window.notDone     = function(){ return !window.mazeAtGoal(); };
 
@@ -1112,8 +1327,11 @@
       stopPlayback(); mazeReset(); frames = []; pushFrame();
       stepCount = 0;
       try{
-        const run = new Function('mazeMoveForward','mazeTurnLeft','mazeTurnRight','mazePathAhead','mazeAtGoal', code);
-        run(mazeMoveForward, mazeTurnLeft, mazeTurnRight, mazePathAhead, mazeAtGoal);
+        const run = new Function(
+          'moveForward','turnLeft','turnRight','pathAhead','pathLeft','pathRight','notDone','atGoal',
+          code
+        );
+        run(moveForward, turnLeft, turnRight, pathAhead, pathLeft, pathRight, notDone, atGoal);
       }catch(e){
         console.error(e);
         alert('Fout in je blokken-code: ' + e.message);
@@ -1159,10 +1377,25 @@
     }
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
+    // --------- Maze (Code) with smart pre-run hints ----------
     $('run-maze2').addEventListener('click', ()=>{
       const code = String(cliEditor.value || '');
       consoleClear();
       if (!code.trim()){ consolePrint('Geen code gevonden. Typ eerst je instructies.', 'log-warn'); return; }
+
+      // Smart static checks BEFORE running
+      const hints = detectCommonIssues(code, window.activeMode);
+      if (hints.length){
+        for (const h of hints){
+          if (h.type === 'unknown-call'){
+            consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col})`, 'log-warn');
+          } else if (h.type === 'assignment-in-condition'){
+            consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col}). Tip: ${h.remedy}`, 'log-warn');
+          }
+        }
+        consolePrint('Los deze punten eerst op en klik opnieuw op Uitvoeren.', 'log-warn');
+        return;
+      }
 
       lastRunCode = code; lastMode = 'maze2'; syncGlobals();
       stopPlayback(); mazeReset(); frames = []; pushFrame(); stepCount = 0;
@@ -1173,44 +1406,47 @@
       const tl = ()=> mazeTurnLeft();
       const tr = ()=> mazeTurnRight();
       const pa = ()=> mazePathAhead();
+      const pl = ()=> mazePathLeft();
+      const pr = ()=> mazePathRight();
       const ag = ()=> mazeAtGoal();
       const nd = ()=> !mazeAtGoal();
 
       try{
         const run = new Function(
-          'moveForward','turnLeft','turnRight','pathAhead','notDone','atGoal',
-          'mazeMoveForward','mazeTurnLeft','mazeTurnRight','mazePathAhead','mazeAtGoal',
+          'moveForward','turnLeft','turnRight','pathAhead','pathLeft','pathRight','notDone','atGoal',
+          'mazeMoveForward','mazeTurnLeft','mazeTurnRight','mazePathAhead','mazePathLeft','mazePathRight','mazeAtGoal',
           'console',
           code
         );
-        run(mf, tl, tr, pa, nd, ag,
-            mazeMoveForward, mazeTurnLeft, mazeTurnRight, mazePathAhead, mazeAtGoal,
+        run(mf, tl, tr, pa, pl, pr, nd, ag,
+            mazeMoveForward, mazeTurnLeft, mazeTurnRight, mazePathAhead, mazePathLeft, mazePathRight, mazeAtGoal,
             studentConsole);
       }catch(e){
         console.error(e);
         const info = parseError(e);
-        if (info.line){
-          consolePrint(`Fout op regel ${info.line}${info.col?`, kolom ${info.col}`:''}: ${info.message}`, 'log-error');
-          const frameHTML = showCodeFrame(code, info.line, info.col);
-          const div = document.createElement('div');
-          div.innerHTML = frameHTML;
-          cliConsole.appendChild(div.firstChild);
-        }else{
-          consolePrint(`Fout: ${info.message}`, 'log-error');
+        const undef = (e && (String(e.message).match(/(?:is not defined|Can't find variable):?\s*([A-Za-z_]\w*)/)));
+        if (undef){
+          const name = undef[1];
+          const allowed = Array.from(makeAllowedSet(window.activeMode));
+          const suggestion = closestAllowed(name, allowed);
+          consolePrint(`Onbekende naam ‘${name}’. ${suggestion ? `Bedoel je ‘${suggestion}()’ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`, 'log-error');
+        } else {
+          if (info.line){
+            consolePrint(`Fout op regel ${info.line}${info.col?`, kolom ${info.col}`:''}: ${info.message}`, 'log-error');
+            const frameHTML = showCodeFrame(code, info.line, info.col);
+            const div = document.createElement('div');
+            div.innerHTML = frameHTML;
+            cliConsole.appendChild(div.firstChild);
+          }else{
+            consolePrint(`Fout: ${info.message}`, 'log-error');
+          }
         }
         return;
       }
       frameIdx = 0; playNext();
     });
 
-    if (levelSel1){ levelSel1.addEventListener('change', ()=> loadLevel(parseInt(levelSel1.value,10))); }
-    if (levelSel2){ levelSel2.addEventListener('change', ()=> loadLevel(parseInt(levelSel2.value,10))); }
-    bindSpeedLabel(speed1, speedLbl1);
-    bindSpeedLabel(speed2, speedLbl2);
-
-    // ─────────────────────────────────────────────
     // TURTLE — grid + outlines + drawing
-    // ─────────────────────────────────────────────
     const TURTLE = {
       x:0, y:0, ang:0, penDown:true, show:true,
       color:'#5200FF', width:2,
@@ -1584,45 +1820,41 @@
     }
     function turtleStop(){ if (TREC.timer){ clearTimeout(TREC.timer); TREC.timer=null; } TREC.steps=[]; TREC.idx=0; }
 
-    (function(){
-      const prev = {
-        moveForward: window.moveForward,
-        moveBackward: window.moveBackward,
-        turnLeft: window.turnLeft,
-        turnRight: window.turnRight,
-        penUp: window.penUp,
-        penDown: window.penDown,
-        setLineWidth: window.setLineWidth,
-        setPenColour: window.setPenColour,
-        goTo: window.goTo,
-        writeText: window.writeText,
-      };
-      window._prevTurtleAPI = prev;
+    // Helpers
+    function isMazeMode(){ return activeMode === 'maze1' || activeMode === 'maze2'; }
 
-      window.moveForward = (d)=> enqueueStep(()=> turtleMove(+d||0));
-      window.moveBackward= (d)=> enqueueStep(()=> turtleMove(-(+d||0)));
-      window.turnLeft    = (a)=> enqueueStep(()=> turtleTurn(+(+a||0)));
-      window.turnRight   = (a)=> enqueueStep(()=> turtleTurn(-(+a||0)));
-      window.penUp       = ()=> enqueueStep(()=> { TURTLE.penDown=false; drawCursorOnly(); });
-      window.penDown     = ()=> enqueueStep(()=> { TURTLE.penDown=true;  drawCursorOnly(); });
-      window.setLineWidth= (w)=> enqueueStep(()=> { TURTLE.width=Math.max(1, +w||1); drawCursorOnly(); });
-      window.setPenColour= (r,g,b)=> enqueueStep(()=> {
-        if (typeof r === 'number') {
-          TURTLE.color = `rgb(${+r||0},${+g||0},${+b||0})`;
-        } else if (typeof r === 'string') {
-          const parsed = parseColor(r) || r;
-          TURTLE.color = parsed;
-        }
+    // Unified API that routes by mode
+    window.moveForward = function(d){
+      if (isMazeMode()) return window.mazeMoveForward();
+      return enqueueStep(()=> turtleMove(+d||0));
+    };
+    window.moveBackward = function(d){
+      if (isMazeMode()) return; // Maze: no backward
+      return enqueueStep(()=> turtleMove(-(+d||0)));
+    };
+    window.turnLeft = function(a){
+      if (isMazeMode()) return window.mazeTurnLeft();
+      return enqueueStep(()=> turtleTurn(+(+a||0)));
+    };
+    window.turnRight = function(a){
+      if (isMazeMode()) return window.mazeTurnRight();
+      return enqueueStep(()=> turtleTurn(-(+a||0)));
+    };
+    window.penUp  = function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.penDown=false; drawCursorOnly(); }); };
+    window.penDown= function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.penDown=true;  drawCursorOnly(); }); };
+    window.setLineWidth = function(w){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.width=Math.max(1,+w||1); drawCursorOnly(); }); };
+    window.setPenColour = function(r,g,b){
+      if (isMazeMode()) return;
+      return enqueueStep(()=> {
+        if (typeof r === 'number') TURTLE.color = `rgb(${+r||0},${+g||0},${+b||0})`;
+        else TURTLE.color = parseColor(r) || String(r);
         drawCursorOnly();
       });
-      window.goTo        = (x,y)=> enqueueStep(()=> turtleGoTo(+x||0, +y||0));
-      window.writeText   = (t)=> enqueueStep(()=> turtleText(t));
-      window.showTurtle  = ()=> enqueueStep(()=> { TURTLE.show=true; drawCursorOnly(); });
-      window.hideTurtle  = ()=> enqueueStep(()=> { TURTLE.show=false; drawCursorOnly(); });
-      window.fitToDrawing= ()=> {};
-      window.resetTurtle = ()=> turtleReset();
-      window.clearCanvas = ()=> { clearDrawLayer(); drawCursorOnly(); };
-    })();
+    };
+    window.goTo = function(x,y){ if (!isMazeMode()) return enqueueStep(()=> turtleGoTo(+x||0,+y||0)); };
+    window.writeText = function(t){ if (!isMazeMode()) return enqueueStep(()=> turtleText(t)); };
+    window.showTurtle = function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.show=true; drawCursorOnly(); }); };
+    window.hideTurtle = function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.show=false; drawCursorOnly(); }); };
 
     function initTurtleUIOnce(){
       resizeTurtleCanvas();
@@ -1673,10 +1905,24 @@
       consoleClear();
       if (!code.trim()){
         const msg = 'Geen code gevonden. Typ eerst je instructies (bv. een vierkant tekenen).';
-        cliConsole.textContent = '';
         const div = document.createElement('div'); div.className='log-line log-warn'; div.textContent = msg; cliConsole.appendChild(div);
         return;
       }
+
+      // Smart static checks BEFORE running
+      const hints = detectCommonIssues(code, window.activeMode);
+      if (hints.length){
+        for (const h of hints){
+          if (h.type === 'unknown-call'){
+            consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col})`, 'log-warn');
+          } else if (h.type === 'assignment-in-condition'){
+            consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col}). Tip: ${h.remedy}`, 'log-warn');
+          }
+        }
+        consolePrint('Los deze punten eerst op en klik opnieuw op Uitvoeren.', 'log-warn');
+        return;
+      }
+
       lastRunCode = code; lastMode = 'turtle_cli'; syncGlobals();
 
       const studentConsole = { log: (...args)=> {
@@ -1698,14 +1944,22 @@
       }catch(e){
         TREC.recording = false;
         const info = parseError(e);
-        const hdr = document.createElement('div');
-        hdr.className='log-line log-error';
-        hdr.textContent = info.line ? `Fout op regel ${info.line}${info.col?`, kolom ${info.col}`:''}: ${info.message}` : `Fout: ${info.message}`;
-        cliConsole.appendChild(hdr);
-        if (info.line){
-          const frameHTML = showCodeFrame(code, info.line, info.col);
-          const cont = document.createElement('div'); cont.innerHTML = frameHTML;
-          cliConsole.appendChild(cont.firstChild);
+        const undef = (e && (String(e.message).match(/(?:is not defined|Can't find variable):?\s*([A-Za-z_]\w*)/)));
+        if (undef){
+          const name = undef[1];
+          const allowed = Array.from(makeAllowedSet(window.activeMode));
+          const suggestion = closestAllowed(name, allowed);
+          consolePrint(`Onbekende naam ‘${name}’. ${suggestion ? `Bedoel je ‘${suggestion}()’ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`, 'log-error');
+        } else {
+          const hdr = document.createElement('div');
+          hdr.className='log-line log-error';
+          hdr.textContent = info.line ? `Fout op regel ${info.line}${info.col?`, kolom ${info.col}`:''}: ${info.message}` : `Fout: ${info.message}`;
+          cliConsole.appendChild(hdr);
+          if (info.line){
+            const frameHTML = showCodeFrame(code, info.line, info.col);
+            const cont = document.createElement('div'); cont.innerHTML = frameHTML;
+            cliConsole.appendChild(cont.firstChild);
+          }
         }
         return;
       }
@@ -1719,7 +1973,7 @@
 
     $('fit-turtle').addEventListener('click', ()=> { /* optional future fit */ });
 
-    turtleLevelSel.addEventListener('change', ()=> {
+    turtleLevelSel.addEventListener('change', ()=>{
       redrawTurtleBackground();
       turtleReset();
     });
@@ -1788,29 +2042,63 @@
     tabTurtle1.addEventListener('click', ()=> setMode('turtle_blocks'));
     tabTurtle2.addEventListener('click', ()=> setMode('turtle_cli'));
 
+    // ---------------- Success Modal + auto-advance ----------------
+    let justCompleted = false;
     function showSuccessModal(msg){
+      justCompleted = true;
       successMsg.textContent = msg || 'Je hebt het level voltooid.';
       successCode.textContent = String(lastRunCode || '').trim() || '// (geen code gevonden)';
       document.body.classList.add('modal-open');
       overlay.classList.remove('hidden');
     }
-    closeSuccess.addEventListener('click', ()=>{
+
+    const exportPdfSuccess = document.getElementById('export-pdf-success');
+    if (exportPdfSuccess){
+      exportPdfSuccess.addEventListener('click', () => {
+        if (window.ExportPDF && typeof ExportPDF.openModal === 'function'){
+          ExportPDF.openModal();   // laat succes-overlay open, PDF-modal komt erboven
+        } else {
+          alert('PDF-export is nog niet geladen. Probeer even later opnieuw.');
+        }
+      });
+    }
+    function advanceToNextExerciseIfPossible(){
+      if (activeMode === 'maze1' || activeMode === 'maze2'){
+        const curr = parseInt((activeMode==='maze1'? levelSel1.value : levelSel2.value) || '1', 10);
+        if (curr < TOTAL_LEVELS){
+          const next = curr + 1;
+          if (levelSel1) levelSel1.value = String(next);
+          if (levelSel2) levelSel2.value = String(next);
+          loadLevel(next);
+          mazeReset(); resizeMazeCanvas();
+        }
+      } else if (activeMode === 'turtle_blocks' || activeMode === 'turtle_cli'){
+        const curr = parseInt(turtleLevelSel.value || '1', 10);
+        if (curr < 9){
+          turtleLevelSel.value = String(curr + 1);
+          turtleLevelSel.dispatchEvent(new Event('change'));
+        }
+      }
+    }
+    function closeSuccessModalAndMaybeAdvance(){
       overlay.classList.add('hidden');
       document.body.classList.remove('modal-open');
-    });
-    overlay.addEventListener('click', (e)=>{
-      if (e.target === overlay){
-        overlay.classList.add('hidden');
-        document.body.classList.remove('modal-open');
+      if (justCompleted){
+        justCompleted = false;
+        advanceToNextExerciseIfPossible();
       }
-    });
-    copySolution.addEventListener('click', async ()=>{
-      try{
-        await navigator.clipboard.writeText(successCode.textContent || '');
-        copySolution.textContent = 'Gekopieerd!';
-        setTimeout(()=> copySolution.textContent = 'Kopieer code', 1200);
-      }catch(_){ /* ignore */ }
-    });
+    }
+    closeSuccess.addEventListener('click', closeSuccessModalAndMaybeAdvance);
+    overlay.addEventListener('click', (e)=>{ if (e.target === overlay){ closeSuccessModalAndMaybeAdvance(); }});
+    if (copySolution) {
+      copySolution.addEventListener('click', async ()=>{
+        try{
+          await navigator.clipboard.writeText(successCode.textContent || '');
+          copySolution.textContent = 'Gekopieerd!';
+          setTimeout(()=> copySolution.textContent = 'Kopieer code', 1200);
+        }catch(_){ /* ignore */ }
+      });
+    }
 
     function getWS(){
       try{
@@ -1824,19 +2112,6 @@
     }
 
     // ------- Editor snapshot via html2canvas ------
-    function _unionRect(rects){
-      let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
-      for (const r of rects){
-        if (!r) continue;
-        left = Math.min(left, r.left);
-        top = Math.min(top, r.top);
-        right = Math.max(right, r.right);
-        bottom = Math.max(bottom, r.bottom);
-      }
-      if (!isFinite(left) || !isFinite(top) || !isFinite(right) || !isFinite(bottom)) return null;
-      return { left, top, right, bottom, width: right-left, height: bottom-top };
-    }
-
     async function getEditorSnapshotPNG(){
       if (typeof html2canvas !== 'function') return null;
 
@@ -1881,7 +2156,6 @@
         windowHeight: window.innerHeight,
         scrollX: -window.scrollX,
         scrollY: -window.scrollY,
-        // IMPORTANT: ignore all CANVAS to avoid tainting
         ignoreElements: (el)=> el.classList?.contains('modal-overlay') || el.tagName === 'CANVAS'
       });
 
@@ -1898,7 +2172,6 @@
     }
 
     // ---- Helpers for PDF snapshots (Maze/Turtle) ----
-    // Plain PNG of Maze (no sprites), at current display size
     window.renderMazePlainPNGAtCurrentSize = function(){
       const cvs = document.getElementById('mazeCanvas');
       if (!cvs) return null;
@@ -1911,7 +2184,6 @@
       off.width = W; off.height = H;
       const ctx = off.getContext('2d');
 
-      // Background
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0,0,W,H);
 
@@ -1935,10 +2207,9 @@
         }
       }
 
-      // Pegman arrow (orientation from current state)
       const cx = offX + mazeState.x*c + c/2;
       const cy = offY + mazeState.y*c + c/2;
-      const a  = (typeof mazeState.ang==='number') ? mazeState.ang : degForDir(mazeState.dir);
+      const a  = degForDir(mazeState.dir);
 
       ctx.save();
       ctx.translate(cx, cy);
@@ -1954,7 +2225,6 @@
       return off.toDataURL('image/png');
     };
 
-    // Compatibility helper if you still want explicit sizing
     window.__getMazeSimplifiedPNG = function(targetW, targetH){
       try{
         const W = Math.max(1, Math.round(targetW));
@@ -1987,7 +2257,7 @@
           }
         }
 
-        const angleDeg = (typeof mazeState.ang === 'number') ? mazeState.ang : degForDir(mazeState.dir);
+        const angleDeg = degForDir(mazeState.dir);
         const cx = offX + mazeState.x*c + c/2;
         const cy = offY + mazeState.y*c + c/2;
 
@@ -2008,14 +2278,12 @@
       }
     };
 
-    // Prefer the *textured* live canvas in PDF (fallback to simplified if tainted/unavailable)
     window.getMazeCanvasPNGPreferTextures = function(){
       const cvs = document.getElementById('mazeCanvas');
       if (!cvs) return null;
       try{
         return cvs.toDataURL('image/png');
       }catch(e){
-        // Tainted or textures not loaded: fall back
         if (typeof window.renderMazePlainPNGAtCurrentSize === 'function') {
           return window.renderMazePlainPNGAtCurrentSize();
         }
@@ -2031,7 +2299,6 @@
       }
     };
 
-    // Turtle layered snapshot at current display size
     window.getActiveCanvasDataURL = function(){
       if (!(activeMode==='turtle_blocks' || activeMode==='turtle_cli')) return null;
       const stack = document.getElementById('turtle-stack');
@@ -2049,7 +2316,6 @@
       function drawCopy(id){
         const src = document.getElementById(id);
         if (src && src.width && src.height){
-          // draw scaled to current CSS size (W,H)
           ctx.drawImage(src, 0, 0, W, H);
         }
       }
@@ -2062,7 +2328,7 @@
   </script>
 
   <script>
-  // ======= ExportPDF (updated: include OEFENINGEN snapshot; no blocks snapshot/XML/console) =======
+  // ======= ExportPDF (updated: robust + codeText rename) =======
   window.ExportPDF = (function () {
     const COLOR_PURPLE = [82, 0, 255];
     let opts = {
@@ -2098,7 +2364,6 @@
       return el ? el.textContent.trim() : '';
     }
 
-    // Code only when in code modes
     function getCodeIfCodeMode(){
       const mode = window.activeMode;
       const isCodeMode = (mode === 'maze2' || mode === 'turtle_cli');
@@ -2130,7 +2395,7 @@
       document.body.classList.remove('modal-open');
 
       const opdracht   = getOpdrachtTekst();
-      const code       = getCodeIfCodeMode();  // alleen in code-modi
+      const codeForPdf = getCodeIfCodeMode();
       const editorPNG  = await getEditorSnapshotPNG();
 
       const { jsPDF } = window.jspdf;
@@ -2156,7 +2421,6 @@
       // Opdracht (optioneel)
       if (opdracht) {
         const lines = pdf.splitTextToSize(opdracht, contentW);
-        // label + multi-line body
         const setBody = () => { pdf.setFont('helvetica','normal'); pdf.setFontSize(12); };
         const setLabel= () => { pdf.setFont('helvetica','bold');  pdf.setFontSize(13); };
 
@@ -2190,7 +2454,7 @@
         ExportPDF._cursorY += h + 16;
       }
 
-      // --- OEFENINGEN snapshot (Maze → prefer textured; Turtle → layered) ---
+      // Oefeningen snapshot
       {
         let oefSnapshotData = null;
 
@@ -2224,10 +2488,9 @@
       }
 
       // Code (alleen voor Maze Code / Turtle Code)
-      if (code) {
-        const lines = pdf.splitTextToSize(code, contentW);
-        // reuse helper
-        const setBody = () => { pdf.setFont('helvetica','normal'); pdf.setFontSize(12); };
+      const codeText = getCodeIfCodeMode();
+      if (codeForPdf) {
+        const lines = pdf.splitTextToSize(codeForPdf, contentW);
         const setCode = () => { pdf.setFont('courier','normal');  pdf.setFontSize(10); };
         const setLabel= () => { pdf.setFont('helvetica','bold');  pdf.setFontSize(13); };
 
@@ -2244,7 +2507,7 @@
         ExportPDF._cursorY += 10;
       }
 
-      // Status / meta (placeholder)
+      // Status / meta
       {
         pdf.setTextColor(...COLOR_PURPLE);
         pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
@@ -2441,7 +2704,7 @@
 
   <button id="fab-help" class="fab-help" aria-label="Toon formularium" aria-pressed="false">?</button>
 
-  
+  <!-- Legacy PDF overlay (kept hidden/unused) -->
   <div id="pdf-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
     <div class="modal">
       <div class="modal-header">⤓ <span id="pdf-title">Exporteren naar PDF</span></div>
