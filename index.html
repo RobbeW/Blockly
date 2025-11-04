@@ -271,7 +271,7 @@
       <div class="canvas-wrap">
         <div id="turtle-stack" class="stack hidden">
           <canvas id="turtle-bg"></canvas>
-          <canvas id="turtle-draw"></"></canvas>
+          <canvas id="turtle-draw"></canvas>
           <canvas id="turtle-cur"></canvas>
         </div>
         <canvas id="mazeCanvas" width="640" height="640" aria-label="Maze"></canvas>
@@ -474,6 +474,19 @@
     const $ = id => document.getElementById(id);
     const urlQS = new URLSearchParams(location.search);
 
+    // NEW: simple loop protection to prevent tab hangs (RESULT_CODE_HUNG)
+    function loopProtect(src, maxIterations = 250000) {
+      const stamp = `__lp_${Math.random().toString(36).slice(2)}`;
+      const header =
+        `let ${stamp}=0;` +
+        `function __lpCheck(){ if(++${stamp} > ${maxIterations}){` +
+        ` throw new Error('Je code loopt vast (te veel iteraties).'); } }`;
+      return header + '\n' + String(src)
+        .replace(/for\s*\(([^)]*)\)\s*{/g, 'for($1){__lpCheck();')
+        .replace(/while\s*\(([^)]*)\)\s*{/g, 'while($1){__lpCheck();')
+        .replace(/do\s*{/g, 'do{__lpCheck();');
+    }
+
     // CORS helper for textures (try same-origin first)
     function isSameOrigin(url){
       try{
@@ -601,16 +614,20 @@
       }
       return { line, col };
     }
-    function findSingleEqualsInIf(clean){
+
+    // UPDATED: check '=' in both if(...) and while(...)
+    function findSingleEqualsInIfOrWhile(clean){
       const hits = [];
       const n = clean.length; let i = 0;
       while (i < n){
-        if (clean[i] === 'i' && clean.slice(i, i+2) === 'if'){
+        const kw = (clean.slice(i, i+2) === 'if') ? 'if'
+                 : (clean.slice(i, i+5) === 'while' ? 'while' : null);
+        if (kw){
           const prev = clean[i-1] || '';
           if (!/[A-Za-z0-9_$]/.test(prev)){
-            let j = i + 2;
+            let j = i + kw.length;
             while (j < n && /\s/.test(clean[j])) j++;
-            if (j >= n || clean[j] !== '('){ i += 2; continue; }
+            if (j >= n || clean[j] !== '('){ i += kw.length; continue; }
             let depth = 0, start = j, k = j;
             for (; k < n; k++){
               const ch = clean[k];
@@ -635,13 +652,14 @@
       }
       return hits;
     }
+
     function levenshtein(a,b){
       a=String(a); b=String(b);
       const m=a.length,n=b.length; const dp=Array.from({length:m+1},()=>Array(n+1).fill(0));
       for(let i=0;i<=m;i++) dp[i][0]=i; for(let j=0;j<=n;j++) dp[0][j]=j;
       for(let i=1;i<=m;i++){ for(let j=1;j<=n;j++){
         const cost=(a[i-1]===b[j-1])?0:1;
-        dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+        dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i][j-1]+cost);
       }}
       return dp[m][n];
     }
@@ -653,27 +671,50 @@
       }
       return (bestD<=3)?best:null;
     }
+
+    // UPDATED: include control-flow keywords; full student API
     function makeAllowedSet(mode){
-      const base = new Set(['console','Math','Number','String','Boolean','Array','Object','let','const','var']);
-      const mazeAPI = ['moveForward','turnLeft','turnRight','pathAhead','pathLeft','pathRight','atGoal','notDone',
-                       'mazeMoveForward','mazeTurnLeft','mazeTurnRight','mazePathAhead','mazePathLeft','mazePathRight','mazeAtGoal'];
-      const turtleAPI = ['moveForward','moveBackward','turnLeft','turnRight','penUp','penDown',
-                         'setPenColour','setLineWidth','goTo','writeText','fitToDrawing','resetTurtle','clearCanvas',
-                         'showTurtle','hideTurtle'];
+      const base = new Set([
+        'console','Math','Number','String','Boolean','Array','Object',
+        'let','const','var',
+        'if','while','for'
+      ]);
+
+      const mazeAPI = [
+        'moveForward','turnLeft','turnRight',
+        'isPathAhead','isPathLeft','isPathRight',
+        'atGoal','notDone',
+        'mazeMoveForward','mazeTurnLeft','mazeTurnRight',
+        'mazePathAhead','mazePathLeft','mazePathRight','mazeAtGoal'
+      ];
+
+      const turtleAPI = [
+        'moveForward','moveBackward','turnLeft','turnRight',
+        'penUp','penDown','setPenColour','setLineWidth',
+        'goTo','writeText','fitToDrawing','resetTurtle','clearCanvas',
+        'showTurtle','hideTurtle'
+      ];
+
       (mode && mode.startsWith('turtle') ? turtleAPI : mazeAPI).forEach(x => base.add(x));
       return base;
     }
+
     function collectDeclaredNames(clean){
       const set = new Set();
       const declRe = /\bfunction\s+([A-Za-z_]\w*)\b|\b(?:const|let|var)\s+([A-Za-z_]\w*)\s*=\s*(?:function|\()/g;
       let m; while ((m = declRe.exec(clean))){ set.add(m[1] || m[2]); }
       return set;
     }
+
+    // UPDATED: skip JS keywords like if/while/for/switch/catch/function
     function detectUnknownCalls(source, mode){
       const clean = stripStringsAndComments(source);
       const declared = collectDeclaredNames(clean);
       const allowed = makeAllowedSet(mode);
       const issues = [];
+
+      const KW = new Set(['if','while','for','switch','catch','function']);
+
       const re = new RegExp(String.raw`(?:^|[^.$\w])([A-Za-z_]\w*)\s*\(`, 'g');
       const lines = clean.split('\n');
       for (let li = 0; li < lines.length; li++){
@@ -681,6 +722,7 @@
         while ((m = re.exec(lines[li]))){
           const name = m[1];
           const col = m.index + m[0].lastIndexOf(name) + 1;
+          if (KW.has(name)) continue; // control-flow, not a function
           if (!allowed.has(name) && !declared.has(name) && name !== 'function'){
             const suggestion = closestAllowed(name, Array.from(allowed));
             issues.push({
@@ -694,11 +736,104 @@
       }
       return issues;
     }
+
+    // NEW: literal infinite-loop checks
+    function detectLiteralInfiniteLoops(clean){
+      const hints = [];
+      if (/\bfor\s*\(\s*;;\s*\)\s*{/.test(clean)) {
+        hints.push({ type:'infinite-loop', line:1, col:1,
+          message:"Oneindige lus ‘for(;;){...}’. Voeg een conditie en update toe of gebruik een teller." });
+      }
+      if (/\bwhile\s*$begin:math:text$\\s*true\\s*$end:math:text$\s*{/.test(clean)) {
+        hints.push({ type:'infinite-loop', line:1, col:1,
+          message:"Oneindige lus ‘while(true){...}’. Voeg een stopvoorwaarde toe." });
+      }
+      return hints;
+    }
+
+    function detectForHeaderIssues(clean){
+      const out = [];
+      const re = /for\s*$begin:math:text$([^)]*)$end:math:text$/g;
+      let m;
+      while ((m = re.exec(clean))){
+        const header = m[1]; // init ; test ; update
+        const parts = header.split(';');
+        if (parts.length !== 3){
+          out.push({ type:'for-header', index:m.index,
+            message:"Ongeldige for-header. Gebruik ‘for (var i = 0; i < x; i++) { … }’." });
+          continue;
+        }
+        const update = parts[2].trim();
+        if (/\+\+\-|\-\-\+|\+\-\+|\-\+\-/.test(update)){
+          out.push({ type:'for-update-typo', index:m.index + header.indexOf(update),
+            message:"Typfout in de for-update. Bedoel je ‘i++)’ of ‘i--)’?" });
+        }
+        if (!update){
+          out.push({ type:'for-update-empty', index:m.index,
+            message:"De for-lus mist een update-deel (bv. ‘i++)’)." });
+        }
+      }
+      return out;
+    }
+
+    // FIXED: brace style after if/while (...) must be { ... }
+    function detectBraceStyleForTeaching(clean){
+      const out = [];
+      const re = /\b(if|while)\s*$begin:math:text$[^)]*$end:math:text$\s*(?!\{)/g;
+      let m;
+      while ((m = re.exec(clean))){
+        out.push({
+          type: 'missing-braces',
+          index: m.index,
+          message: `Plaats accolades na ‘${m[1]}(...)’. Gebruik ‘${m[1]} (...) { … }’.`
+        });
+      }
+      return out;
+    }
+
+    // FIXED: detect while(notDone) — missing parentheses call
+    function detectNotDoneCallIssues(clean){
+      const out = [];
+      const n = clean.length;
+      for (let i=0;i<n;i++){
+        if (clean.slice(i,i+5)==='while'){
+          const prev = clean[i-1]||'';
+          if (/[A-Za-z0-9_$]/.test(prev)) continue;
+          let j=i+5; while (j<n && /\s/.test(clean[j])) j++;
+          if (clean[j] !== '(') continue;
+          let depth=0, start=j, k=j;
+          for (;k<n;k++){
+            const ch = clean[k];
+            if (ch==='(') depth++;
+            else if (ch===')'){ depth--; if (depth===0) break; }
+          }
+          if (depth!==0) continue;
+          const cond = clean.slice(start+1, k);
+          const idx = cond.indexOf('notDone');
+          if (idx>=0){
+            const after = cond.slice(idx + 'notDone'.length);
+            if (!/^\s*\(/.test(after)){
+              out.push({
+                type:'notDone-parens',
+                index: start + 1 + idx,
+                message:"Gebruik ‘notDone()’ met haakjes: ‘while (notDone()) { … }’."
+              });
+            }
+          }
+          i = k;
+        }
+      }
+      return out;
+    }
+
+    // UPDATED: call all checks
     function detectCommonIssues(source, mode){
       const clean = stripStringsAndComments(source);
       const hints = [];
       hints.push(...detectUnknownCalls(source, mode));
-      const eqHits = findSingleEqualsInIf(clean);
+      hints.push(...detectLiteralInfiniteLoops(clean));
+
+      const eqHits = findSingleEqualsInIfOrWhile(clean);
       for (const h of eqHits){
         const pos = indexToLineCol(source, h.globalIndex);
         hints.push({
@@ -708,6 +843,20 @@
           remedy: "Vervang '=' door '==' (waarde) of '===' (type + waarde)."
         });
       }
+
+      detectForHeaderIssues(clean).forEach(h=>{
+        const pos = indexToLineCol(source, h.index);
+        hints.push({ ...h, line:pos.line, col:pos.col });
+      });
+      detectBraceStyleForTeaching(clean).forEach(h=>{
+        const pos = indexToLineCol(source, h.index);
+        hints.push({ ...h, line:pos.line, col:pos.col });
+      });
+      detectNotDoneCallIssues(clean).forEach(h=>{
+        const pos = indexToLineCol(source, h.index);
+        hints.push({ ...h, line:pos.line, col:pos.col });
+      });
+
       return hints;
     }
 
@@ -851,9 +1000,9 @@
       _setGenStmt('maze_move_forward', ()=> `moveForward();\n`);
       _setGenStmt('maze_turn_left',    ()=> `turnLeft();\n`);
       _setGenStmt('maze_turn_right',   ()=> `turnRight();\n`);
-      _setGenExpr('maze_path_ahead',   ()=> [`pathAhead()`, ORDER_CALL]);
-      _setGenExpr('maze_path_left',    ()=> [`pathLeft()`, ORDER_CALL]);
-      _setGenExpr('maze_path_right',   ()=> [`pathRight()`, ORDER_CALL]);
+      _setGenExpr('maze_path_ahead',   ()=> [`isPathAhead()`, ORDER_CALL]);
+      _setGenExpr('maze_path_left',    ()=> [`isPathLeft()`, ORDER_CALL]);
+      _setGenExpr('maze_path_right',   ()=> [`isPathRight()`, ORDER_CALL]);
       _setGenExpr('maze_not_done',     ()=> [`notDone()`, ORDER_CALL]);
     }
 
@@ -1313,25 +1462,27 @@
     window.moveForward = window.mazeMoveForward;
     window.turnLeft    = window.mazeTurnLeft;
     window.turnRight   = window.mazeTurnRight;
-    window.pathAhead   = window.mazePathAhead;
-    window.pathLeft    = window.mazePathLeft;
-    window.pathRight   = window.mazePathRight;
+    window.isPathAhead   = window.mazePathAhead;
+    window.isPathLeft    = window.mazePathLeft;
+    window.isPathRight   = window.mazePathRight;
     window.atGoal      = window.mazeAtGoal;
     window.notDone     = function(){ return !window.mazeAtGoal(); };
 
     $('run-maze1').addEventListener('click', ()=>{
       const J = Blockly.JavaScript || Blockly.javascriptGenerator;
-      const code = (J && J.workspaceToCode) ? J.workspaceToCode(workspace) : Blockly.JavaScript.workspaceToCode(workspace);
+      const codeRaw = (J && J.workspaceToCode) ? J.workspaceToCode(workspace) : Blockly.JavaScript.workspaceToCode(workspace);
+      const code = String(codeRaw || '');
       if (!code.trim()){ alert('Voeg eerst blokken toe.'); return; }
       lastRunCode = code; lastMode = 'maze1'; syncGlobals();
       stopPlayback(); mazeReset(); frames = []; pushFrame();
       stepCount = 0;
       try{
+        const protectedCode = loopProtect(code);
         const run = new Function(
-          'moveForward','turnLeft','turnRight','pathAhead','pathLeft','pathRight','notDone','atGoal',
-          code
+          'moveForward','turnLeft','turnRight','isPathAhead','isPathLeft','isPathRight','notDone','atGoal',
+          protectedCode
         );
-        run(moveForward, turnLeft, turnRight, pathAhead, pathLeft, pathRight, notDone, atGoal);
+        run(moveForward, turnLeft, turnRight, isPathAhead, isPathLeft, isPathRight, notDone, atGoal);
       }catch(e){
         console.error(e);
         alert('Fout in je blokken-code: ' + e.message);
@@ -1391,6 +1542,8 @@
             consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col})`, 'log-warn');
           } else if (h.type === 'assignment-in-condition'){
             consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col}). Tip: ${h.remedy}`, 'log-warn');
+          } else {
+            consolePrint(`${h.message} (regel ${h.line || '?'}${h.col ? ', kolom ' + h.col : ''})`, 'log-warn');
           }
         }
         consolePrint('Los deze punten eerst op en klik opnieuw op Uitvoeren.', 'log-warn');
@@ -1405,6 +1558,7 @@
       const mf = ()=> mazeMoveForward();
       const tl = ()=> mazeTurnLeft();
       const tr = ()=> mazeTurnRight();
+      // UPDATED: correct engine bindings
       const pa = ()=> mazePathAhead();
       const pl = ()=> mazePathLeft();
       const pr = ()=> mazePathRight();
@@ -1412,11 +1566,12 @@
       const nd = ()=> !mazeAtGoal();
 
       try{
+        const protectedCode = loopProtect(code);
         const run = new Function(
-          'moveForward','turnLeft','turnRight','pathAhead','pathLeft','pathRight','notDone','atGoal',
+          'moveForward','turnLeft','turnRight','isPathAhead','isPathLeft','isPathRight','notDone','atGoal',
           'mazeMoveForward','mazeTurnLeft','mazeTurnRight','mazePathAhead','mazePathLeft','mazePathRight','mazeAtGoal',
           'console',
-          code
+          protectedCode
         );
         run(mf, tl, tr, pa, pl, pr, nd, ag,
             mazeMoveForward, mazeTurnLeft, mazeTurnRight, mazePathAhead, mazePathLeft, mazePathRight, mazeAtGoal,
@@ -1868,17 +2023,19 @@
       turtleReset();
 
       const J = Blockly.JavaScript || Blockly.javascriptGenerator;
-      const code = (J && J.workspaceToCode) ? J.workspaceToCode(workspace) : Blockly.JavaScript.workspaceToCode(workspace);
+      const codeRaw = (J && J.workspaceToCode) ? J.workspaceToCode(workspace) : Blockly.JavaScript.workspaceToCode(workspace);
+      const code = String(codeRaw || '');
       if (!code.trim()){ alert('Voeg eerst blokken toe.'); return; }
       lastRunCode = code; lastMode = 'turtle_blocks'; syncGlobals();
 
       TREC.steps = [];
       TREC.recording = true;
       try{
+        const protectedCode = loopProtect(code);
         const run = new Function(
           'moveForward','moveBackward','turnLeft','turnRight','penUp','penDown',
           'setPenColour','setLineWidth','goTo','writeText','fitToDrawing',
-          code
+          protectedCode
         );
         run(moveForward, moveBackward, turnLeft, turnRight, penUp, penDown,
             setPenColour, setLineWidth, goTo, writeText, (typeof fitToDrawing==='function'?fitToDrawing:()=>{}));
@@ -1917,6 +2074,8 @@
             consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col})`, 'log-warn');
           } else if (h.type === 'assignment-in-condition'){
             consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col}). Tip: ${h.remedy}`, 'log-warn');
+          } else {
+            consolePrint(`${h.message} (regel ${h.line || '?'}${h.col ? ', kolom ' + h.col : ''})`, 'log-warn');
           }
         }
         consolePrint('Los deze punten eerst op en klik opnieuw op Uitvoeren.', 'log-warn');
@@ -1933,10 +2092,11 @@
       TREC.steps = [];
       TREC.recording = true;
       try{
+        const protectedCode = loopProtect(code);
         const run = new Function(
           'moveForward','moveBackward','turnLeft','turnRight','penUp','penDown',
           'setPenColour','setLineWidth','goTo','writeText','fitToDrawing','console',
-          code
+          protectedCode
         );
         run(moveForward, moveBackward, turnLeft, turnRight, penUp, penDown,
             setPenColour, setLineWidth, goTo, writeText, (typeof fitToDrawing==='function'?fitToDrawing:()=>{}),
@@ -2146,7 +2306,8 @@
       if (!region || region.width < 10 || region.height < 10) return null;
 
       const pad = 12;
-      const scale = Math.min(3, Math.max(1, (window.devicePixelRatio || 1) * 1.5));
+      // LOWER scale cap to avoid OOM on export
+      const scale = Math.min(1.2, Math.max(1, (window.devicePixelRatio || 1)));
 
       const full = await html2canvas(document.body, {
         backgroundColor: '#ffffff',
@@ -2328,7 +2489,7 @@
   </script>
 
   <script>
-  // ======= ExportPDF (updated: robust + codeText rename) =======
+  // ======= ExportPDF (updated: robust + removed unused codeText) =======
   window.ExportPDF = (function () {
     const COLOR_PURPLE = [82, 0, 255];
     let opts = {
@@ -2488,7 +2649,6 @@
       }
 
       // Code (alleen voor Maze Code / Turtle Code)
-      const codeText = getCodeIfCodeMode();
       if (codeForPdf) {
         const lines = pdf.splitTextToSize(codeForPdf, contentW);
         const setCode = () => { pdf.setFont('courier','normal');  pdf.setFontSize(10); };
@@ -2704,7 +2864,7 @@
 
   <button id="fab-help" class="fab-help" aria-label="Toon formularium" aria-pressed="false">?</button>
 
-  <!-- Legacy PDF overlay (kept hidden/unused) -->
+  
   <div id="pdf-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
     <div class="modal">
       <div class="modal-header">⤓ <span id="pdf-title">Exporteren naar PDF</span></div>
