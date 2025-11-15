@@ -1,4 +1,4 @@
-# JavaScript in de Klas: Maze & Turtle
+# Blockly in de Klas: Maze & Turtle
 
 Auteur: Robbe Wulgaert · aiindeklas.be / robbewulgaert.be
 © 2025 Robbe Wulgaert
