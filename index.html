@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>JavaScript in de Klas — Maze & Turtle</title>
+  <title>Blockly in de Klas — Maze & Turtle</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="common/common.css" />
   <meta name="color-scheme" content="light">
@@ -186,7 +186,7 @@
   <header>
     <div class="ai-brand">
       <div class="ai-dot"></div>
-      <div>JavaScript in de Klas · Maze & Turtle</div>
+      <div>Blockly in de Klas · Maze & Turtle</div>
     </div>
 
     <div class="tabs" role="tablist" aria-label="Kies oefening">
@@ -445,6 +445,20 @@
     </div>
   </div>
 
+    <!-- Error Modal -->
+  <div id="error-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="error-title">
+    <div class="modal">
+      <div class="modal-header" id="error-title">Fout in je code! </div>
+      <div class="modal-body">
+        <span class="pill" id="error-pill">Programma onderbroken. Mogelijks is er een oneindige lus!</span>
+        <div id="error-message" style="margin-top:8px;"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn primary" id="close-error">OK</button>
+      </div>
+    </div>
+  </div>
+  
   <!-- PDF Export Modal -->
   <div id="pdf-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
     <div class="modal" style="max-width:740px">
@@ -470,12 +484,12 @@
   </div>
 
   <script>
-    // ---------- Small helpers
+    // ---------- Kleine DOM-helper ----------
     const $ = id => document.getElementById(id);
     const urlQS = new URLSearchParams(location.search);
 
-    // NEW: simple loop protection to prevent tab hangs (RESULT_CODE_HUNG)
-    function loopProtect(src, maxIterations = 250000) {
+    // Eenvoudige loop-bescherming; maxIterations zetten we per modus
+    function loopProtect(src, maxIterations = 2000) {
       const stamp = `__lp_${Math.random().toString(36).slice(2)}`;
       const header =
         `let ${stamp}=0;` +
@@ -487,26 +501,26 @@
         .replace(/do\s*{/g, 'do{__lpCheck();');
     }
 
-    // CORS helper for textures (try same-origin first)
+    // CORS helper voor textures (probeer eerst same-origin)
     function isSameOrigin(url){
       try{
         const u = new URL(url, location.href);
         return u.origin === location.origin;
-      }catch(_){ return true; } // relative paths -> treat as same-origin
+      }catch(_){ return true; } // relatieve paden => als same-origin behandelen
     }
 
-    // Expose run/meta on window for ExportPDF
+    // Globale state voor export
     window.activeMode = 'maze1';
     window.lastRunCode = '';
 
-    // ---------- Theme
+    // ---------- Thema (forceer licht) ----------
     (function initTheme(){
       const root = document.documentElement;
-      root.setAttribute('data-theme','light');        // altijd licht
+      root.setAttribute('data-theme','light');
       try { localStorage.setItem('aik_theme','light'); } catch(_) {}
     })();
 
-    // ---------- Formularium / informatie
+    // ---------- Formularium / informatie ----------
     const formEl = $('formularium');
     const btnFormHideNow = $('btn-form-hide-now');
     localStorage.removeItem('aik_form_perm_hide');
@@ -539,7 +553,7 @@
       btnFormHideNow?.addEventListener('click', ()=> setFormVisible(false));
     });
 
-    // Color helpers
+    // Kleurkiezer (Turtle)
     const colorPicker = $('color-picker');
     const colorText = $('color-text');
     const colorApply = $('color-apply');
@@ -581,12 +595,11 @@
       return null;
     }
 
-    // ---------- Smart static analysis helpers (no fragile regex) ----------
+    // ---------- Statische analyse helpers ----------
     function stripStringsAndComments(src){
       let out = '', i = 0, n = src.length;
       while (i < n){
         const c = src[i], d = src[i+1];
-        // strings
         if (c === "'" || c === '"' || c === '`'){
           const q = c; out += ' '; i++;
           while (i < n){
@@ -598,9 +611,7 @@
           }
           continue;
         }
-        // //comment
         if (c === '/' && d === '/'){ out += '  '; i += 2; while (i < n && src[i] !== '\n'){ out += ' '; i++; } continue; }
-        // /* comment */
         if (c === '/' && d === '*'){ out += '  '; i += 2; while (i < n-1 && !(src[i] === '*' && src[i+1] === '/')){ out += (src[i] === '\n' ? '\n' : ' '); i++; } i += 2; continue; }
         out += c; i++;
       }
@@ -615,7 +626,7 @@
       return { line, col };
     }
 
-    // UPDATED: check '=' in both if(...) and while(...)
+    // Zoekt '=' in if/while-voorwaarden (waarschuw bij fout gebruik)
     function findSingleEqualsInIfOrWhile(clean){
       const hits = [];
       const n = clean.length; let i = 0;
@@ -656,11 +667,14 @@
     function levenshtein(a,b){
       a=String(a); b=String(b);
       const m=a.length,n=b.length; const dp=Array.from({length:m+1},()=>Array(n+1).fill(0));
-      for(let i=0;i<=m;i++) dp[i][0]=i; for(let j=0;j<=n;j++) dp[0][j]=j;
-      for(let i=1;i<=m;i++){ for(let j=1;j<=n;j++){
-        const cost=(a[i-1]===b[j-1])?0:1;
-        dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i][j-1]+cost);
-      }}
+      for(let i=0;i<=m;i++) dp[i][0]=i;
+      for(let j=0;j<=n;j++) dp[0][j]=j;
+      for(let i=1;i<=m;i++){
+        for(let j=1;j<=n;j++){
+          const cost=(a[i-1]===b[j-1])?0:1;
+          dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+        }
+      }
       return dp[m][n];
     }
     function closestAllowed(name, allowedArr){
@@ -672,7 +686,6 @@
       return (bestD<=3)?best:null;
     }
 
-    // UPDATED: include control-flow keywords; full student API
     function makeAllowedSet(mode){
       const base = new Set([
         'console','Math','Number','String','Boolean','Array','Object',
@@ -706,7 +719,7 @@
       return set;
     }
 
-    // UPDATED: skip JS keywords like if/while/for/switch/catch/function
+    // Detecteer onbekende functie-aanroepen; sla JS-sleutelwoorden over
     function detectUnknownCalls(source, mode){
       const clean = stripStringsAndComments(source);
       const declared = collectDeclaredNames(clean);
@@ -722,7 +735,7 @@
         while ((m = re.exec(lines[li]))){
           const name = m[1];
           const col = m.index + m[0].lastIndexOf(name) + 1;
-          if (KW.has(name)) continue; // control-flow, not a function
+          if (KW.has(name)) continue;
           if (!allowed.has(name) && !declared.has(name) && name !== 'function'){
             const suggestion = closestAllowed(name, Array.from(allowed));
             issues.push({
@@ -737,49 +750,67 @@
       return issues;
     }
 
-    // NEW: literal infinite-loop checks
+    // Detecteer letterlijke oneindige lussen (for(;;), while(true), while(1))
     function detectLiteralInfiniteLoops(clean){
       const hints = [];
       if (/\bfor\s*\(\s*;;\s*\)\s*{/.test(clean)) {
-        hints.push({ type:'infinite-loop', line:1, col:1,
-          message:"Oneindige lus ‘for(;;){...}’. Voeg een conditie en update toe of gebruik een teller." });
+        hints.push({
+          type:'infinite-loop',
+          line:1,
+          col:1,
+          message:"Oneindige lus ‘for(;;){...}’. Voeg een conditie en update toe of gebruik een teller."
+        });
       }
-      if (/\bwhile\s*$begin:math:text$\\s*true\\s*$end:math:text$\s*{/.test(clean)) {
-        hints.push({ type:'infinite-loop', line:1, col:1,
-          message:"Oneindige lus ‘while(true){...}’. Voeg een stopvoorwaarde toe." });
+      if (/\bwhile\s*$begin:math:text$\\s\*\(\?\:true\|1\)\\s\*$end:math:text$\s*{/.test(clean)) {
+        hints.push({
+          type:'infinite-loop',
+          line:1,
+          col:1,
+          message:"Oneindige lus ‘while(true){...}’. Voeg een stopvoorwaarde toe."
+        });
       }
       return hints;
     }
 
+    // Controleer for-header op typische fouten
     function detectForHeaderIssues(clean){
       const out = [];
-      const re = /for\s*$begin:math:text$([^)]*)$end:math:text$/g;
+      const re = /for\s*$begin:math:text$\(\[\^\)\]\*\)$end:math:text$/g;
       let m;
       while ((m = re.exec(clean))){
-        const header = m[1]; // init ; test ; update
+        const header = m[1];
         const parts = header.split(';');
         if (parts.length !== 3){
-          out.push({ type:'for-header', index:m.index,
-            message:"Ongeldige for-header. Gebruik ‘for (var i = 0; i < x; i++) { … }’." });
+          out.push({
+            type:'for-header',
+            index:m.index,
+            message:"Ongeldige for-header. Gebruik ‘for (var i = 0; i < x; i++) { … }’."
+          });
           continue;
         }
         const update = parts[2].trim();
         if (/\+\+\-|\-\-\+|\+\-\+|\-\+\-/.test(update)){
-          out.push({ type:'for-update-typo', index:m.index + header.indexOf(update),
-            message:"Typfout in de for-update. Bedoel je ‘i++)’ of ‘i--)’?" });
+          out.push({
+            type:'for-update-typo',
+            index:m.index + header.indexOf(update),
+            message:"Typfout in de for-update. Bedoel je ‘i++)’ of ‘i--)’?"
+          });
         }
         if (!update){
-          out.push({ type:'for-update-empty', index:m.index,
-            message:"De for-lus mist een update-deel (bv. ‘i++)’)." });
+          out.push({
+            type:'for-update-empty',
+            index:m.index,
+            message:"De for-lus mist een update-deel (bv. ‘i++)’)."
+          });
         }
       }
       return out;
     }
 
-    // FIXED: brace style after if/while (...) must be { ... }
+    // Dwing accolades af voor didactische duidelijkheid
     function detectBraceStyleForTeaching(clean){
       const out = [];
-      const re = /\b(if|while)\s*$begin:math:text$[^)]*$end:math:text$\s*(?!\{)/g;
+      const re = /\b(if|while)\s*$begin:math:text$\[\^\)\]\*$end:math:text$\s*(?!\{)/g;
       let m;
       while ((m = re.exec(clean))){
         out.push({
@@ -791,7 +822,7 @@
       return out;
     }
 
-    // FIXED: detect while(notDone) — missing parentheses call
+    // Specifieke check: while(notDone) i.p.v. while(notDone())
     function detectNotDoneCallIssues(clean){
       const out = [];
       const n = clean.length;
@@ -826,10 +857,11 @@
       return out;
     }
 
-    // UPDATED: call all checks
+    // Verzamel alle hints uit de statische analyses
     function detectCommonIssues(source, mode){
       const clean = stripStringsAndComments(source);
       const hints = [];
+
       hints.push(...detectUnknownCalls(source, mode));
       hints.push(...detectLiteralInfiniteLoops(clean));
 
@@ -860,7 +892,7 @@
       return hints;
     }
 
-    // ---------- Blockly helpers (support old & new)
+    // ---------- Blockly helpers ----------
     function _getJSGen(){
       const legacy = Blockly.JavaScript || null;
       const modern = Blockly.javascriptGenerator || null;
@@ -895,14 +927,13 @@
     const blocklyArea = $('blocklyArea'), blocklyDiv = $('blocklyDiv');
     const cliWrap = $('cli-wrap'), cliEditor = $('cli-editor'), cliConsole = $('cli-console');
 
-    // Turtle canvases
     const bgCanvas = $('turtle-bg');
     const drawCanvas = $('turtle-draw');
     const curCanvas = $('turtle-cur');
     let ctxBG, ctxDraw, ctxCur;
 
-    // Success modal
-    const overlay = $('success-overlay'), closeSuccess = $('close-success'), copySolution = $('copy-solution'), successCode = $('success-code'), successMsg = $('success-message');
+    const overlay = $('success-overlay'), closeSuccess = $('close-success'), successCode = $('success-code'), successMsg = $('success-message');
+    const copySolution = $('copy-solution'); // kan undefined zijn, wordt hieronder gecheckt
 
     let activeMode = 'maze1';
     let workspace;
@@ -929,7 +960,6 @@
     window.addEventListener('resize', fitBlockly);
 
     function registerBlocks(){
-      // Turtle
       if (!Blockly.Blocks['turtle_move_forward']) {
         Blockly.defineBlocksWithJsonArray([
           { type:'turtle_move_forward', message0:'ga vooruit %1', args0:[{type:'input_value',name:'DIST',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
@@ -945,7 +975,6 @@
           { type:'turtle_fit', message0:'pas tekening in beeld', previousStatement:null, nextStatement:null, colour:280 }
         ]);
       }
-      // Maze
       if (!Blockly.Blocks['maze_move_forward']) {
         Blockly.defineBlocksWithJsonArray([
           { type:'maze_move_forward', message0:'stap vooruit', previousStatement:null, nextStatement:null, colour:200 },
@@ -972,6 +1001,7 @@
       const code = J.valueToCode(b, name, ORDER) || String(fallback);
       return `(+(${code}))`;
     }
+
     function ensureTurtleGenerators(){
       _setGenStmt('turtle_move_forward', (b,g)=> { const d=_numArg(g,b,'DIST',0); return `moveForward(${d});\n`; });
       _setGenStmt('turtle_move_backward',(b,g)=> { const d=_numArg(g,b,'DIST',0); return `moveBackward(${d});\n`; });
@@ -995,6 +1025,7 @@
       });
       _setGenStmt('turtle_fit',       ()=> `if (typeof fitToDrawing==='function') fitToDrawing();\n`);
     }
+
     function ensureMazeGenerators(){
       const ORDER_CALL = (Blockly.JavaScript && Blockly.JavaScript.ORDER_FUNCTION_CALL) || 0;
       _setGenStmt('maze_move_forward', ()=> `moveForward();\n`);
@@ -1067,7 +1098,6 @@
           applyMaxBlocks();
         }
 
-        // Bind dropdown changes for both Maze (Blokken) and Maze (Code)
         if (levelSel1) levelSel1.addEventListener('change', () => setMazeLevel(levelSel1.value));
         if (levelSel2) levelSel2.addEventListener('change', () => setMazeLevel(levelSel2.value));
 
@@ -1110,8 +1140,6 @@
     // ─────────────────────────────────────────────
     const mctx = mazeCanvas.getContext('2d');
 
-    // Allow optional hard-embedded data-URIs:
-    // window.AIK_EMBEDDED_ASSETS = { tiles:'data:image/png;base64,...', sprite:'data:...', marker:'data:...' }
     const SKIN = {
       tiles: 'assets/tiles_pegman.png',
       sprite: 'assets/pegman.png',
@@ -1127,10 +1155,8 @@
       if (EMBED.marker) SKIN.marker = EMBED.marker;
     })();
 
-    // Only inline textures on http(s) to avoid file:// CORS errors.
     const INLINE_TEXTURES_FOR_PDF = /^https?:$/.test(location.protocol);
 
-    // Fetch same-origin http(s) resource as data URI
     async function fetchAsDataURI(url){
       try{
         const u = new URL(url, location.href);
@@ -1153,12 +1179,10 @@
     let ASSETS_READY = false;
 
     async function loadAssets(){
-      // Reset images
       IMG.tiles  = new Image();
       IMG.sprite = new Image();
       IMG.marker = new Image();
 
-      // Apply crossOrigin only when loading from another origin (inline/data-URIs don't need it)
       [ [IMG.tiles,  SKIN.tiles],
         [IMG.sprite, SKIN.sprite],
         [IMG.marker, SKIN.marker]
@@ -1166,7 +1190,6 @@
         if (!/^data:/.test(src) && !isSameOrigin(src)) img.crossOrigin = 'anonymous';
       });
 
-      // Try to inline textures on http(s) for clean PDF canvas snapshots
       let tilesSrc  = INLINE_TEXTURES_FOR_PDF ? (await fetchAsDataURI(SKIN.tiles))  : null;
       let spriteSrc = INLINE_TEXTURES_FOR_PDF ? (await fetchAsDataURI(SKIN.sprite)) : null;
       let markerSrc = INLINE_TEXTURES_FOR_PDF ? (await fetchAsDataURI(SKIN.marker)) : null;
@@ -1196,8 +1219,6 @@
       'null0':[4,3], 'null1':[3,0], 'null2':[3,1], 'null3':[0,3], 'null4':[1,3],
     };
 
-    // ---- Pegman pose mapping (16 orientation frames within a 21-frame sheet)
-    // dir: 0=E, 1=N, 2=W, 3=S  → base pose indices (0-based) [E,N,W,S] => [4,0,12,8]
     const ORIENT_TOTAL = 16;
     const DIR_TO_BASE_POSE = [4, 0, 12, 8];
 
@@ -1274,7 +1295,6 @@
       return {x:1,y:1};
     }
 
-    // Include pose index in state
     const mazeState = { x:1, y:1, dir:0, pose: DIR_TO_BASE_POSE[0] };
     function degForDir(dir){ return [0, -90, 180, 90][dir] || 0; }
 
@@ -1295,7 +1315,6 @@
       ctx.clearRect(0,0,mazeCanvas.width,mazeCanvas.height);
       ctx.restore();
 
-      // Fallback when assets not ready: simple rotated arrow
       if (!ASSETS_READY) {
         for(let y=0;y<rows;y++){
           for(let x=0;x<cols;x++){
@@ -1332,7 +1351,6 @@
       };
       const norm = (x,y)=> (x<0||x>=cols||y<0||y>=rows) ? '0' : (isOpenCell(x,y) ? '1' : '0');
 
-      // Tiles
       for(let y=0;y<rows;y++){
         for(let x=0;x<cols;x++){
           let key = norm(x,y) + norm(x,y-1) + norm(x+1,y) + norm(x,y+1) + norm(x-1,y);
@@ -1342,7 +1360,6 @@
         }
       }
 
-      // Marker
       for(let y=0;y<rows;y++){
         for(let x=0;x<cols;x++){
           if (level.grid[y][x] === 'G'){
@@ -1355,7 +1372,6 @@
         }
       }
 
-      // Pegman via pose frame (no canvas rotation)
       const pegW = Math.round(frameW * pegScale);
       const pegH = Math.round(frameH * pegScale);
       const px = offX + state.x*c + Math.floor(c/2);
@@ -1383,8 +1399,16 @@
       drawMaze(mazeState);
     }
 
+    // Maximale hoeveelheid frames in de animatie voor Maze (beperkt oneindige lussen)
+    const MAX_MAZE_FRAMES = 5000;
+
     let frames = []; let timer = null; let frameIdx = 0;
-    function pushFrame(){ frames.push({ x:mazeState.x, y:mazeState.y, dir:mazeState.dir, pose: mazeState.pose }); }
+    function pushFrame(){
+      if (frames.length >= MAX_MAZE_FRAMES) {
+        throw new Error('Je programma produceert te veel stappen (mogelijk oneindige lus in Maze).');
+      }
+      frames.push({ x:mazeState.x, y:mazeState.y, dir:mazeState.dir, pose: mazeState.pose });
+    }
     function stopPlayback(){ frames = []; frameIdx = 0; if (timer){ clearTimeout(timer); timer = null; } }
 
     function sliderDelay(input){
@@ -1413,20 +1437,24 @@
       const f = frames[frameIdx++];
       drawMaze(f);
 
-      // faster tween when turning
       const isTurnTween = typeof f.ang === 'number';
       const delay = isTurnTween ? Math.max(10, currentSpeed() * 0.4) : currentSpeed();
 
       timer = setTimeout(playNext, delay);
     }
 
+    // Beveiliging op totaal aantal stappen studentencode (Maze + Turtle)
     let stepCount = 0;
     const MAX_STEPS = 4000;
-    function _tick(){ stepCount++; if (stepCount > MAX_STEPS) { throw new Error('Je programma loopt te lang (mogelijk oneindige lus).'); } }
+    function _tick(){
+      stepCount++;
+      if (stepCount > MAX_STEPS) {
+        throw new Error('Je programma loopt te lang (mogelijk oneindige lus).');
+      }
+    }
 
     let lastFailAt = 0;
 
-    // Pose tween for quarter turns: 4 intermediate frames per turn.
     function tweenTurn(kind){
       const step = (kind === 'R') ? +1 : -1;
       for (let i=0; i<4; i++){
@@ -1435,38 +1463,76 @@
       }
     }
 
-    window.mazeMoveForward = function () {
-      _tick();
-      const {dx,dy}=frontDelta(mazeState.dir);
-      const nx=mazeState.x+dx, ny=mazeState.y+dy;
-      if (isOpen(nx,ny)) { mazeState.x = nx; mazeState.y = ny; }
-      else { const now = performance.now(); if (now - lastFailAt > 150) { try{ SND.fail.currentTime=0; SND.fail.play(); }catch(_){} lastFailAt = now; } }
-      pushFrame();
-    };
-    window.mazeTurnLeft  = function(){
-      _tick();
-      mazeState.dir = (mazeState.dir+1)%4;
-      tweenTurn('L'); pushFrame();
-    };
-    window.mazeTurnRight = function(){
-      _tick();
-      mazeState.dir = (mazeState.dir+3)%4;
-      tweenTurn('R'); pushFrame();
-    };
-    window.mazePathAhead = function(){ const {dx,dy}=frontDelta(mazeState.dir); return isOpen(mazeState.x+dx, mazeState.y+dy); };
-    window.mazePathLeft  = function(){ const {dx,dy}=leftDelta(mazeState.dir);  return isOpen(mazeState.x+dx, mazeState.y+dy); };
-    window.mazePathRight = function(){ const {dx,dy}=rightDelta(mazeState.dir); return isOpen(mazeState.x+dx, mazeState.y+dy); };
-    window.mazeAtGoal    = function(){ return level.grid[mazeState.y][mazeState.x]==='G'; };
+    // Maze acties met stap-teller om oneindige lussen te detecteren
+window.mazeMoveForward = function () {
+  _tick(); // elke verplaatsing telt als stap
+  const {dx,dy}=frontDelta(mazeState.dir);
+  const nx=mazeState.x+dx, ny=mazeState.y+dy;
+  if (isOpen(nx,ny)) {
+    mazeState.x = nx; 
+    mazeState.y = ny;
+  } else {
+    const now = performance.now();
+    if (now - lastFailAt > 150) {
+      try {
+        SND.fail.currentTime = 0;
+        SND.fail.play();
+      } catch(_) {}
+      lastFailAt = now;
+    }
+  }
+  pushFrame();
+};
 
-    // CLI & Blocks-friendly aliases
-    window.moveForward = window.mazeMoveForward;
-    window.turnLeft    = window.mazeTurnLeft;
-    window.turnRight   = window.mazeTurnRight;
-    window.isPathAhead   = window.mazePathAhead;
-    window.isPathLeft    = window.mazePathLeft;
-    window.isPathRight   = window.mazePathRight;
-    window.atGoal      = window.mazeAtGoal;
-    window.notDone     = function(){ return !window.mazeAtGoal(); };
+window.mazeTurnLeft  = function(){
+  _tick(); // draaien telt ook als stap
+  mazeState.dir = (mazeState.dir+1)%4;
+  tweenTurn('L');
+  pushFrame();
+};
+
+window.mazeTurnRight = function(){
+  _tick(); // idem
+  mazeState.dir = (mazeState.dir+3)%4;
+  tweenTurn('R');
+  pushFrame();
+};
+
+// Maze-queries tellen nu óók stappen, zodat while(notDone())-lussen afgebroken worden
+window.mazePathAhead = function(){
+  _tick(); // check naar voren telt als stap
+  const {dx,dy}=frontDelta(mazeState.dir);
+  return isOpen(mazeState.x+dx, mazeState.y+dy);
+};
+window.mazePathLeft  = function(){
+  _tick(); // check links
+  const {dx,dy}=leftDelta(mazeState.dir);
+  return isOpen(mazeState.x+dx, mazeState.y+dy);
+};
+window.mazePathRight = function(){
+  _tick(); // check rechts
+  const {dx,dy}=rightDelta(mazeState.dir);
+  return isOpen(mazeState.x+dx, mazeState.y+dy);
+};
+window.mazeAtGoal    = function(){
+  _tick(); // ook doel-check telt, voor lussen die alleen notDone()/atGoal gebruiken
+  return level.grid[mazeState.y][mazeState.x]==='G';
+};
+
+// CLI & Blocks-vriendelijke aliassen
+window.moveForward  = window.mazeMoveForward;
+window.turnLeft     = window.mazeTurnLeft;
+window.turnRight    = window.mazeTurnRight;
+window.isPathAhead  = window.mazePathAhead;
+window.isPathLeft   = window.mazePathLeft;
+window.isPathRight  = window.mazePathRight;
+window.atGoal       = window.mazeAtGoal;
+
+// notDone gebruikt nu de teller via mazeAtGoal()
+window.notDone = function(){
+  // Let op: mazeAtGoal() roept _tick() al aan
+  return !window.mazeAtGoal();
+};
 
     $('run-maze1').addEventListener('click', ()=>{
       const J = Blockly.JavaScript || Blockly.javascriptGenerator;
@@ -1477,15 +1543,21 @@
       stopPlayback(); mazeReset(); frames = []; pushFrame();
       stepCount = 0;
       try{
-        const protectedCode = loopProtect(code);
+        // Strakkere limiet voor Maze (Blokken)
+        const protectedCode = loopProtect(code, 20000);
         const run = new Function(
           'moveForward','turnLeft','turnRight','isPathAhead','isPathLeft','isPathRight','notDone','atGoal',
           protectedCode
         );
         run(moveForward, turnLeft, turnRight, isPathAhead, isPathLeft, isPathRight, notDone, atGoal);
-      }catch(e){
+            }catch(e){
         console.error(e);
-        alert('Fout in je blokken-code: ' + e.message);
+        const baseMsg = (e && e.message) ? String(e.message) : 'Onbekende fout in je blokken-code.';
+        const isLoopError = baseMsg.toLowerCase().includes('oneindige lus') || baseMsg.toLowerCase().includes('loopt te lang');
+        const finalMsg = isLoopError
+          ? 'Je programma loopt te lang (mogelijk oneindige lus). Controleer je while/for-lussen.'
+          : 'Fout in je blokken-code: ' + baseMsg;
+        showErrorModal(finalMsg, isLoopError ? 'Mogelijk oneindige lus' : 'Fout in code');
         return;
       }
       frameIdx = 0; playNext();
@@ -1528,13 +1600,11 @@
     }
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
-    // --------- Maze (Code) with smart pre-run hints ----------
     $('run-maze2').addEventListener('click', ()=>{
       const code = String(cliEditor.value || '');
       consoleClear();
       if (!code.trim()){ consolePrint('Geen code gevonden. Typ eerst je instructies.', 'log-warn'); return; }
 
-      // Smart static checks BEFORE running
       const hints = detectCommonIssues(code, window.activeMode);
       if (hints.length){
         for (const h of hints){
@@ -1558,7 +1628,6 @@
       const mf = ()=> mazeMoveForward();
       const tl = ()=> mazeTurnLeft();
       const tr = ()=> mazeTurnRight();
-      // UPDATED: correct engine bindings
       const pa = ()=> mazePathAhead();
       const pl = ()=> mazePathLeft();
       const pr = ()=> mazePathRight();
@@ -1566,7 +1635,8 @@
       const nd = ()=> !mazeAtGoal();
 
       try{
-        const protectedCode = loopProtect(code);
+        // Strakkere limiet voor Maze (Code)
+        const protectedCode = loopProtect(code, 20000);
         const run = new Function(
           'moveForward','turnLeft','turnRight','isPathAhead','isPathLeft','isPathRight','notDone','atGoal',
           'mazeMoveForward','mazeTurnLeft','mazeTurnRight','mazePathAhead','mazePathLeft','mazePathRight','mazeAtGoal',
@@ -1576,32 +1646,48 @@
         run(mf, tl, tr, pa, pl, pr, nd, ag,
             mazeMoveForward, mazeTurnLeft, mazeTurnRight, mazePathAhead, mazePathLeft, mazePathRight, mazeAtGoal,
             studentConsole);
-      }catch(e){
+            }catch(e){
         console.error(e);
         const info = parseError(e);
+        const msg  = (info && info.message) ? info.message : (e && e.message) ? String(e.message) : 'Onbekende fout';
+        const lower = msg.toLowerCase();
+        const isLoopError = lower.includes('oneindige lus') || lower.includes('loopt te lang');
+
+        if (isLoopError) {
+          const finalMsg = 'Je programma loopt te lang (mogelijk oneindige lus). Controleer je while/for-lussen en zorg dat de conditie ooit onwaar wordt.';
+          consolePrint(finalMsg, 'log-error');
+          showErrorModal(finalMsg, 'Mogelijk oneindige lus');
+          return;
+        }
+
         const undef = (e && (String(e.message).match(/(?:is not defined|Can't find variable):?\s*([A-Za-z_]\w*)/)));
         if (undef){
           const name = undef[1];
           const allowed = Array.from(makeAllowedSet(window.activeMode));
           const suggestion = closestAllowed(name, allowed);
-          consolePrint(`Onbekende naam ‘${name}’. ${suggestion ? `Bedoel je ‘${suggestion}()’ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`, 'log-error');
+          consolePrint(
+            `Onbekende naam ‘${name}’. ${suggestion ? `Bedoel je ‘${suggestion}()’ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
+            'log-error'
+          );
         } else {
           if (info.line){
-            consolePrint(`Fout op regel ${info.line}${info.col?`, kolom ${info.col}`:''}: ${info.message}`, 'log-error');
+            consolePrint(`Fout op regel ${info.line}${info.col?`, kolom ${info.col}`:''}: ${msg}`, 'log-error');
             const frameHTML = showCodeFrame(code, info.line, info.col);
             const div = document.createElement('div');
             div.innerHTML = frameHTML;
             cliConsole.appendChild(div.firstChild);
-          }else{
-            consolePrint(`Fout: ${info.message}`, 'log-error');
+          } else {
+            consolePrint(`Fout: ${msg}`, 'log-error');
           }
         }
+
+        // Toon ook een modal bij overige fouten, maar met algemene tekst
+        showErrorModal('Er is een fout opgetreden in je Maze-code. Bekijk de console voor details.', 'Fout in Maze-code');
         return;
       }
       frameIdx = 0; playNext();
     });
 
-    // TURTLE — grid + outlines + drawing
     const TURTLE = {
       x:0, y:0, ang:0, penDown:true, show:true,
       color:'#5200FF', width:2,
@@ -1804,7 +1890,9 @@
       STROKES.push({ x1, y1, x2, y2, width: TURTLE.width, color: TURTLE.color });
     }
 
+    // Turtle-kern met _tick() zodat ook daar het staplimiet geldt
     function turtleMove(dist){
+      _tick();
       const rad = TURTLE.ang * Math.PI/180;
       const nx = TURTLE.x + dist * Math.cos(rad);
       const ny = TURTLE.y + dist * Math.sin(rad);
@@ -1815,10 +1903,12 @@
       drawCursorOnly();
     }
     function turtleTurn(deg){
+      _tick();
       TURTLE.ang = ((TURTLE.ang + deg) % 360 + 360) % 360;
       drawCursorOnly();
     }
     function turtleGoTo(x,y){
+      _tick();
       if (TURTLE.penDown){ strokeTo(x,y); }
       TURTLE.x=x; TURTLE.y=y;
       TURTLE.minX = Math.min(TURTLE.minX, x); TURTLE.maxX = Math.max(TURTLE.maxX, x);
@@ -1826,6 +1916,7 @@
       drawCursorOnly();
     }
     function turtleText(txt){
+      _tick();
       const {X,Y} = worldToCanvas(TURTLE.x, TURTLE.y);
       ctxDraw.save();
       ctxDraw.translate(X,Y);
@@ -1957,10 +2048,19 @@
       drawCursorOnly();
     }
 
+    // Maximale aantal Turtle-tekeningenstappen tijdens opname
+    const MAX_TURTLE_STEPS = 5000;
+
     const TREC = { recording:false, steps:[], timer:null, idx:0 };
 
     function enqueueStep(fn){
-      if (TREC.recording) { TREC.steps.push(fn); return; }
+      if (TREC.recording) {
+        if (TREC.steps.length >= MAX_TURTLE_STEPS) {
+          throw new Error('Je programma tekent te veel stappen (mogelijk oneindige lus in Turtle).');
+        }
+        TREC.steps.push(fn);
+        return;
+      }
       fn();
     }
     function turtlePlay(done){
@@ -1975,16 +2075,14 @@
     }
     function turtleStop(){ if (TREC.timer){ clearTimeout(TREC.timer); TREC.timer=null; } TREC.steps=[]; TREC.idx=0; }
 
-    // Helpers
     function isMazeMode(){ return activeMode === 'maze1' || activeMode === 'maze2'; }
 
-    // Unified API that routes by mode
     window.moveForward = function(d){
       if (isMazeMode()) return window.mazeMoveForward();
       return enqueueStep(()=> turtleMove(+d||0));
     };
     window.moveBackward = function(d){
-      if (isMazeMode()) return; // Maze: no backward
+      if (isMazeMode()) return;
       return enqueueStep(()=> turtleMove(-(+d||0)));
     };
     window.turnLeft = function(a){
@@ -2031,7 +2129,8 @@
       TREC.steps = [];
       TREC.recording = true;
       try{
-        const protectedCode = loopProtect(code);
+        // Iets hogere limiet voor Turtle-tekeningen
+        const protectedCode = loopProtect(code, 50000);
         const run = new Function(
           'moveForward','moveBackward','turnLeft','turnRight','penUp','penDown',
           'setPenColour','setLineWidth','goTo','writeText','fitToDrawing',
@@ -2066,7 +2165,6 @@
         return;
       }
 
-      // Smart static checks BEFORE running
       const hints = detectCommonIssues(code, window.activeMode);
       if (hints.length){
         for (const h of hints){
@@ -2092,7 +2190,8 @@
       TREC.steps = [];
       TREC.recording = true;
       try{
-        const protectedCode = loopProtect(code);
+        // Iets hogere limiet voor Turtle-code
+        const protectedCode = loopProtect(code, 50000);
         const run = new Function(
           'moveForward','moveBackward','turnLeft','turnRight','penUp','penDown',
           'setPenColour','setLineWidth','goTo','writeText','fitToDrawing','console',
@@ -2101,19 +2200,35 @@
         run(moveForward, moveBackward, turnLeft, turnRight, penUp, penDown,
             setPenColour, setLineWidth, goTo, writeText, (typeof fitToDrawing==='function'?fitToDrawing:()=>{}),
             studentConsole);
-      }catch(e){
+            }catch(e){
         TREC.recording = false;
         const info = parseError(e);
+        const msg  = (info && info.message) ? info.message : (e && e.message) ? String(e.message) : 'Onbekende fout';
+        const lower = msg.toLowerCase();
+        const isLoopError = lower.includes('oneindige lus') || lower.includes('loopt te lang');
+
+        if (isLoopError) {
+          const finalMsg = 'Je programma loopt te lang (mogelijk oneindige lus). Controleer je while/for-lussen en zorg dat de conditie ooit onwaar wordt.';
+          consolePrint(finalMsg, 'log-error');
+          showErrorModal(finalMsg, 'Mogelijk oneindige lus');
+          return;
+        }
+
         const undef = (e && (String(e.message).match(/(?:is not defined|Can't find variable):?\s*([A-Za-z_]\w*)/)));
         if (undef){
           const name = undef[1];
           const allowed = Array.from(makeAllowedSet(window.activeMode));
           const suggestion = closestAllowed(name, allowed);
-          consolePrint(`Onbekende naam ‘${name}’. ${suggestion ? `Bedoel je ‘${suggestion}()’ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`, 'log-error');
+          consolePrint(
+            `Onbekende naam ‘${name}’. ${suggestion ? `Bedoel je ‘${suggestion}()’ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
+            'log-error'
+          );
         } else {
           const hdr = document.createElement('div');
           hdr.className='log-line log-error';
-          hdr.textContent = info.line ? `Fout op regel ${info.line}${info.col?`, kolom ${info.col}`:''}: ${info.message}` : `Fout: ${info.message}`;
+          hdr.textContent = info.line
+            ? `Fout op regel ${info.line}${info.col?`, kolom ${info.col}`:''}: ${msg}`
+            : `Fout: ${msg}`;
           cliConsole.appendChild(hdr);
           if (info.line){
             const frameHTML = showCodeFrame(code, info.line, info.col);
@@ -2121,6 +2236,8 @@
             cliConsole.appendChild(cont.firstChild);
           }
         }
+
+        showErrorModal('Er is een fout opgetreden in je Turtle-code. Bekijk de console voor details.', 'Fout in Turtle-code');
         return;
       }
       TREC.recording = false;
@@ -2131,7 +2248,7 @@
       });
     });
 
-    $('fit-turtle').addEventListener('click', ()=> { /* optional future fit */ });
+    $('fit-turtle').addEventListener('click', ()=> { /* optioneel later invullen */ });
 
     turtleLevelSel.addEventListener('change', ()=>{
       redrawTurtleBackground();
@@ -2202,8 +2319,44 @@
     tabTurtle1.addEventListener('click', ()=> setMode('turtle_blocks'));
     tabTurtle2.addEventListener('click', ()=> setMode('turtle_cli'));
 
-    // ---------------- Success Modal + auto-advance ----------------
     let justCompleted = false;
+    
+        // ---------------- Error Modal (voor runtime fouten en oneindige lussen) ----------------
+    const errorOverlay   = $('error-overlay');
+    const errorMessageEl = $('error-message');
+    const errorPill      = $('error-pill');
+    const closeErrorBtn  = $('close-error');
+
+    // Toon fout in een eigen modal (SEB-proof, geen window.alert)
+    function showErrorModal(message, pillText) {
+      if (!errorOverlay || !errorMessageEl) return;
+      errorMessageEl.textContent = message || 'Onbekende fout in je code.';
+      if (errorPill && pillText) {
+        errorPill.textContent = pillText;
+      } else if (errorPill) {
+        errorPill.textContent = 'Programma onderbroken';
+      }
+      document.body.classList.add('modal-open');
+      errorOverlay.classList.remove('hidden');
+    }
+
+    function closeErrorModal() {
+      if (!errorOverlay) return;
+      errorOverlay.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    }
+
+    if (closeErrorBtn) {
+      closeErrorBtn.addEventListener('click', closeErrorModal);
+    }
+    if (errorOverlay) {
+      errorOverlay.addEventListener('click', (e) => {
+        if (e.target === errorOverlay) {
+          closeErrorModal();
+        }
+      });
+    }
+    
     function showSuccessModal(msg){
       justCompleted = true;
       successMsg.textContent = msg || 'Je hebt het level voltooid.';
@@ -2216,7 +2369,7 @@
     if (exportPdfSuccess){
       exportPdfSuccess.addEventListener('click', () => {
         if (window.ExportPDF && typeof ExportPDF.openModal === 'function'){
-          ExportPDF.openModal();   // laat succes-overlay open, PDF-modal komt erboven
+          ExportPDF.openModal();
         } else {
           alert('PDF-export is nog niet geladen. Probeer even later opnieuw.');
         }
@@ -2256,7 +2409,7 @@
           await navigator.clipboard.writeText(successCode.textContent || '');
           copySolution.textContent = 'Gekopieerd!';
           setTimeout(()=> copySolution.textContent = 'Kopieer code', 1200);
-        }catch(_){ /* ignore */ }
+        }catch(_){}
       });
     }
 
@@ -2271,7 +2424,6 @@
       return null;
     }
 
-    // ------- Editor snapshot via html2canvas ------
     async function getEditorSnapshotPNG(){
       if (typeof html2canvas !== 'function') return null;
 
@@ -2306,7 +2458,6 @@
       if (!region || region.width < 10 || region.height < 10) return null;
 
       const pad = 12;
-      // LOWER scale cap to avoid OOM on export
       const scale = Math.min(1.2, Math.max(1, (window.devicePixelRatio || 1)));
 
       const full = await html2canvas(document.body, {
@@ -2332,7 +2483,6 @@
       return crop.toDataURL('image/png');
     }
 
-    // ---- Helpers for PDF snapshots (Maze/Turtle) ----
     window.renderMazePlainPNGAtCurrentSize = function(){
       const cvs = document.getElementById('mazeCanvas');
       if (!cvs) return null;
@@ -2489,7 +2639,7 @@
   </script>
 
   <script>
-  // ======= ExportPDF (updated: robust + removed unused codeText) =======
+  // ======= ExportPDF (NL) =======
   window.ExportPDF = (function () {
     const COLOR_PURPLE = [82, 0, 255];
     let opts = {
@@ -2568,7 +2718,6 @@
       const metaTitle = `${chapter} — Level ${level} — ${naam}`;
       if (pdf.setProperties) pdf.setProperties({ title: metaTitle, author: 'AI in de Klas' });
 
-      // Kop
       pdf.setTextColor(...COLOR_PURPLE);
       pdf.setFont('helvetica','bold'); pdf.setFontSize(18);
       pdf.text('Oefening Blockly', margin(), ExportPDF._cursorY); ExportPDF._cursorY += 28;
@@ -2579,7 +2728,6 @@
       pdf.text(`Klas: ${klas}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 18;
       pdf.text(`Oefening: ${chapter} — Level ${level}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 24;
 
-      // Opdracht (optioneel)
       if (opdracht) {
         const lines = pdf.splitTextToSize(opdracht, contentW);
         const setBody = () => { pdf.setFont('helvetica','normal'); pdf.setFontSize(12); };
@@ -2598,7 +2746,6 @@
         ExportPDF._cursorY += 8;
       }
 
-      // Editor snapshot
       if (editorPNG){
         const img = new Image();
         await new Promise(res=>{ img.onload = res; img.onerror = res; img.src = editorPNG; });
@@ -2615,7 +2762,6 @@
         ExportPDF._cursorY += h + 16;
       }
 
-      // Oefeningen snapshot
       {
         let oefSnapshotData = null;
 
@@ -2648,7 +2794,6 @@
         }
       }
 
-      // Code (alleen voor Maze Code / Turtle Code)
       if (codeForPdf) {
         const lines = pdf.splitTextToSize(codeForPdf, contentW);
         const setCode = () => { pdf.setFont('courier','normal');  pdf.setFontSize(10); };
@@ -2667,7 +2812,6 @@
         ExportPDF._cursorY += 10;
       }
 
-      // Status / meta
       {
         pdf.setTextColor(...COLOR_PURPLE);
         pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
@@ -2681,42 +2825,11 @@
         pdf.text(`Tijd besteed: ${formatDuur(0)}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 20;
       }
 
-      // Rubric
       drawRubric(pdf, opts.rubric);
 
-      // Filename
       const {chapter: chName} = getChapterInfo();
       const fname = `${sanitize(naam)}-${sanitize(klas)}-${sanitize(chName)}-Level_${String(level).padStart(2,'0')}.pdf`;
       pdf.save(fname);
-    }
-
-    function addMultilineSection(pdf, label, textArr, color=COLOR_PURPLE, options={code:false}) {
-      const setBody = () => { pdf.setFont('helvetica','normal'); pdf.setFontSize(12); };
-      const setCode = () => { pdf.setFont('courier','normal');  pdf.setFontSize(10); };
-      const setLabel= () => { pdf.setFont('helvetica','bold');  pdf.setFontSize(13); };
-
-      let y = ExportPDF._cursorY;
-      const lineH = options.code ? 13 : 14;
-
-      ensureSpace(pdf, 20);
-      pdf.setTextColor(...color); setLabel();
-      pdf.text(label, margin(), y); y += 16;
-
-      options.code ? setCode() : setBody();
-      pdf.setTextColor(0,0,0);
-
-      let i = 0;
-      while (i < textArr.length) {
-        const spaceLeft = pageH(pdf) - y - margin();
-        const linesFit  = Math.max(1, Math.floor(spaceLeft / lineH));
-        const linesThis = textArr.slice(i, i + linesFit);
-        pdf.text(linesThis, margin(), y);
-        y += linesThis.length * lineH;
-        i += linesThis.length;
-        if (i < textArr.length) { pdf.addPage(); y = margin(); }
-      }
-      y += 10;
-      ExportPDF._cursorY = y;
     }
 
     function drawRubric(pdf, config){
@@ -2864,7 +2977,7 @@
 
   <button id="fab-help" class="fab-help" aria-label="Toon formularium" aria-pressed="false">?</button>
 
-  
+  <!-- Oud overlay-sjabloon (nu ongebruikt, maar laten staan voor compatibiliteit) -->
   <div id="pdf-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
     <div class="modal">
       <div class="modal-header">⤓ <span id="pdf-title">Exporteren naar PDF</span></div>
