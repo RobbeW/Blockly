@@ -325,7 +325,10 @@
           <input id="color-text" type="text" class="btn" style="width:180px" value="#5200FF" spellcheck="false" title="HEX of CSS kleur">
           <button id="color-apply" class="btn">Zet penkleur</button>
         </div>
-        <div class="cap">Werkt in Turtle-modus. Je kunt ook <code>setPenColour(...)</code> gebruiken.</div>
+        <div class="cap">
+  Werkt in Turtle-modus. In code kun je bijvoorbeeld
+  <code>setPenColour('#5200FF')</code> gebruiken.
+</div>
       </div>
 
       <div class="form-card">
@@ -970,9 +973,24 @@
           { type:'turtle_pen_up', message0:'pen omhoog', previousStatement:null, nextStatement:null, colour:280 },
           { type:'turtle_pen_down', message0:'pen omlaag', previousStatement:null, nextStatement:null, colour:280 },
           { type:'turtle_set_width', message0:'zet lijndikte %1', args0:[{type:'input_value',name:'W',check:'Number'}], previousStatement:null, nextStatement:null, colour:280 },
-          { type:'turtle_set_color', message0:'zet kleur R %1 G %2 B %3', args0:[{type:'input_value',name:'R',check:'Number'},{type:'input_value',name:'G',check:'Number'},{type:'input_value',name:'B',check:'Number'}], previousStatement:null, nextStatement:null, colour:280 },
-          { type:'turtle_write_text', message0:'schrijf tekst %1', args0:[{type:'input_value',name:'TXT',check:'String'}], previousStatement:null, nextStatement:null, colour:280 },
-          { type:'turtle_fit', message0:'pas tekening in beeld', previousStatement:null, nextStatement:null, colour:280 }
+          { type:'turtle_set_color',
+  message0:'zet penkleur R %1 G %2 B %3',
+  args0:[
+    { type:'input_value', name:'R', check:'Number' },
+    { type:'input_value', name:'G', check:'Number' },
+    { type:'input_value', name:'B', check:'Number' }
+  ],
+  previousStatement:null,
+  nextStatement:null,
+  colour:280
+},
+
+    { type:'turtle_write_text', message0:'schrijf tekst %1',
+      args0:[{type:'input_value',name:'TXT',check:'String'}],
+      previousStatement:null, nextStatement:null, colour:280 },
+
+    { type:'turtle_fit', message0:'pas tekening in beeld',
+      previousStatement:null, nextStatement:null, colour:280 }
         ]);
       }
       if (!Blockly.Blocks['maze_move_forward']) {
@@ -1002,29 +1020,43 @@
       return `(+(${code}))`;
     }
 
-    function ensureTurtleGenerators(){
-      _setGenStmt('turtle_move_forward', (b,g)=> { const d=_numArg(g,b,'DIST',0); return `moveForward(${d});\n`; });
-      _setGenStmt('turtle_move_backward',(b,g)=> { const d=_numArg(g,b,'DIST',0); return `moveBackward(${d});\n`; });
-      _setGenStmt('turtle_turn_left',    (b,g)=> { const a=_numArg(g,b,'ANGLE',0); return `turnLeft(${a});\n`; });
-      _setGenStmt('turtle_turn_right',   (b,g)=> { const a=_numArg(g,b,'ANGLE',0); return `turnRight(${a});\n`; });
-      _setGenStmt('turtle_goto',         (b,g)=> {
-        const x=_numArg(g,b,'X',0), y=_numArg(g,b,'Y',0);
-        return `goTo(${x}, ${y});\n`;
-      });
-      _setGenStmt('turtle_pen_up',   ()=> `penUp();\n`);
-      _setGenStmt('turtle_pen_down', ()=> `penDown();\n`);
-      _setGenStmt('turtle_set_width',(b,g)=> { const w=_numArg(g,b,'W',1); return `setLineWidth(${w});\n`; });
-      _setGenStmt('turtle_set_color',(b,g)=> {
-        const r=_numArg(g,b,'R',0), gg=_numArg(g,b,'G',0), bb=_numArg(g,b,'B',0);
-        return `setPenColour(${r}, ${gg}, ${bb});\n`;
-      });
-      _setGenStmt('turtle_write_text', (b,g)=> {
-        const J=g||Blockly.JavaScript, ORDER=(Blockly.JavaScript && Blockly.JavaScript.ORDER_ATOMIC) || 0;
-        const txt = J.valueToCode(b,'TXT',ORDER) || '""';
-        return `writeText(${txt});\n`;
-      });
-      _setGenStmt('turtle_fit',       ()=> `if (typeof fitToDrawing==='function') fitToDrawing();\n`);
-    }
+function ensureTurtleGenerators(){
+  _setGenStmt('turtle_move_forward', (b,g)=> { const d=_numArg(g,b,'DIST',0); return `moveForward(${d});\n`; });
+  _setGenStmt('turtle_move_backward',(b,g)=> { const d=_numArg(g,b,'DIST',0); return `moveBackward(${d});\n`; });
+  _setGenStmt('turtle_turn_left',    (b,g)=> { const a=_numArg(g,b,'ANGLE',0); return `turnLeft(${a});\n`; });
+  _setGenStmt('turtle_turn_right',   (b,g)=> { const a=_numArg(g,b,'ANGLE',0); return `turnRight(${a});\n`; });
+  _setGenStmt('turtle_goto',         (b,g)=> {
+    const x=_numArg(g,b,'X',0), y=_numArg(g,b,'Y',0);
+    return `goTo(${x}, ${y});\n`;
+  });
+  _setGenStmt('turtle_pen_up',   ()=> `penUp();\n`);
+  _setGenStmt('turtle_pen_down', ()=> `penDown();\n`);
+  _setGenStmt('turtle_set_width',(b,g)=> { const w=_numArg(g,b,'W',1); return `setLineWidth(${w});\n`; });
+_setGenStmt('turtle_set_color', (b, g) => {
+  const hasRGB =
+    typeof b.getInput === 'function' &&
+    (b.getInput('R') || b.getInput('G') || b.getInput('B'));
+
+  if (hasRGB) {
+    const r  = _numArg(g, b, 'R', 0);
+    const gg = _numArg(g, b, 'G', 0);
+    const bb = _numArg(g, b, 'B', 0);
+    return `setPenColour(${r}, ${gg}, ${bb});\n`;
+  }
+  const hex =
+    (b.getField && (b.getFieldValue('COL') || b.getFieldValue('COLOUR') || b.getFieldValue('COLOR'))) ||
+    '#5200FF';
+  const safeHex = String(hex).replace(/'/g, "\\'");
+  return `setPenColour('${safeHex}');\n`;
+});
+
+  _setGenStmt('turtle_write_text', (b,g)=> {
+    const J=g||Blockly.JavaScript, ORDER=(Blockly.JavaScript && Blockly.JavaScript.ORDER_ATOMIC) || 0;
+    const txt = J.valueToCode(b,'TXT',ORDER) || '""';
+    return `writeText(${txt});\n`;
+  });
+  _setGenStmt('turtle_fit',       ()=> `if (typeof fitToDrawing==='function') fitToDrawing();\n`);
+}
 
     function ensureMazeGenerators(){
       const ORDER_CALL = (Blockly.JavaScript && Blockly.JavaScript.ORDER_FUNCTION_CALL) || 0;
@@ -1694,6 +1726,23 @@ window.notDone = function(){
       minX:0, maxX:0, minY:0, maxY:0
     };
     const TURTLE_CHECK = { checkLineW: 12, minRecall: 0.85, minPrecision: 0.70 };
+    // Per-level overrides voor Turtle-controle
+    const TURTLE_LEVEL_CHECK = {
+  7: { 
+    minRecall: 0.97,
+    minPrecision: 0.80
+  }
+  // Later kan je hier andere levels toevoegen indien nodig
+};
+    function getTurtleCheckParams(level) {
+  const base = TURTLE_CHECK;
+  const ov = TURTLE_LEVEL_CHECK[level] || {};
+  return {
+    checkLineW: ov.checkLineW ?? base.checkLineW,
+    minRecall: ov.minRecall ?? base.minRecall,
+    minPrecision: ov.minPrecision ?? base.minPrecision
+  };
+}
     let STROKES = [];
     const TURTLE_STARTS = [
       {x:0, y:0, ang:90}, {x:0, y:0, ang:108}, {x:0, y:0, ang:0},
@@ -1995,38 +2044,61 @@ window.notDone = function(){
       ctx.restore();
     }
 
-    function checkTurtleSolution(){
-      const level = parseInt(turtleLevelSel.value || '1', 10);
-      const rect = bgCanvas.getBoundingClientRect();
-      const W = Math.max(1, Math.floor(rect.width));
-      const H = Math.max(1, Math.floor(rect.height));
+    function checkTurtleSolution() {
+  // Haal huidig level uit de UI
+  const level = parseInt(turtleLevelSel.value || '1', 10);
 
-      const expC = document.createElement('canvas'); expC.width=W; expC.height=H;
-      const stuC = document.createElement('canvas'); stuC.width=W; stuC.height=H;
-      const exp = expC.getContext('2d', { willReadFrequently: true });
-      const stu = stuC.getContext('2d', { willReadFrequently: true });
+  // Haal controleparameters op (globale defaults + eventuele level override)
+  const { checkLineW, minRecall, minPrecision } = getTurtleCheckParams(level);
 
-      drawExpectedTo(exp, W, H, level, TURTLE_CHECK.checkLineW);
-      renderStrokesTo(stu, W, H, TURTLE_CHECK.checkLineW);
+  // Bepaal de canvasafmetingen
+  const rect = bgCanvas.getBoundingClientRect();
+  const W = Math.max(1, Math.floor(rect.width));
+  const H = Math.max(1, Math.floor(rect.height));
 
-      const expData = exp.getImageData(0,0,W,H).data;
-      const stuData = stu.getImageData(0,0,W,H).data;
+  // Maak tijdelijke canvassen aan voor vergelijking
+  const expC = document.createElement('canvas'); 
+  expC.width = W; 
+  expC.height = H;
 
-      let E=0, S=0, I=0;
-      for (let i=0;i<expData.length;i+=4){
-        const e = expData[i+3] > 0;
-        const s = stuData[i+3] > 0;
-        if (e) E++;
-        if (s) S++;
-        if (e && s) I++;
-      }
-      const recall = E ? (I/E) : 0;
-      const precision = S ? (I/S) : 0;
-      const iou = (E+S-I) ? (I/(E+S-I)) : 0;
+  const stuC = document.createElement('canvas'); 
+  stuC.width = W; 
+  stuC.height = H;
 
-      const pass = (recall >= TURTLE_CHECK.minRecall) && (precision >= TURTLE_CHECK.minPrecision);
-      return { pass, recall, precision, iou };
-    }
+  const exp = expC.getContext('2d', { willReadFrequently: true });
+  const stu = stuC.getContext('2d', { willReadFrequently: true });
+
+  // Teken de verwachte vorm (solution contour) en de studententekening
+  drawExpectedTo(exp, W, H, level, checkLineW);
+  renderStrokesTo(stu, W, H, checkLineW);
+
+  // Lees de pixeldatasets
+  const expData = exp.getImageData(0, 0, W, H).data;
+  const stuData = stu.getImageData(0, 0, W, H).data;
+
+  // Tel overlappende en niet-overlappende pixels
+  let E = 0, // aantal verwachte (exp) pixels
+      S = 0, // aantal student (stu) pixels
+      I = 0; // intersectie (exp ∧ stu)
+
+  for (let i = 0; i < expData.length; i += 4) {
+    const e = expData[i + 3] > 0; // alpha > 0 = 'actief'
+    const s = stuData[i + 3] > 0;
+    if (e) E++;
+    if (s) S++;
+    if (e && s) I++;
+  }
+
+  // Recall, precision en IoU berekenen
+  const recall = E ? (I / E) : 0;
+  const precision = S ? (I / S) : 0;
+  const iou = (E + S - I) ? (I / (E + S - I)) : 0;
+
+  // Slagen of falen op basis van thresholds
+  const pass = (recall >= minRecall) && (precision >= minPrecision);
+
+  return { pass, recall, precision, iou };
+}
 
     function applyTurtleStartForLevel(){
       const level = parseInt(turtleLevelSel.value || '1', 10);
@@ -2096,14 +2168,31 @@ window.notDone = function(){
     window.penUp  = function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.penDown=false; drawCursorOnly(); }); };
     window.penDown= function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.penDown=true;  drawCursorOnly(); }); };
     window.setLineWidth = function(w){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.width=Math.max(1,+w||1); drawCursorOnly(); }); };
-    window.setPenColour = function(r,g,b){
-      if (isMazeMode()) return;
-      return enqueueStep(()=> {
-        if (typeof r === 'number') TURTLE.color = `rgb(${+r||0},${+g||0},${+b||0})`;
-        else TURTLE.color = parseColor(r) || String(r);
-        drawCursorOnly();
-      });
-    };
+    function clampChannel(v){
+  v = Math.round(+v || 0);
+  return Math.max(0, Math.min(255, v));
+}
+
+window.setPenColour = function(r,g,b){
+  if (isMazeMode()) return;
+  return enqueueStep(()=> {
+    if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number'){
+
+      const R = clampChannel(r);
+      const G = clampChannel(g);
+      const B = clampChannel(b);
+      TURTLE.color = `rgb(${R},${G},${B})`;
+    } else if (typeof r === 'string'){
+
+      const parsed = parseColor(r);
+      if (parsed){
+        TURTLE.color = parsed;
+      }
+
+    }
+    drawCursorOnly();
+  });
+};
     window.goTo = function(x,y){ if (!isMazeMode()) return enqueueStep(()=> turtleGoTo(+x||0,+y||0)); };
     window.writeText = function(t){ if (!isMazeMode()) return enqueueStep(()=> turtleText(t)); };
     window.showTurtle = function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.show=true; drawCursorOnly(); }); };
