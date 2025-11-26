@@ -202,7 +202,7 @@
   </header>
 
   <main class="wrap">
-    <!-- LEFT: Blockly or CLI -->
+
     <section class="panel" aria-label="Editor">
       <h3>Editor <span id="blocks-info" class="cap">— 0/∞</span></h3>
       <div class="panel-body">
@@ -223,14 +223,14 @@
       </div>
     </section>
 
-    <!-- RIGHT: Preview -->
+
     <section class="panel" aria-label="Preview">
       <h3 id="panelTitle">
         <span id="print-title" class="hidden"></span>
         <span id="mode-title">OEFENING</span>
       </h3>
 
-      <!-- Maze (Blokken) controls -->
+
       <div class="controls" id="controls-maze1">
         <button class="btn primary" id="run-maze1">Uitvoeren</button>
 
@@ -240,6 +240,18 @@
         <label for="speed-range-1" class="sr-only">Snelheid (ms per stap)</label>
         <input type="range" class="btn" id="speed-range-1" min="50" max="1000" step="50" value="900" title="Snelheid (ms per stap)">
         <span id="speed-label-1" style="font-size:12px;color:var(--muted)">Snelheid: 900 ms/stap</span>
+        <span id="random-controls" class="cap hidden">
+  Level 11 (Random):
+  <input type="range"
+         class="btn"
+         id="random-difficulty"
+         min="1"
+         max="3"
+         step="1"
+         value="1"
+         title="Moeilijkheid random doolhof">
+  <span id="random-difficulty-label">Gemiddeld</span>
+</span>
       </div>
 
       <!-- Maze (Code) controls -->
@@ -487,7 +499,7 @@
   </div>
 
   <script>
-    // ---------- Kleine DOM-helper ----------
+    let randomDifficulty = 1; 
     const $ = id => document.getElementById(id);
     const urlQS = new URLSearchParams(location.search);
 
@@ -753,27 +765,39 @@
       return issues;
     }
 
-    // Detecteer letterlijke oneindige lussen (for(;;), while(true), while(1))
+    
     function detectLiteralInfiniteLoops(clean){
-      const hints = [];
-      if (/\bfor\s*\(\s*;;\s*\)\s*{/.test(clean)) {
-        hints.push({
-          type:'infinite-loop',
-          line:1,
-          col:1,
-          message:"Oneindige lus ‘for(;;){...}’. Voeg een conditie en update toe of gebruik een teller."
-        });
-      }
-      if (/\bwhile\s*$begin:math:text$\\s\*\(\?\:true\|1\)\\s\*$end:math:text$\s*{/.test(clean)) {
-        hints.push({
-          type:'infinite-loop',
-          line:1,
-          col:1,
-          message:"Oneindige lus ‘while(true){...}’. Voeg een stopvoorwaarde toe."
-        });
-      }
-      return hints;
-    }
+  const hints = [];
+  // for(;;) { ... }
+  if (/\bfor\s*\(\s*;;\s*\)\s*{/.test(clean)) {
+    hints.push({
+      type:'infinite-loop',
+      line:1,
+      col:1,
+      message:"Oneindige lus ‘for(;;){...}’. Voeg een conditie en update toe of gebruik een teller."
+    });
+  }
+  // while(true) { ... } of while(1) { ... }
+  if (/\bwhile\s*\(\s*(?:true|1)\s*\)\s*{/.test(clean)) {
+    hints.push({
+      type:'infinite-loop',
+      line:1,
+      col:1,
+      message:"Oneindige lus ‘while(true){...}’. Voeg een stopvoorwaarde toe."
+    });
+  }
+  return hints;
+}
+
+function detectForHeaderIssues(clean){
+  
+  return [];
+}
+
+function detectBraceStyleForTeaching(clean){
+  
+  return [];
+}
 
     // Controleer for-header op typische fouten
     function detectForHeaderIssues(clean){
@@ -914,29 +938,69 @@
       if (legacy){ legacy[type] = (block)=> makeCodeAndOrder(block, legacy); }
     }
 
-    const tabMaze1 = $('tab-maze1'), tabMaze2 = $('tab-maze2'),
-          tabTurtle1 = $('tab-turtle1'), tabTurtle2 = $('tab-turtle2');
+const tabMaze1 = $('tab-maze1'), tabMaze2 = $('tab-maze2'),
+      tabTurtle1 = $('tab-turtle1'), tabTurtle2 = $('tab-turtle2');
 
-    const controlsM1 = $('controls-maze1'), controlsM2 = $('controls-maze2'), controlsT = $('controls-turtle');
-    const levelSel1 = $('level-select-1'), levelSel2 = $('level-select-2');
-    const speed1 = $('speed-range-1'), speed2 = $('speed-range-2');
-    const speedLbl1 = $('speed-label-1'), speedLbl2 = $('speed-label-2');
+const controlsM1 = $('controls-maze1'), controlsM2 = $('controls-maze2'), controlsT = $('controls-turtle');
+const levelSel1 = $('level-select-1'), levelSel2 = $('level-select-2');
+const speed1 = $('speed-range-1'), speed2 = $('speed-range-2');
+const speedLbl1 = $('speed-label-1'), speedLbl2 = $('speed-label-2');
 
-    const turtleStack = $('turtle-stack'), mazeCanvas = $('mazeCanvas');
-    const previewNote = $('previewNote'), modeTitle = $('mode-title');
-    const blocksInfo = $('blocks-info');
-    const editorNote = $('editorNote');
+const turtleStack = $('turtle-stack'), mazeCanvas = $('mazeCanvas');
+const previewNote = $('previewNote'), modeTitle = $('mode-title');
+const blocksInfo = $('blocks-info');
+const editorNote = $('editorNote');
 
-    const blocklyArea = $('blocklyArea'), blocklyDiv = $('blocklyDiv');
-    const cliWrap = $('cli-wrap'), cliEditor = $('cli-editor'), cliConsole = $('cli-console');
+const blocklyArea = $('blocklyArea'), blocklyDiv = $('blocklyDiv');
+const cliWrap = $('cli-wrap'), cliEditor = $('cli-editor'), cliConsole = $('cli-console');
 
-    const bgCanvas = $('turtle-bg');
-    const drawCanvas = $('turtle-draw');
-    const curCanvas = $('turtle-cur');
-    let ctxBG, ctxDraw, ctxCur;
+const bgCanvas = $('turtle-bg');
+const drawCanvas = $('turtle-draw');
+const curCanvas = $('turtle-cur');
+let ctxBG, ctxDraw, ctxCur;
 
-    const overlay = $('success-overlay'), closeSuccess = $('close-success'), successCode = $('success-code'), successMsg = $('success-message');
-    const copySolution = $('copy-solution'); // kan undefined zijn, wordt hieronder gecheckt
+const overlay = $('success-overlay'),
+      closeSuccess = $('close-success'),
+      successCode = $('success-code'),
+      successMsg  = $('success-message');
+const copySolution = $('copy-solution'); 
+
+const randomControls        = $('random-controls');
+const randomDifficultyInput = $('random-difficulty');
+const randomDifficultyLabel = $('random-difficulty-label');
+
+if (randomDifficultyInput && randomDifficultyLabel) {
+
+  randomDifficulty = Number(randomDifficultyInput.value || '2');
+
+  const updateRandomLabel = () => {
+    const val = Number(randomDifficultyInput.value || '2');
+    let txt = 'Gemiddeld';
+    if (val === 1) txt = 'Makkelijk';
+    else if (val === 3) txt = 'Moeilijk';
+    randomDifficultyLabel.textContent = txt;
+  };
+
+
+  updateRandomLabel();
+
+  randomDifficultyInput.addEventListener('input', (e) => {
+    randomDifficulty = Number(e.target.value || '2');
+    updateRandomLabel();
+    
+    //Als level 11 (random) geselecteerd is, laad een nieuw random doolhof
+    const isRandomSelected =
+      (levelSel1 && parseInt(levelSel1.value || '1', 10) === RANDOM_LEVEL_INDEX) ||
+      (levelSel2 && parseInt(levelSel2.value || '1', 10) === RANDOM_LEVEL_INDEX);
+
+    if (isRandomSelected) {
+      // Gebruik de huidige sliderwaarde als moeilijkheid
+      loadLevel(RANDOM_LEVEL_INDEX, { difficulty: randomDifficulty });
+    }
+  });
+}
+
+
 
     let activeMode = 'maze1';
     let workspace;
@@ -949,7 +1013,7 @@
       window.workspace = workspace;
     }
 
-    const MAX_BLOCKS_MAZE = [Infinity, Infinity, 3, 5, 5, 6, 6, 10, 7, 10];
+    const MAX_BLOCKS_MAZE = [Infinity, Infinity, 3, 5, 5, 6, 6, 10, 7, 10, Infinity];
 
     function fitBlockly() {
       if (!workspace) return;
@@ -1119,26 +1183,46 @@ _setGenStmt('turtle_set_color', (b, g) => {
       loadAssets().then(()=>{
         populateLevelSelect(levelSel1);
         populateLevelSelect(levelSel2);
+function setMazeLevel(idx){
+  const num      = parseInt(idx || '1', 10);
+  const clamped  = Math.max(1, Math.min(TOTAL_LEVELS, num));
+  const value    = String(clamped);
 
-        function setMazeLevel(idx){
-          const value = String(Math.max(1, Math.min(TOTAL_LEVELS, parseInt(idx || '1', 10))));
-          if (levelSel1) levelSel1.value = value;
-          if (levelSel2) levelSel2.value = value;
-          loadLevel(parseInt(value, 10));
-          mazeReset();
-          resizeMazeCanvas();
-          applyMaxBlocks();
-        }
+  if (levelSel1) levelSel1.value = value;
+  if (levelSel2) levelSel2.value = value;
 
-        if (levelSel1) levelSel1.addEventListener('change', () => setMazeLevel(levelSel1.value));
-        if (levelSel2) levelSel2.addEventListener('change', () => setMazeLevel(levelSel2.value));
+  const isRandom = (clamped === RANDOM_LEVEL_INDEX);
 
-        const INIT_LEVEL = Math.max(1, Math.min(TOTAL_LEVELS, parseInt(urlQS.get('level') || '1', 10) || 1));
-        if (levelSel1) levelSel1.value = String(INIT_LEVEL);
-        if (levelSel2) levelSel2.value = String(INIT_LEVEL);
-        loadLevel(INIT_LEVEL);
-        mazeReset();
-        resizeMazeCanvas();
+  // Toon/verberg de inline random-controls span
+  if (randomControls){
+    randomControls.classList.toggle('hidden', !isRandom);
+  }
+
+  // Kies moeilijkheid op basis van de slider
+  const diff = randomDifficultyInput
+    ? Number(randomDifficultyInput.value || '2')
+    : randomDifficulty;
+
+  if (isRandom){
+    loadLevel(RANDOM_LEVEL_INDEX, { difficulty: diff });
+  } else {
+    loadLevel(clamped);
+  }
+
+  mazeReset();
+  resizeMazeCanvas();
+  applyMaxBlocks();
+}
+
+if (levelSel1) levelSel1.addEventListener('change', () => setMazeLevel(levelSel1.value));
+if (levelSel2) levelSel2.addEventListener('change', () => setMazeLevel(levelSel2.value));
+
+const INIT_LEVEL = Math.max(1, Math.min(TOTAL_LEVELS, parseInt(urlQS.get('level') || '1', 10) || 1));
+if (levelSel1) levelSel1.value = String(INIT_LEVEL);
+if (levelSel2) levelSel2.value = String(INIT_LEVEL);
+setMazeLevel(INIT_LEVEL);
+mazeReset();
+resizeMazeCanvas();
 
         initTurtleUIOnce();
       });
@@ -1152,11 +1236,11 @@ _setGenStmt('turtle_set_color', (b, g) => {
     }
 
     function computeMaxBlocks(){
-      if (activeMode !== 'maze1') return Infinity;
-      const idx = Math.max(1, parseInt(levelSel1?.value || '1', 10));
-      const v = MAX_BLOCKS_MAZE[idx-1];
-      return (typeof v === 'number' ? v : Infinity);
-    }
+  if (activeMode !== 'maze1') return Infinity;
+  const idx = Math.max(1, parseInt(levelSel1?.value || '1', 10));
+  const v = MAX_BLOCKS_MAZE[idx-1];
+  return (typeof v === 'number' ? v : Infinity);
+}
     function applyMaxBlocks(){
       workspace.options.maxBlocks = computeMaxBlocks();
       updateCapacityBadge();
@@ -1282,19 +1366,109 @@ _setGenStmt('turtle_set_color', (b, g) => {
       ]
     };
 
-    let level = FALLBACK;
-    const TOTAL_LEVELS = (window.AIK_GENERATED?.maze?.levels?.length) || 10;
+    // Basis: aantal handgemaakte levels
+const BASE_TOTAL_LEVELS = (window.AIK_GENERATED?.maze?.levels?.length) || 10;
 
-    function populateLevelSelect(sel){
-      if (!sel) return;
-      sel.innerHTML = '';
-      for (let i=1; i<=TOTAL_LEVELS; i++){
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = 'Level ' + i;
-        sel.appendChild(opt);
-      }
+// "Officieel" random level = level BASE_TOTAL_LEVELS + 1
+const RANDOM_LEVEL_INDEX = BASE_TOTAL_LEVELS + 1;
+
+// Totaal aantal levels in de dropdown (inclusief random)
+const TOTAL_LEVELS = RANDOM_LEVEL_INDEX;
+
+let level = FALLBACK;
+    
+// ---------------- Random Maze generator (Level 11) ----------------
+// Genereert een doolhof met oneven binnenmaat en muurborder eromheen.
+// difficulty: 1 (klein) – 3 (groot)
+function difficultyToCells(diff){
+  const d = Math.max(1, Math.min(3, diff|0));
+  if (d === 1) return 9;   // klein
+  if (d === 2) return 11;  // medium
+  return 13;               // groot
+}
+
+function generateRandomMazeLevel(diff){
+  const cells = difficultyToCells(diff);
+  const rows = cells + 2;  // +2 voor de vaste muurborder
+  const cols = cells + 2;
+
+  // Start met overal muren (0)
+  const grid = Array.from({length: rows}, () =>
+    Array.from({length: cols}, () => 0)
+  );
+
+  // Alle "cellen" op oneven coördinaten als mogelijke paden markeren (voor DFS)
+  for (let y = 1; y < rows - 1; y += 2){
+    for (let x = 1; x < cols - 1; x += 2){
+      grid[y][x] = 1;
     }
+  }
+
+  const startX = 1;
+  const startY = 1;
+  const goalX  = cols - 2;
+  const goalY  = rows - 2;
+
+  const stack = [{x:startX, y:startY}];
+  const visited = new Set();
+  visited.add(`${startX},${startY}`);
+
+  const dirs = [
+    {dx:  2, dy:  0},
+    {dx: -2, dy:  0},
+    {dx:  0, dy:  2},
+    {dx:  0, dy: -2},
+  ];
+
+  while (stack.length){
+    const current = stack[stack.length - 1];
+    const candidates = dirs
+      .map(d => ({ dx:d.dx, dy:d.dy, nx: current.x + d.dx, ny: current.y + d.dy }))
+      .filter(p =>
+        p.nx > 0 && p.nx < cols - 1 &&
+        p.ny > 0 && p.ny < rows - 1 &&
+        !visited.has(`${p.nx},${p.ny}`)
+      );
+
+    if (!candidates.length){
+      stack.pop();
+      continue;
+    }
+
+    const choice = candidates[Math.floor(Math.random() * candidates.length)];
+    const wallX = current.x + choice.dx / 2;
+    const wallY = current.y + choice.dy / 2;
+
+    // Verbind huidige cel met de gekozen buur
+    grid[wallY][wallX] = 1;
+    grid[choice.ny][choice.nx] = 1;
+
+    visited.add(`${choice.nx},${choice.ny}`);
+    stack.push({x:choice.nx, y:choice.ny});
+  }
+
+  // Start & goal plaatsen
+  grid[startY][startX] = 'S';
+  grid[goalY][goalX]   = 'G';
+
+  return { grid, cell: 50 }; 
+}
+    
+
+function populateLevelSelect(sel){
+  if (!sel) return;
+  sel.innerHTML = '';
+  for (let i=1; i<=TOTAL_LEVELS; i++){
+    const opt = document.createElement('option');
+    opt.value = i;
+    if (i === RANDOM_LEVEL_INDEX){
+      opt.textContent = 'Level ' + i + ' — Willekeurig';
+    } else {
+      opt.textContent = 'Level ' + i;
+    }
+    sel.appendChild(opt);
+  }
+}
 
     function resizeMazeCanvas(){
       const rect = mazeCanvas.getBoundingClientRect();
@@ -1306,19 +1480,30 @@ _setGenStmt('turtle_set_color', (b, g) => {
       drawMaze(mazeState);
     }
     window.addEventListener('resize', resizeMazeCanvas);
+function loadLevel(idx, opts = {}){
+  if (idx === RANDOM_LEVEL_INDEX){
+    const diff = (typeof opts.difficulty === 'number')
+      ? opts.difficulty
+      : 2; // fallback
 
-    function loadLevel(idx){
-      const og = getOGLevel(idx);
-      level = og || FALLBACK;
+    level = generateRandomMazeLevel(diff);
 
-      const url = new URL(location.href);
-      url.searchParams.set('level', String(idx));
-      history.replaceState(null, '', url.toString());
+    const url = new URL(location.href);
+    url.searchParams.set('level', String(RANDOM_LEVEL_INDEX));
+    history.replaceState(null, '', url.toString());
+  } else {
+    const og = getOGLevel(idx);
+    level = og || FALLBACK;
 
-      stopPlayback();
-      mazeReset();
-      resizeMazeCanvas();
-    }
+    const url = new URL(location.href);
+    url.searchParams.set('level', String(idx));
+    history.replaceState(null, '', url.toString());
+  }
+
+  stopPlayback();
+  mazeReset();
+  resizeMazeCanvas();
+}
 
     function findStart(){
       for (let y=0;y<level.grid.length;y++)
@@ -2410,13 +2595,13 @@ window.setPenColour = function(r,g,b){
 
     let justCompleted = false;
     
-        // ---------------- Error Modal (voor runtime fouten en oneindige lussen) ----------------
+
     const errorOverlay   = $('error-overlay');
     const errorMessageEl = $('error-message');
     const errorPill      = $('error-pill');
     const closeErrorBtn  = $('close-error');
 
-    // Toon fout in een eigen modal (SEB-proof, geen window.alert)
+
     function showErrorModal(message, pillText) {
       if (!errorOverlay || !errorMessageEl) return;
       errorMessageEl.textContent = message || 'Onbekende fout in je code.';
@@ -3043,25 +3228,65 @@ window.setPenColour = function(r,g,b){
     return { init, openModal, exportNow, _cursorY: 36 };
   })();
 
-  document.addEventListener('DOMContentLoaded', ()=>{
-    ExportPDF.init({
-      exerciseGetter: () => {
-        const {chapter, level} = (function(){
-          const mode = window.activeMode;
-          if (mode === 'maze1') return { chapter: 'Maze (Blokken)', level: parseInt(document.getElementById('level-select-1')?.value||'1',10) };
-          if (mode === 'maze2') return { chapter: 'Maze (Code)',     level: parseInt(document.getElementById('level-select-2')?.value||'1',10) };
-          if (mode === 'turtle_blocks') return { chapter: 'Turtle (Blokken)', level: parseInt(document.getElementById('turtle-level')?.value||'1',10) };
-          if (mode === 'turtle_cli')    return { chapter: 'Turtle (Code)',    level: parseInt(document.getElementById('turtle-level')?.value||'1',10) };
-          return { chapter:'Oefening', level:1 };
-        })();
-        return `${chapter} — Level ${level}`;
-      },
-      rubric: {
-        include: true,
-        rows: ['Functioneel','Leesbaar','Programmeerconcept','Wiskundeconcept','Creativiteit'],
-      }
-    });
+document.addEventListener('DOMContentLoaded', () => {
+  // Verdediging: als ExportPDF nog niet geladen is, doe niets
+  if (!window.ExportPDF || typeof window.ExportPDF.init !== 'function') {
+    console.warn('ExportPDF.init niet beschikbaar op DOMContentLoaded');
+    return;
+  }
+
+  // Hulpfunctie: haal veilig een level-nummer op
+  function getLevel(selectId) {
+    const el = document.getElementById(selectId);
+    if (!el) return 1;
+    const parsed = parseInt(el.value, 10);
+    return Number.isNaN(parsed) ? 1 : parsed;
+  }
+
+  function getExerciseLabel() {
+    const mode = window.activeMode; // verwacht: 'maze1', 'maze2', 'turtle_blocks', 'turtle_cli'
+    let chapter = 'Oefening';
+    let level   = 1;
+
+    switch (mode) {
+      case 'maze1':
+        chapter = 'Maze (Blokken)';
+        level   = getLevel('level-select-1');
+        break;
+      case 'maze2':
+        chapter = 'Maze (Code)';
+        level   = getLevel('level-select-2');
+        break;
+      case 'turtle_blocks':
+        chapter = 'Turtle (Blokken)';
+        level   = getLevel('turtle-level');   // zorg dat dit id echt bestaat
+        break;
+      case 'turtle_cli':
+        chapter = 'Turtle (Code)';
+        level   = getLevel('turtle-level');   // idem: zelfde dropdown voor beide Turtle-modes
+        break;
+      default:
+        // fallback blijft 'Oefening — Level 1'
+        break;
+    }
+
+    return `${chapter} — Level ${level}`;
+  }
+
+  ExportPDF.init({
+    exerciseGetter: getExerciseLabel,
+    rubric: {
+      include: true,
+      rows: [
+        'Functioneel',
+        'Leesbaar',
+        'Programmeerconcept',
+        'Wiskundeconcept',
+        'Creativiteit',
+      ],
+    },
   });
+});
   </script>
 
   <button id="fab-help" class="fab-help" aria-label="Toon formularium" aria-pressed="false">?</button>
