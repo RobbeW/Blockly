@@ -504,7 +504,7 @@
     const urlQS = new URLSearchParams(location.search);
 
     // Eenvoudige loop-bescherming; maxIterations zetten we per modus
-    function loopProtect(src, maxIterations = 2000) {
+    function loopProtect(src, maxIterations = 5000) {
       const stamp = `__lp_${Math.random().toString(36).slice(2)}`;
       const header =
         `let ${stamp}=0;` +
