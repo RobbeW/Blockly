@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "world": "turtle",
+  "title": "Turtle",
+  "description": "Tekenlevels voor simple sequence / eenvoudige sequentie, limited iteration / begrensde herhaling, hoeken, coordinaten en patronen.",
+  "levels": [
+    { "id": 1, "title": "Lijn en richting", "focus": "eenvoudige sequentie", "concepts": ["simple sequence / eenvoudige sequentie"] },
+    { "id": 2, "title": "Rechte hoek", "focus": "eenvoudige sequentie en hoekbegrip", "concepts": ["simple sequence / eenvoudige sequentie"] },
+    { "id": 3, "title": "Vierkant", "focus": "begrensde herhaling", "concepts": ["limited iteration / begrensde herhaling"] },
+    { "id": 4, "title": "Driehoek", "focus": "begrensde herhaling en draaihoek", "concepts": ["limited iteration / begrensde herhaling"] },
+    { "id": 5, "title": "Trap", "focus": "patroon en begrensde herhaling", "concepts": ["simple sequence / eenvoudige sequentie", "limited iteration / begrensde herhaling"] },
+    { "id": 6, "title": "Coordinaten", "focus": "eenvoudige sequentie en assenstelsel", "concepts": ["simple sequence / eenvoudige sequentie"] },
+    { "id": 7, "title": "Meerdere vormen", "focus": "decompositie en begrensde herhaling", "concepts": ["simple sequence / eenvoudige sequentie", "limited iteration / begrensde herhaling"] },
+    { "id": 8, "title": "Kleur en lijndikte", "focus": "parameters in een sequentie", "concepts": ["simple sequence / eenvoudige sequentie"] },
+    { "id": 9, "title": "Creatieve transfer", "focus": "concepten combineren", "concepts": ["simple sequence / eenvoudige sequentie", "limited iteration / begrensde herhaling"] }
+  ]
+}

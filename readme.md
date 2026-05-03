@@ -1,77 +1,72 @@
-# Blockly in de Klas: Maze & Turtle
+# Blockly in de Klas
 
-Auteur: Robbe Wulgaert · aiindeklas.be / robbewulgaert.be
-© 2025 Robbe Wulgaert
+Auteur: Robbe Wulgaert · AI in de Klas · [robbewulgaert.be](https://www.robbewulgaert.be)  
+© 2026 Robbe Wulgaert
 
-**Demo:** [Klik hier! ](https://robbew.github.io/Blockly/)
+Demo: [klik hier](https://robbew.github.io/Blockly/)
 
 ## Doel
 
-## Deze webapp helpt leerlingen (10-13 jaar) om:
-	•	Computationeel denken te oefenen met doolhoven (Maze) en tekenopdrachten (Turtle).
-	•	Zowel met blokken als met code te werken en stap-voor-stap uitvoering te volgen.
-	•	Hun resultaten netjes te exporteren naar PDF voor feedback of evaluatie.
-	•	Zonder accounts of installatie te werken; alles draait lokaal in de browser.
+Blockly in de Klas helpt leerlingen van ongeveer 10-13 jaar om stap-voor-stap van blokken naar echte code te groeien.
 
-## Belangrijkste functies:
-	•	Twee oefenwerelden:
-	•	Maze: levels met doel, stap-voor-stap animatie, snelheid instelbaar.
-	•	Turtle: raster met doelcontouren per level, blokkenset of vrije code.
-	•	Dubbele modus per wereld:
-	•		Blokken: Blockly in het Nederlands met aangepaste toolbox.
-	•		Code: kleine code-editor met console en duidelijke foutkaders.
-	•	PDF-export:
-	•		Neemt automatisch een editor-snapshot en een Maze/Turtle-snapshot op.
-	•		Voegt in codemodi ook de geschreven code toe.
-	•		Optionele rubrieksectie voor leerkrachtfeedback.
-	•	Formularium-zijpaneel:
-	•	Korte uitleg, debugtips, kleurkiezer voor de turtle-pen.
+De app focust op:
 
+- computationeel denken via Maze en Turtle;
+- eerst redeneren met blokken, daarna dezelfde concepten herkennen in code;
+- simple sequence / eenvoudige sequentie, selection / selectie, conditional iteration / voorwaardelijke herhaling en limited iteration / begrensde herhaling;
+- zichtbare feedback via animatie, tekenresultaten en leergerichte meldingen;
+- lokaal werken zonder accounts of installatie;
+- PDF-export als bewijs van leren en basis voor feedback.
 
-## Vereisten:
-	•	Geen installatie nodig; draait volledig in de browser.
-	•	Aanbevolen: recente Chromium-browser (Chrome, Edge).
-	•	Werkt in een SEB-omgeving mits standaard webtoegang tot de meegeleverde assets.
+## Projectstructuur
 
+```text
+index.html              # productpagina
+platform.html           # leeromgeving
+content/catalog.json    # eerste aanzet voor losse contentstructuur
+content/maze/levels.json
+content/turtle/levels.json
+content/formularium/sections.json
+maze/generated.js       # bestaande Maze-levels
+assets/                 # sprites, tiles en audio
+common/                 # gedeelde Blockly-styling
+```
 
-## Aan de slag: 
-	•	Open index.html via een lokale webserver of via GitHub Pages.
-	•	Kies bovenaan de modus:
-	•	Maze (Blokken) of Maze (Code).
-	•	Turtle (Blokken) of Turtle (Code).
-	•	Maze:
-	•	Selecteer het level en stel de snelheid in.
-	•	Klik Uitvoeren om het algoritme stap voor stap te laten lopen.
-	•	Turtle:
-	•	Raster en doelcontour zijn zichtbaar; kies level en snelheid.
-	•	Gebruik beweging, draaien, pen omhoog/omlaag, kleur en lijndikte.
-	•	Formularium:
-	•	Open of verberg via de ronde hulpknop rechtsonder.
-	•	Gebruik de kleurkiezer of lees de debugtips.
-	•	Code-modus:
-	•	Schrijf je algoritme, klik Uitvoeren.
-	•	Console toont berichten en duidelijke foutkaders met regelnummers.
+## Leeromgeving
 
-## PDF-export: 
-	•	Klik in de header op Exporteren naar PDF.
-	•	Vul naam en klas in; de export bevat:
-	•	Editor-snapshot.
-	•	Snapshot van de Oefeningen-weergave (Maze/Turtle).
-	•	In codemodi: de gebruikte code.
-	•	Optionele rubrieksectie voor leerkrachtfeedback.
-	•	Het PDF-bestand krijgt automatisch een bestandsnaam op basis van naam, klas en oefening.
-    
+Open `platform.html` om de app zelf te gebruiken.
 
-## Tips voor gebruik in de klas:
-	•	Start in Maze (Blokken) met sequentie, selectie en herhaling; schakel daarna over naar Maze (Code).
-	•	Gebruik Turtle voor begrensde herhalingen, coördinaten en hoekredenering.
-	•	Laat leerlingen regelmatig exporteren naar PDF en voeg korte formatieve feedback toe in de rubriek.
-	•	Werk met levels als tussendoelen; verlaag tijdelijk de snelheid om denkstappen zichtbaar te maken.
-	•	Stimuleer leerlingen om code te verklaren en kleine tests te schrijven voordat ze complexere patronen tekenen.
+De leeromgeving bevat vier modi:
 
-## Licentie & Copyright
+- Maze (Blokken)
+- Maze (Code)
+- Turtle (Blokken)
+- Turtle (Code)
 
-© 2025 Robbe Wulgaert, aiindeklas.be / robbewulgaert.be
-Alle rechten voorbehouden.
+Maze bevat vaste levels en een random level. Turtle bevat tekenlevels met doelcontouren. De app bewaart voortgang lokaal in de browser.
 
-Niet herdistribueren of gebruiken zonder schriftelijke toestemming van de auteur.
+## Formularium
+
+Klik op het `?`-icoon rechtsonder voor het Blockly Formularium. Dat bevat:
+
+- denkstrategieën voor Maze;
+- Turtle-commando's;
+- blok-naar-code voorbeelden;
+- foutchecks voor leerlingen;
+- export- en feedbackafspraken.
+
+## PDF-export
+
+De PDF-export bevat naam, klas, oefening, code of blokken-snapshot, Maze/Turtle-snapshot en een rubriek voor feedback.
+
+## Licentie en copyright
+
+© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be. Alle rechten voorbehouden.
+
+Gebruik in eigen klas of eigen onderwijscontext is toegelaten mits duidelijke en expliciete naamsvermelding:
+
+```text
+Robbe Wulgaert, AI in de Klas, robbewulgaert.be
+```
+
+Gebaseerd op oefeningen uit het open-source Blockly project door Google.

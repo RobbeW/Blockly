@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "world": "maze",
+  "title": "Maze",
+  "description": "Doolhoflevels voor simple sequence / eenvoudige sequentie, limited iteration / begrensde herhaling, selection / selectie en conditional iteration / voorwaardelijke herhaling.",
+  "levels": [
+    { "id": 1, "title": "Eerste stappen", "focus": "eenvoudige sequentie", "concepts": ["simple sequence / eenvoudige sequentie"] },
+    { "id": 2, "title": "Draaien en vooruitgaan", "focus": "eenvoudige sequentie", "concepts": ["simple sequence / eenvoudige sequentie"] },
+    { "id": 3, "title": "Korter met bloklimiet", "focus": "begrensde herhaling", "concepts": ["limited iteration / begrensde herhaling"] },
+    { "id": 4, "title": "Trap-patroon herhalen", "focus": "eenvoudige sequentie en begrensde herhaling", "concepts": ["simple sequence / eenvoudige sequentie", "limited iteration / begrensde herhaling"] },
+    { "id": 5, "title": "Vaste route verkorten", "focus": "eenvoudige sequentie en begrensde herhaling", "concepts": ["simple sequence / eenvoudige sequentie", "limited iteration / begrensde herhaling"] },
+    { "id": 6, "title": "Kiezen tijdens herhalen", "focus": "selectie en voorwaardelijke herhaling", "concepts": ["selection / selectie", "conditional iteration / voorwaardelijke herhaling"] },
+    { "id": 7, "title": "Links en rechts testen", "focus": "selectie en voorwaardelijke herhaling", "concepts": ["selection / selectie", "conditional iteration / voorwaardelijke herhaling"] },
+    { "id": 8, "title": "Strategie combineren", "focus": "sequentie, selectie en voorwaardelijke herhaling", "concepts": ["simple sequence / eenvoudige sequentie", "selection / selectie", "conditional iteration / voorwaardelijke herhaling"] },
+    { "id": 9, "title": "Minder blokken", "focus": "selectie en voorwaardelijke herhaling", "concepts": ["selection / selectie", "conditional iteration / voorwaardelijke herhaling"] },
+    { "id": 10, "title": "Einddoolhof", "focus": "concepten combineren", "concepts": ["simple sequence / eenvoudige sequentie", "selection / selectie", "conditional iteration / voorwaardelijke herhaling"] },
+    { "id": 11, "title": "Random doolhof", "focus": "transfer", "concepts": ["selection / selectie", "conditional iteration / voorwaardelijke herhaling"] }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "project": "Blockly in de Klas",
+  "description": "Contentstructuur voor de groeilijn van blokken naar code.",
+  "chapters": [
+    {
+      "id": "maze",
+      "title": "Maze: algoritmes in een doolhof",
+      "order": 1,
+      "path": "maze/levels.json",
+      "concepts": ["simple sequence / eenvoudige sequentie", "limited iteration / begrensde herhaling", "selection / selectie", "conditional iteration / voorwaardelijke herhaling", "debuggen"]
+    },
+    {
+      "id": "turtle",
+      "title": "Turtle: tekenen met algoritmes",
+      "order": 2,
+      "path": "turtle/levels.json",
+      "concepts": ["simple sequence / eenvoudige sequentie", "limited iteration / begrensde herhaling", "hoeken", "coordinaten", "patronen"]
+    },
+    {
+      "id": "formularium",
+      "title": "Formularium en denkstappen",
+      "order": 3,
+      "path": "formularium/sections.json",
+      "concepts": ["simple sequence / eenvoudige sequentie", "selection / selectie", "conditional iteration / voorwaardelijke herhaling", "limited iteration / begrensde herhaling", "blok naar code", "foutcheck"]
+    }
+  ]
+}

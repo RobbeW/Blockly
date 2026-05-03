@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "title": "Blockly Formularium",
+  "sections": [
+    { "id": "doel", "title": "Doel", "focus": "eerst denken, dan coderen" },
+    { "id": "concepten", "title": "Vier programmeerconcepten", "focus": "eenvoudige sequentie, selectie, voorwaardelijke herhaling, begrensde herhaling" },
+    { "id": "maze", "title": "Maze denkstrategie", "focus": "eenvoudige sequentie, begrensde herhaling, selectie, voorwaardelijke herhaling" },
+    { "id": "maze-code", "title": "Maze naar code", "focus": "blok naar JavaScript" },
+    { "id": "turtle", "title": "Turtle beweging", "focus": "afstand, hoek, coordinaat, begrensde herhaling" },
+    { "id": "debug", "title": "Snelle foutcheck", "focus": "leerlingen zelfstandig laten bijsturen" },
+    { "id": "export", "title": "Exporteren en feedback", "focus": "bewijs van leren" }
+  ]
+}

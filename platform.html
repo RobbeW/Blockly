@@ -1,0 +1,4045 @@
+<!--
+  Blockly in de Klas - leerplatform
+  Copyright (c) 2026 Robbe Wulgaert
+  Citeer/vermeld als: Robbe Wulgaert, AI in de Klas, robbewulgaert.be
+-->
+<!DOCTYPE html>
+<html lang="nl-BE" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blockly in de Klas - Leerplatform</title>
+  <meta name="description" content="Blockly in de Klas leerplatform voor Maze, Turtle, blokken, code en computationeel denken." />
+  <meta name="author" content="Robbe Wulgaert, AI in de Klas, robbewulgaert.be" />
+  <meta name="copyright" content="Copyright (c) 2026 Robbe Wulgaert" />
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="common/common.css" />
+  <meta name="color-scheme" content="light">
+
+  <style>
+    :root{
+      --brand-purple:#5200FF; --brand-aqua:#03ddef; --brand-green:#03ddef;
+      --bg:#F9F8FC; --ink:#1A224C; --muted:#9aa3b2;
+      --card:#ffffff; --border:#ececf3;
+    }
+    html[data-theme="dark"]{
+      --brand-purple:#5200FF; --brand-aqua:#03ddef; --brand-green:#03ddef;
+      --bg:#F9F8FC; --ink:#1A224C; --muted:#9aa3b2;
+      --card:#ffffff; --border:#ececf3;
+    }
+    html[data-theme="dark"]{
+      --bg:#181622; --ink:#F5F4FA; --muted:#b9b6cd;
+      --card:#201d2e; --border:rgba(255,255,255,.12);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);
+      font-family:Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif}
+
+    header{display:flex;align-items:center;justify-content:space-between;
+      gap:12px;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--border);
+      position:sticky;top:0;z-index:10}
+    .ai-brand{display:flex;gap:10px;align-items:center;font-weight:800;letter-spacing:.2px}
+    .ai-brand a{color:inherit;text-decoration:none}
+    .ai-dot{width:12px;height:12px;border-radius:50%;background:var(--brand-green);
+      box-shadow:0 0 0 4px rgba(3,221,239,.15)}
+    .tabs{display:inline-flex;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .tab{padding:8px 14px;cursor:pointer;background:var(--card);color:var(--ink);
+      border-right:1px solid var(--border);font-weight:700}
+    .tab:last-child{border-right:none}
+    .tab.active{background:var(--brand-purple);color:#fff}
+    .app-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .progress-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:999px;padding:7px 11px;background:rgba(82,0,255,.05);font-size:12px;font-weight:800;color:var(--ink)}
+    .progress-dot{width:8px;height:8px;border-radius:50%;background:var(--brand-aqua);box-shadow:0 0 0 4px rgba(3,221,239,.14)}
+
+    .wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;height:calc(100dvh - var(--header-height,64px));padding:12px;min-height:0}
+    @media (max-width:1100px){.wrap{grid-template-columns:1fr;height:auto;min-height:calc(100dvh - var(--header-height,64px))}.panel{min-height:min(680px,calc(100dvh - var(--header-height,64px) - 24px))}}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+    .panel h3{margin:0;padding:10px 12px;border-bottom:1px solid var(--border);font-size:14px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);display:flex;align-items:center;gap:8px}
+    .cap{font-size:12px;color:var(--muted)}
+    .cap.over-limit{color:#b91c1c;font-weight:800}
+    .panel-body{display:flex;flex:1;min-height:0}
+
+    #blocklyArea{position:relative;flex:1;min-height:0}
+    #blocklyDiv{position:absolute;inset:0}
+
+    .controls{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border-bottom:1px solid var(--border);align-items:center}
+    .btn{appearance:none;border:1px solid var(--border);background:var(--card);color:var(--ink);
+      padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
+    .btn:hover{border-color:var(--brand-purple);box-shadow:0 0 0 3px rgba(82,0,255,.08)}
+    .btn.primary{background:var(--brand-purple);color:#fff;border-color:var(--brand-purple)}
+    .btn.small{padding:6px 10px;font-weight:600}
+    select.btn{appearance:auto}
+    input[type="range"].btn{height:34px;padding:0 6px}
+
+    .canvas-wrap{position:relative;flex:1;display:grid;place-items:center;padding:12px;min-width:0;min-height:0;overflow:hidden}
+    .stack{position:relative;width:100%;max-width:1000px;aspect-ratio:1 / 1;}
+    canvas{display:block;width:100%;height:100%;image-rendering:crisp-edges}
+    #mazeCanvas{width:min(640px,100%);height:auto;max-width:100%;max-height:100%;aspect-ratio:1 / 1;border:1px solid var(--border);border-radius:12px}
+
+    /* Turtle layered canvases */
+    #turtle-stack{ position:relative; }
+    #turtle-stack > canvas{ position:absolute; inset:0; width:100%; height:100%; }
+    #turtle-bg{ z-index:0; }
+    #turtle-draw{ z-index:1; }
+    #turtle-cur{ z-index:2; pointer-events:none; }
+
+    .notice{padding:10px 12px;font-size:12px;color:var(--muted);border-top:1px dashed var(--border)}
+    .hidden{display:none !important}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,1,1);white-space:nowrap;border:0}
+
+    /* CLI editor */
+    .cli-wrap{display:flex;flex-direction:column;gap:8px;padding:10px;flex:1}
+    #cli-editor{flex:1;min-height:280px;width:100%;resize:vertical;border:1px solid var(--border);
+      border-radius:12px;padding:12px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;font-size:14px;background:var(--card);color:var(--ink)}
+    #cli-console{min-height:110px;width:100%;white-space:pre-wrap;border:1px dashed var(--border);border-radius:12px;padding:10px;font-size:13px;color:var(--ink);background:rgba(82,0,255,.03)}
+    .log-line{margin:0 0 6px 0}
+    .log-info{color:#1A224C}
+    .log-warn{color:#b45309}
+    .log-error{color:#b91c1c}
+    .code-frame{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:8px 10px;line-height:1.4;overflow:auto}
+    .code-num{opacity:.6;margin-right:8px;user-select:none}
+    .code-caret{color:#03ddef}
+
+    /* Success modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:50}
+    .modal{width:min(800px,90vw);background:var(--card);border:2px solid var(--brand-purple);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.25);overflow:hidden}
+    .modal-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(90deg,var(--brand-purple),#6a3cff);color:#fff;font-weight:800}
+    .modal-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--border)}
+    .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(3,221,239,.14);color:#0f5132;border:1px solid rgba(3,221,239,.42);padding:6px 10px;border-radius:999px;font-size:13px;font-weight:700}
+    .modal pre{margin:0}
+
+    .learning-feedback{border:1px solid rgba(82,0,255,.18);border-radius:14px;background:rgba(82,0,255,.05);padding:12px 14px;line-height:1.45}
+    .learning-feedback strong{color:var(--brand-purple)}
+
+    /* Formularium modal */
+    .form-drawer{ position:fixed; top:50%; left:50%; width:min(960px, calc(100vw - 28px)); max-height:min(760px, calc(100vh - 28px));
+      transform:translate(-50%, -50%); background:var(--card); border:1px solid var(--border); border-radius:22px; box-shadow:0 0 0 9999px rgba(0,0,0,.52), 0 24px 70px rgba(0,0,0,.26); overflow:auto; z-index:100001; }
+    .form-header{position:sticky; top:0; background:var(--card); border-bottom:1px solid var(--border);
+      padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px}
+    .form-title{font-weight:800; letter-spacing:.2px}
+    .form-body{padding:14px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; font-size:14px; line-height:1.5}
+    .form-card{border:1px solid var(--border); border-radius:12px; padding:10px}
+    .form-card.wide{grid-column:1 / -1}
+    .form-card h4{margin:0 0 6px 0; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
+    .kbd{display:inline-block; border:1px solid var(--border); border-bottom-width:2px; padding:2px 6px; border-radius:6px; font-family:ui-monospace, monospace; font-size:.9em}
+    .code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace; background:rgba(82,0,255,.06); border:1px solid var(--border); border-radius:8px; padding:6px 8px; overflow:auto; white-space:pre-wrap}
+    .copy-btn{float:right; font-size:12px}
+
+    /* Print */
+    @media print{
+      header,.wrap .panel:first-child,.controls .btn:not(.print-keep),.notice,.modal-overlay,.form-drawer{display:none !important}
+      #print-title{display:block;margin:0 0 8px 0;font-size:16px}
+      body{background:#fff}
+      .panel{border:none}
+      #mazeCanvas{width:100% !important;height:auto !important}
+      .stack{width:1000px;height:1000px}
+    }
+
+    /* Modal on top of Blockly */
+    .modal-overlay{ z-index: 100000; }
+    body.modal-open .blocklyToolboxDiv,
+    body.modal-open .blocklyWidgetDiv,
+    body.modal-open .blocklyDropDownDiv{ pointer-events: none !important; }
+
+    .fab-help{
+      position:fixed; bottom:16px; right:16px;
+      width:56px; height:56px; border-radius:50%; border:none;
+      background:var(--brand-purple); color:#fff;
+      font:800 28px/1 Inter,system-ui,sans-serif;
+      display:grid; place-items:center; cursor:pointer;
+      box-shadow:0 6px 18px rgba(82,0,255,.35); z-index:60;
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+    .fab-help:hover{ transform:translateY(-1px); box-shadow:0 10px 24px rgba(82,0,255,.45); }
+    .fab-help:active{ transform:translateY(0); }
+    .fab-help:focus-visible{ outline:3px solid #03ddef; outline-offset:2px; }
+    .fab-help[disabled]{ opacity:.55; cursor:not-allowed; }
+    @media (prefers-reduced-motion: reduce){ .fab-help{ transition:none } .fab-help:hover{ transform:none } }
+    @media print{ .fab-help{ display:none !important } }
+
+    #btn-pdf{ background: var(--brand-purple); color:#fff; border-color: var(--brand-purple); }
+    #btn-pdf:hover{ box-shadow:0 0 0 3px rgba(82,0,255,.18); }
+
+    /* PDF modal fields */
+    .field{display:flex;gap:10px;align-items:center}
+    .field label{width:90px;font-weight:700;color:var(--ink)}
+    .field input{flex:1;min-width:0;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--card);color:var(--ink)}
+    .hint{font-size:12px;color:var(--muted)}
+
+    #print-sheet{ display:none; }
+    #print-sheet .print-wrap{ padding:16px; }
+    #print-sheet h1{ margin:0 0 8px 0; font-size:18px; }
+    #print-sheet .meta{ font-size:12px; color:var(--muted); margin-bottom:12px; }
+    #print-sheet .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    #print-sheet .card{ border:1px solid var(--border); border-radius:12px; padding:10px; background:#fff; }
+    #print-sheet img{ width:100%; height:auto; border:1px solid var(--border); border-radius:8px; background:#fff; }
+    #print-sheet pre{ margin:0; white-space:pre-wrap; word-break:break-word; font:13px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace; background:#0f172a; color:#e2e8f0; border-radius:10px; padding:10px; }
+
+    /* Show only the print sheet while printing */
+    @media print{
+      header,.wrap,.notice,.modal-overlay,.form-drawer,#fab-help{ display:none !important }
+      #print-sheet{ display:block !important }
+      body{ background:#fff }
+    }
+    @media (max-width:900px){
+      header{align-items:flex-start;flex-direction:column}
+      .tabs{width:100%;overflow:auto}
+      .tab{white-space:nowrap}
+      .app-actions{width:100%;justify-content:space-between}
+      .form-body{grid-template-columns:1fr}
+    }
+    @media (max-width:560px){
+      .wrap{padding:8px;gap:8px}
+      .panel{border-radius:12px}
+      .controls{padding:8px}
+      .canvas-wrap{padding:8px}
+    }
+  </style>
+
+  <!-- Blockly core + Dutch locale -->
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <script src="https://unpkg.com/blockly/msg/nl.js"></script>
+
+  <!-- Optional libs -->
+  <script src="rgbcolor.js"></script>
+  <script src="turtlelib.js"></script>
+
+  <!-- Optional levels bundle (Maze) -->
+  <script src="maze/generated.js"></script>
+
+  <!-- jsPDF / html2canvas -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="ai-brand">
+      <div class="ai-dot"></div>
+      <div><a href="index.html">Blockly in de Klas</a> · Maze & Turtle</div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Kies oefening">
+      <button id="tab-maze1" class="tab active" role="tab" aria-selected="true">Maze (Blokken)</button>
+      <button id="tab-maze2" class="tab" role="tab" aria-selected="false">Maze (Code)</button>
+      <button id="tab-turtle1" class="tab" role="tab" aria-selected="false">Turtle (Blokken)</button>
+      <button id="tab-turtle2" class="tab" role="tab" aria-selected="false">Turtle (Code)</button>
+    </div>
+
+    <div class="app-actions">
+      <div class="progress-chip" id="progress-chip" aria-live="polite">
+        <span class="progress-dot" aria-hidden="true"></span>
+        <span id="progress-summary">Voortgang: 0/40</span>
+      </div>
+      <button class="btn small" id="reset-progress" title="Wis opgeslagen voortgang">Voortgang wissen</button>
+      <button class="btn small" id="btn-pdf" title="Exporteer naar PDF">⤓ Exporteren naar PDF</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <section class="panel" aria-label="Editor">
+      <h3>Editor <span id="blocks-info" class="cap">— 0/∞</span></h3>
+      <div class="panel-body">
+        <div id="blocklyArea">
+          <div id="blocklyDiv" aria-label="Blockly werkruimte"></div>
+        </div>
+
+        <div id="cli-wrap" class="cli-wrap hidden" aria-label="Code-editor">
+          <textarea id="cli-editor" spellcheck="false">// Tip: probeer stap voor stap te denken.
+// Oefen de syntax goed in. Werk niet alleen digitaal, maar ook schriftelijk!</textarea>
+          <div id="cli-console" aria-live="polite" aria-atomic="true">
+            <div class="log-line log-info">Console verschijnt hier. Gebruik console.log() of bekijk foutmeldingen hieronder.</div>
+          </div>
+        </div>
+      </div>
+      <div class="notice" id="editorNote">
+        Tip: gebruik in Maze (Blokken) de blokken; in Maze (Code) en Turtle (Code) typ je code. In Turtle is (0,0) het midden.
+      </div>
+    </section>
+
+
+    <section class="panel" aria-label="Preview">
+      <h3 id="panelTitle">
+        <span id="print-title" class="hidden"></span>
+        <span id="mode-title">OEFENING</span>
+      </h3>
+
+
+      <div class="controls" id="controls-maze1">
+        <button class="btn primary" id="run-maze1">Uitvoeren</button>
+
+        <label for="level-select-1" class="sr-only">Level</label>
+        <select class="btn" id="level-select-1" title="Kies level"></select>
+
+        <label for="speed-range-1" class="sr-only">Snelheid (ms per stap)</label>
+        <input type="range" class="btn" id="speed-range-1" min="50" max="1000" step="50" value="900" title="Snelheid (ms per stap)">
+        <span id="speed-label-1" style="font-size:12px;color:var(--muted)">Snelheid: 900 ms/stap</span>
+        <span id="random-controls" class="cap hidden">
+  Level 11 (Random):
+  <input type="range"
+         class="btn"
+         id="random-difficulty"
+         min="1"
+         max="3"
+         step="1"
+         value="1"
+         title="Moeilijkheid random doolhof">
+  <span id="random-difficulty-label">Gemiddeld</span>
+</span>
+      </div>
+
+      <!-- Maze (Code) controls -->
+      <div class="controls hidden" id="controls-maze2">
+        <button class="btn primary" id="run-maze2">Uitvoeren</button>
+
+        <label for="level-select-2" class="sr-only">Level</label>
+        <select class="btn" id="level-select-2" title="Kies level"></select>
+
+        <label for="speed-range-2" class="sr-only">Snelheid (ms per stap)</label>
+        <input type="range" class="btn" id="speed-range-2" min="50" max="1000" step="50" value="900" title="Snelheid (ms per stap)">
+        <span id="speed-label-2" style="font-size:12px;color:var(--muted)">Snelheid: 900 ms/stap</span>
+      </div>
+
+      <!-- Turtle controls (shared) -->
+      <div class="controls hidden" id="controls-turtle">
+        <button class="btn primary" id="run-turtle-blocks">Uitvoeren</button>
+        <button class="btn primary hidden" id="run-turtle-cli">Uitvoeren</button>
+        <button class="btn" id="fit-turtle">Pas in beeld</button>
+
+        <label for="turtle-level" class="sr-only">Turtle Level</label>
+        <select class="btn" id="turtle-level" title="Kies level (1–9)"></select>
+
+        <label for="speed-range-t" class="sr-only">Snelheid (ms per stap)</label>
+        <input type="range" class="btn" id="speed-range-t" min="10" max="1000" step="10" value="600" title="Snelheid (ms per stap)">
+        <span id="speed-label-t" style="font-size:12px;color:var(--muted)">Snelheid: 600 ms/stap</span>
+      </div>
+
+      <div class="canvas-wrap">
+        <div id="turtle-stack" class="stack hidden">
+          <canvas id="turtle-bg"></canvas>
+          <canvas id="turtle-draw"></canvas>
+          <canvas id="turtle-cur"></canvas>
+        </div>
+        <canvas id="mazeCanvas" width="640" height="640" aria-label="Maze"></canvas>
+      </div>
+
+      <div class="notice" id="previewNote">
+        Maze: je algoritme speelt stap voor stap af. Pas de snelheid aan (tot 1000 ms).
+      </div>
+    </section>
+  </main>
+
+  <!-- Formularium Modal -->
+  <aside id="formularium" class="form-drawer hidden" aria-label="Blockly formularium" role="dialog" aria-modal="true" aria-labelledby="formularium-title">
+    <div class="form-header">
+      <div class="form-title" id="formularium-title">Blockly Formularium</div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn small" id="btn-form-hide-now" title="Sluit formularium">X</button>
+      </div>
+    </div>
+    <div class="form-body">
+      <div class="form-card wide">
+        <h4>Doel</h4>
+        <div>
+          Denk telkens in vier vragen: <b>Welke stappen moeten na elkaar?</b>, <b>Wanneer moet ik kiezen?</b>,
+          <b>Wanneer moet ik herhalen zolang iets waar is?</b>, <b>Wanneer moet ik een vast aantal keer herhalen?</b>
+        </div>
+      </div>
+
+      <div class="form-card wide">
+        <h4>Vier programmeerconcepten</h4>
+        <ul>
+          <li><b>Eenvoudige sequentie:</b> losse instructies staan in de juiste volgorde.</li>
+          <li><b>Selectie:</b> het programma kiest met <code>if</code>, <code>else if</code> of <code>else</code>.</li>
+          <li><b>Voorwaardelijke herhaling:</b> het programma herhaalt zolang een voorwaarde waar is, bijvoorbeeld <code>while (notDone())</code>.</li>
+          <li><b>Begrensde herhaling:</b> het programma herhaalt een vooraf bepaald aantal keer, bijvoorbeeld met <code>repeat</code> of <code>for</code>.</li>
+        </ul>
+      </div>
+
+      <div class="form-card">
+        <h4>Maze: denkstrategie</h4>
+        <ul>
+          <li><b>Eenvoudige sequentie:</b> zet stappen in de juiste volgorde.</li>
+          <li><b>Selectie:</b> gebruik <span class="kbd">als</span> wanneer je moet kiezen.</li>
+          <li><b>Begrensde herhaling:</b> herhaal een stap of patroon een vast aantal keer.</li>
+          <li><b>Voorwaardelijke herhaling:</b> herhaal zolang je nog niet bij het doel bent.</li>
+          <li><b>Sensoren:</b> controleer <span class="kbd">pad voor mij?</span>, <span class="kbd">pad links?</span> of <span class="kbd">pad rechts?</span>.</li>
+        </ul>
+        <div class="code">zolang niet klaar:
+  als pad voor mij:
+    stap vooruit
+  anders:
+    draai links</div>
+      </div>
+
+      <div class="form-card">
+        <h4>Maze: dezelfde gedachte in code</h4>
+        <div class="code">while (notDone()) {
+  if (isPathAhead()) {
+    moveForward();
+  } else {
+    turnLeft();
+  }
+}</div>
+        <p class="cap">Let op de haakjes bij functies: <code>notDone()</code> en <code>isPathAhead()</code>.</p>
+      </div>
+
+      <div class="form-card">
+        <h4>Turtle: beweging</h4>
+        <ul>
+          <li><b>Begrensde herhaling:</b> herhaal een bouwsteen een vast aantal keer wanneer je een vorm of patroon tekent.</li>
+          <li><code>moveForward(100)</code>: ga vooruit.</li>
+          <li><code>moveBackward(50)</code>: ga achteruit.</li>
+          <li><code>turnLeft(90)</code> en <code>turnRight(90)</code>: draai in graden.</li>
+          <li><code>goTo(x, y)</code>: spring naar een coordinaat. Het midden is <code>(0, 0)</code>.</li>
+          <li><code>penUp()</code> en <code>penDown()</code>: verplaatsen zonder of met tekenen.</li>
+        </ul>
+      </div>
+
+      <div class="form-card">
+        <h4>Turtle: tekenen</h4>
+        <ul>
+          <li><code>setPenColour('#5200FF')</code>: kies een kleur.</li>
+          <li><code>setPenColour(82, 0, 255)</code>: kies een RGB-kleur.</li>
+          <li><code>setLineWidth(4)</code>: pas de lijndikte aan.</li>
+          <li><code>writeText('Hallo')</code>: schrijf tekst op de huidige plaats.</li>
+          <li><code>fitToDrawing()</code>: pas de tekening in beeld.</li>
+        </ul>
+      </div>
+
+      <div class="form-card wide">
+        <h4>Snelle foutcheck voor je op Uitvoeren klikt</h4>
+        <ul>
+          <li>Heb je bij code functies met haakjes geschreven, zoals <code>moveForward(100)</code>?</li>
+          <li>Verandert er iets in je <code>while</code>-lus, zodat de lus ooit stopt?</li>
+          <li>Test eerst een kleine lijn, daarna een vorm, daarna pas een patroon.</li>
+          <li>Staat de pen omhoog wanneer je alleen wil verplaatsen?</li>
+          <li>Bij Maze: verlaag de snelheid en kijk waar je algoritme een verkeerde keuze maakt.</li>
+          <li>Bij Turtle: controleer hoeken. Een vierkant gebruikt meestal <code>90</code> graden, een gelijkzijdige driehoek <code>120</code> graden draaien.</li>
+        </ul>
+      </div>
+
+      <div class="form-card wide">
+        <h4>Kleurkiezer</h4>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <input id="color-picker" type="color" value="#5200FF" class="btn" title="Kies kleur">
+          <input id="color-text" type="text" class="btn" style="width:180px" value="#5200FF" spellcheck="false" title="HEX of CSS kleur">
+          <button id="color-apply" class="btn">Zet penkleur</button>
+        </div>
+        <div class="cap">Werkt in Turtle-modus. In code kan je dezelfde kleur gebruiken met <code>setPenColour('#5200FF')</code>.</div>
+      </div>
+
+      <div class="form-card wide">
+        <h4>Exporteren en feedback</h4>
+        <ul>
+          <li>Exporteer jouw oefening als PDF om jouw werk in te dienen.</li>
+          <li>Vul je volledige naam en klas in.</li>
+          <li>De feedback kijkt niet alleen naar het resultaat, maar ook naar leesbaarheid, programmeerconcepten, wiskundig denken en creativiteit.</li>
+        </ul>
+      </div>
+
+      <div class="form-card wide">
+        <h4>Credits en licentie</h4>
+        <ul>
+          <li>© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.</li>
+          <li>Gebaseerd op oefeningen uit het open-source Blockly project door Google.</li>
+          <li>Gebruik in eigen klas of onderwijscontext is toegelaten mits duidelijke naamsvermelding.</li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Turtle toolbox -->
+  <xml id="toolbox-turtle" style="display:none">
+    <category name="Beweging" colour="#5b6ee1">
+      <block type="turtle_move_forward"><value name="DIST"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block>
+      <block type="turtle_move_backward"><value name="DIST"><shadow type="math_number"><field name="NUM">50</field></shadow></value></block>
+      <block type="turtle_turn_left"><value name="ANGLE"><shadow type="math_number"><field name="NUM">90</field></shadow></value></block>
+      <block type="turtle_turn_right"><value name="ANGLE"><shadow type="math_number"><field name="NUM">90</field></shadow></value></block>
+      <block type="turtle_goto">
+        <value name="X"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="Y"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+    </category>
+    <category name="Tekenen" colour="#7c3aed">
+      <block type="turtle_pen_up"></block>
+      <block type="turtle_pen_down"></block>
+      <block type="turtle_set_width"><value name="W"><shadow type="math_number"><field name="NUM">2</field></shadow></value></block>
+      <block type="turtle_set_color">
+        <value name="R"><shadow type="math_number"><field name="NUM">82</field></shadow></value>
+        <value name="G"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="B"><shadow type="math_number"><field name="NUM">255</field></shadow></value>
+      </block>
+      <block type="turtle_write_text"><value name="TXT"><shadow type="text"><field name="TEXT">Hallo!</field></shadow></value></block>
+      <block type="turtle_fit"></block>
+    </category>
+    <category name="Lussen" colour="#10b981">
+      <block type="controls_repeat_ext"><value name="TIMES"><shadow type="math_number"><field name="NUM">4</field></shadow></value></block>
+      <block type="controls_whileUntil"></block>
+      <block type="controls_for">
+        <value name="FROM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="TO"><shadow type="math_number"><field name="NUM">6</field></shadow></value>
+        <value name="BY"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+    </category>
+    <category name="Logica" colour="#ef4444">
+      <block type="logic_compare"></block>
+      <block type="logic_operation"></block>
+      <block type="logic_boolean"></block>
+      <block type="math_number"></block>
+      <block type="text"></block>
+    </category>
+  </xml>
+
+  <!-- Maze toolbox -->
+  <xml id="toolbox-maze" style="display:none">
+    <category name="Beweging" colour="#5b6ee1">
+      <block type="maze_move_forward"></block>
+      <block type="maze_turn_left"></block>
+      <block type="maze_turn_right"></block>
+    </category>
+    <category name="Voorwaarden" colour="#00bcd4">
+      <block type="maze_path_ahead"></block>
+      <block type="maze_path_left"></block>
+      <block type="maze_path_right"></block>
+      <block type="maze_not_done"></block>
+    </category>
+    <category name="Lussen" colour="#10b981">
+      <block type="controls_whileUntil"></block>
+      <block type="controls_repeat_ext">
+        <value name="TIMES"><shadow type="math_number"><field name="NUM">3</field></shadow></value>
+      </block>
+    </category>
+    <category name="Logica" colour="#ef4444">
+      <block type="controls_if"></block>
+      <block type="logic_compare"></block>
+      <block type="logic_boolean"></block>
+      <block type="math_number"></block>
+    </category>
+  </xml>
+
+  <!-- Success Modal -->
+  <div id="success-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="success-title">
+    <div class="modal">
+      <div class="modal-header">🎉 <span id="success-title">Succes!</span></div>
+      <div class="modal-body">
+        <span class="pill">Goed gedaan — doel bereikt</span>
+        <div id="success-message">Je hebt het level voltooid.</div>
+        <div id="success-feedback" class="learning-feedback"></div>
+        <div>
+          <div style="font-weight:700;margin:6px 0 8px 0;">Jouw oplossing (code)</div>
+          <pre class="code-frame" id="success-code"></pre>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="export-pdf-success">⤓ Exporteren naar PDF</button>
+        <button class="btn primary" id="close-success">Naar volgend level!</button>
+      </div>
+    </div>
+  </div>
+
+    <!-- Feedback Modal -->
+  <div id="error-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="error-title">
+    <div class="modal">
+      <div class="modal-header" id="error-title">Feedback</div>
+      <div class="modal-body">
+        <span class="pill" id="error-pill">Bekijk je uitvoering</span>
+        <div id="error-message" style="margin-top:8px;"></div>
+        <div id="error-feedback" class="learning-feedback"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn primary" id="close-error">Verder oefenen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Progress Modal -->
+  <div id="reset-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="reset-title">
+    <div class="modal" style="max-width:620px">
+      <div class="modal-header" id="reset-title">Voortgang wissen</div>
+      <div class="modal-body">
+        <span class="pill">Lokaal opgeslagen in deze browser</span>
+        <div id="reset-current-context">Kies wat je wil wissen.</div>
+        <div class="hint">
+          Dit wist alleen Blockly-voortgang en opgeslagen werk. Je formularium-voorkeuren blijven behouden.
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn primary" id="reset-current" type="button">Alleen huidige oefening</button>
+        <button class="btn" id="reset-all" type="button">Alle voortgang</button>
+        <button class="btn" id="reset-cancel" type="button">Annuleren</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- PDF Export Modal -->
+  <div id="pdf-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
+    <div class="modal" style="max-width:740px">
+      <div class="modal-header">⤓ Exporteren naar PDF</div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="modal-naam">Naam</label>
+          <input id="modal-naam" type="text" placeholder="Voornaam Naam">
+        </div>
+        <div class="field">
+          <label for="modal-klas">Klas</label>
+          <input id="modal-klas" type="text" placeholder="vb. 1STEAM1, 1STEAM4 ...">
+        </div>
+        <div class="hint">
+          Vergeet niet jouw volledige naam en klas correct in te vullen. Plaats jouw PDF daarna in de correcte map binnen de Uploadzone.
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="close-pdf-modal">Annuleren</button>
+        <button class="btn primary" id="modal-ok">Genereer PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let randomDifficulty = 1; 
+    const $ = id => document.getElementById(id);
+    const urlQS = new URLSearchParams(location.search);
+
+    // Eenvoudige loop-bescherming; maxIterations zetten we per modus
+    function loopProtect(src, maxIterations = 5000) {
+      const stamp = `__lp_${Math.random().toString(36).slice(2)}`;
+      const header =
+        `let ${stamp}=0;` +
+        `function __lpCheck(){ if(++${stamp} > ${maxIterations}){` +
+        ` throw new Error('Je code loopt vast (te veel iteraties).'); } }`;
+      return header + '\n' + String(src)
+        .replace(/for\s*\(([^)]*)\)\s*{/g, 'for($1){__lpCheck();')
+        .replace(/while\s*\(([^)]*)\)\s*{/g, 'while($1){__lpCheck();')
+        .replace(/do\s*{/g, 'do{__lpCheck();');
+    }
+
+    // CORS helper voor textures (probeer eerst same-origin)
+    function isSameOrigin(url){
+      try{
+        const u = new URL(url, location.href);
+        return u.origin === location.origin;
+      }catch(_){ return true; } // relatieve paden => als same-origin behandelen
+    }
+
+    // Globale state voor export
+    window.activeMode = 'maze1';
+    window.lastRunCode = '';
+
+    // ---------- Thema (forceer licht) ----------
+    (function initTheme(){
+      const root = document.documentElement;
+      root.setAttribute('data-theme','light');
+      try { localStorage.setItem('aik_theme','light'); } catch(_) {}
+    })();
+
+    // ---------- Formularium / informatie ----------
+    const formEl = $('formularium');
+    const btnFormHideNow = $('btn-form-hide-now');
+    localStorage.removeItem('aik_form_perm_hide');
+
+    function formShouldStartVisible(){
+      if (urlQS.has('form')) return urlQS.get('form') === '1';
+      const saved = localStorage.getItem('aik_form_vis');
+      return saved === null ? true : saved === 'true';
+    }
+    function setFormVisible(vis){
+      formEl.classList.toggle('hidden', !vis);
+      localStorage.setItem('aik_form_vis', vis ? 'true' : 'false');
+      const fab = document.getElementById('fab-help');
+      if (fab){
+        fab.setAttribute('aria-pressed', String(vis));
+        fab.setAttribute('aria-label', vis ? 'Verberg formularium' : 'Toon formularium');
+        fab.title = vis ? 'Verberg formularium' : 'Toon formularium';
+      }
+    }
+    setFormVisible(formShouldStartVisible());
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const fab = document.getElementById('fab-help');
+      if (fab){
+        fab.addEventListener('click', ()=> setFormVisible(formEl.classList.contains('hidden')));
+        const open = !formEl.classList.contains('hidden');
+        fab.setAttribute('aria-pressed', String(open));
+        fab.setAttribute('aria-label', open ? 'Verberg formularium' : 'Toon formularium');
+        fab.title = open ? 'Verberg formularium' : 'Toon formularium';
+      }
+      btnFormHideNow?.addEventListener('click', ()=> setFormVisible(false));
+    });
+
+    // Kleurkiezer (Turtle)
+    const colorPicker = $('color-picker');
+    const colorText = $('color-text');
+    const colorApply = $('color-apply');
+    if (colorPicker && colorText && colorApply){
+      colorPicker.addEventListener('input', ()=> colorText.value = colorPicker.value);
+      colorText.addEventListener('input', ()=> {
+        if (/^#?[0-9a-f]{3,8}$/i.test(colorText.value.replace(/^#/,''))) {
+          try{ colorPicker.value = ensureHex8(colorText.value).slice(0,7); }catch(_){}
+        }
+      });
+      colorApply.addEventListener('click', ()=>{
+        if (typeof setPenColour === 'function'){
+          const parsed = parseColor(colorText.value);
+          if (parsed) setPenColour(parsed);
+        }
+      });
+    }
+    function ensureHex8(v){
+      let s = String(v).trim();
+      if (!s.startsWith('#')) s = '#' + s;
+      if (s.length === 4) { s = '#' + s[1]+s[1]+s[2]+s[2]+s[3]+s[3]; }
+      if (s.length === 7) return s + 'FF';
+      return s;
+    }
+    function parseColor(input){
+      const v = String(input).trim();
+      if (window.RGBColor){
+        const c = new RGBColor(v);
+        if (c.ok) return `rgb(${c.r},${c.g},${c.b})`;
+      }
+      if (/^#?[0-9a-f]{3,8}$/i.test(v.replace(/^#/,''))){
+        const hex = ensureHex8(v).replace(/^#/, '');
+        const r = parseInt(hex.slice(0,2),16);
+        const g = parseInt(hex.slice(2,4),16);
+        const b = parseInt(hex.slice(4,6),16);
+        return `rgb(${r},${g},${b})`;
+      }
+      if (/^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$/i.test(v)) return v;
+      return null;
+    }
+
+    // ---------- Statische analyse helpers ----------
+    function stripStringsAndComments(src){
+      let out = '', i = 0, n = src.length;
+      while (i < n){
+        const c = src[i], d = src[i+1];
+        if (c === "'" || c === '"' || c === '`'){
+          const q = c; out += ' '; i++;
+          while (i < n){
+            const ch = src[i], prev = src[i-1];
+            if (ch === '\\'){ out += ' '; i += 2; continue; }
+            if (ch === q && prev !== '\\'){ out += ' '; i++; break; }
+            out += (ch === '\n' ? '\n' : ' ');
+            i++;
+          }
+          continue;
+        }
+        if (c === '/' && d === '/'){ out += '  '; i += 2; while (i < n && src[i] !== '\n'){ out += ' '; i++; } continue; }
+        if (c === '/' && d === '*'){ out += '  '; i += 2; while (i < n-1 && !(src[i] === '*' && src[i+1] === '/')){ out += (src[i] === '\n' ? '\n' : ' '); i++; } i += 2; continue; }
+        out += c; i++;
+      }
+      return out;
+    }
+    function indexToLineCol(text, idx){
+      let line = 1, col = 1;
+      for (let i=0; i<idx; i++){
+        if (text[i] === '\n'){ line++; col = 1; }
+        else col++;
+      }
+      return { line, col };
+    }
+
+    // Zoekt '=' in if/while-voorwaarden (waarschuw bij fout gebruik)
+    function findSingleEqualsInIfOrWhile(clean){
+      const hits = [];
+      const n = clean.length; let i = 0;
+      while (i < n){
+        const kw = (clean.slice(i, i+2) === 'if') ? 'if'
+                 : (clean.slice(i, i+5) === 'while' ? 'while' : null);
+        if (kw){
+          const prev = clean[i-1] || '';
+          if (!/[A-Za-z0-9_$]/.test(prev)){
+            let j = i + kw.length;
+            while (j < n && /\s/.test(clean[j])) j++;
+            if (j >= n || clean[j] !== '('){ i += kw.length; continue; }
+            let depth = 0, start = j, k = j;
+            for (; k < n; k++){
+              const ch = clean[k];
+              if (ch === '(') depth++;
+              else if (ch === ')'){ depth--; if (depth === 0) break; }
+            }
+            if (depth !== 0){ i = j + 1; continue; }
+            const cond = clean.slice(start + 1, k);
+            for (let m = 0; m < cond.length; m++){
+              if (cond[m] === '='){
+                const pv = cond[m-1] || '', nx = cond[m+1] || '';
+                if (pv !== '=' && pv !== '!' && pv !== '<' && pv !== '>' && nx !== '=' && nx !== '>'){
+                  hits.push({ globalIndex: (start + 1 + m) });
+                  break;
+                }
+              }
+            }
+            i = k + 1; continue;
+          }
+        }
+        i++;
+      }
+      return hits;
+    }
+
+    function levenshtein(a,b){
+      a=String(a); b=String(b);
+      const m=a.length,n=b.length; const dp=Array.from({length:m+1},()=>Array(n+1).fill(0));
+      for(let i=0;i<=m;i++) dp[i][0]=i;
+      for(let j=0;j<=n;j++) dp[0][j]=j;
+      for(let i=1;i<=m;i++){
+        for(let j=1;j<=n;j++){
+          const cost=(a[i-1]===b[j-1])?0:1;
+          dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+        }
+      }
+      return dp[m][n];
+    }
+    function closestAllowed(name, allowedArr){
+      let best=null, bestD=1e9;
+      for (const x of allowedArr){
+        const d=levenshtein(name,x);
+        if (d<bestD){ bestD=d; best=x; }
+      }
+      return (bestD<=3)?best:null;
+    }
+
+    function makeAllowedSet(mode){
+      const base = new Set([
+        'console','Math','Number','String','Boolean','Array','Object',
+        'let','const','var',
+        'if','while','for'
+      ]);
+
+      const mazeAPI = [
+        'moveForward','turnLeft','turnRight',
+        'isPathAhead','isPathLeft','isPathRight',
+        'atGoal','notDone',
+        'mazeMoveForward','mazeTurnLeft','mazeTurnRight',
+        'mazePathAhead','mazePathLeft','mazePathRight','mazeAtGoal'
+      ];
+
+      const turtleAPI = [
+        'moveForward','moveBackward','turnLeft','turnRight',
+        'penUp','penDown','setPenColour','setLineWidth',
+        'goTo','writeText','fitToDrawing','resetTurtle','clearCanvas',
+        'showTurtle','hideTurtle'
+      ];
+
+      (mode && mode.startsWith('turtle') ? turtleAPI : mazeAPI).forEach(x => base.add(x));
+      return base;
+    }
+
+    function collectDeclaredNames(clean){
+      const set = new Set();
+      const declRe = /\bfunction\s+([A-Za-z_]\w*)\b|\b(?:const|let|var)\s+([A-Za-z_]\w*)\s*=\s*(?:function|\()/g;
+      let m; while ((m = declRe.exec(clean))){ set.add(m[1] || m[2]); }
+      return set;
+    }
+
+    // Detecteer onbekende functie-aanroepen; sla JS-sleutelwoorden over
+    function detectUnknownCalls(source, mode){
+      const clean = stripStringsAndComments(source);
+      const declared = collectDeclaredNames(clean);
+      const allowed = makeAllowedSet(mode);
+      const issues = [];
+
+      const KW = new Set(['if','while','for','switch','catch','function']);
+
+      const re = new RegExp(String.raw`(?:^|[^.$\w])([A-Za-z_]\w*)\s*\(`, 'g');
+      const lines = clean.split('\n');
+      for (let li = 0; li < lines.length; li++){
+        let m; re.lastIndex = 0;
+        while ((m = re.exec(lines[li]))){
+          const name = m[1];
+          const col = m.index + m[0].lastIndexOf(name) + 1;
+          if (KW.has(name)) continue;
+          if (!allowed.has(name) && !declared.has(name) && name !== 'function'){
+            const suggestion = closestAllowed(name, Array.from(allowed));
+            issues.push({
+              type: 'unknown-call', name, line: li+1, col,
+              message: suggestion
+                ? `Onbekende functie ‘${name}()’. Bedoel je ‘${suggestion}()’?`
+                : `Onbekende functie ‘${name}()’. Kijk de naam na en gebruik alleen de toegelaten acties.`
+            });
+          }
+        }
+      }
+      return issues;
+    }
+
+    
+    function detectLiteralInfiniteLoops(clean){
+  const hints = [];
+  // for(;;) { ... }
+  if (/\bfor\s*\(\s*;;\s*\)\s*{/.test(clean)) {
+    hints.push({
+      type:'infinite-loop',
+      line:1,
+      col:1,
+      message:"Oneindige lus ‘for(;;){...}’. Voeg een conditie en update toe of gebruik een teller."
+    });
+  }
+  // while(true) { ... } of while(1) { ... }
+  if (/\bwhile\s*\(\s*(?:true|1)\s*\)\s*{/.test(clean)) {
+    hints.push({
+      type:'infinite-loop',
+      line:1,
+      col:1,
+      message:"Oneindige lus ‘while(true){...}’. Voeg een stopvoorwaarde toe."
+    });
+  }
+  return hints;
+}
+
+    // Controleer for-header op typische fouten
+    function detectForHeaderIssues(clean){
+      const out = [];
+      const re = /for\s*\(([^)]*)\)/g;
+      let m;
+      while ((m = re.exec(clean))){
+        const header = m[1];
+        const parts = header.split(';');
+        if (parts.length !== 3){
+          out.push({
+            type:'for-header',
+            index:m.index,
+            message:"Ongeldige for-header. Gebruik 'for (let i = 0; i < x; i++) { ... }'."
+          });
+          continue;
+        }
+        const update = parts[2].trim();
+        if (/\+\+\-|\-\-\+|\+\-\+|\-\+\-/.test(update)){
+          out.push({
+            type:'for-update-typo',
+            index:m.index + header.indexOf(update),
+            message:"Typfout in de for-update. Bedoel je 'i++' of 'i--'?"
+          });
+        }
+        if (!update){
+          out.push({
+            type:'for-update-empty',
+            index:m.index,
+            message:"De for-lus mist een update-deel, bijvoorbeeld 'i++'."
+          });
+        }
+      }
+      return out;
+    }
+
+    function findMatchingParen(clean, openIndex){
+      let depth = 0;
+      for (let i = openIndex; i < clean.length; i++){
+        const ch = clean[i];
+        if (ch === '(') depth++;
+        else if (ch === ')'){
+          depth--;
+          if (depth === 0) return i;
+        }
+      }
+      return -1;
+    }
+
+    // Dwing accolades af voor didactische duidelijkheid, zonder te struikelen over notDone()
+    function detectBraceStyleForTeaching(clean){
+      const out = [];
+      const re = /\b(if|while)\b/g;
+      let m;
+      while ((m = re.exec(clean))){
+        let open = m.index + m[0].length;
+        while (open < clean.length && /\s/.test(clean[open])) open++;
+        if (clean[open] !== '(') continue;
+
+        const close = findMatchingParen(clean, open);
+        if (close < 0) continue;
+
+        let next = close + 1;
+        while (next < clean.length && /\s/.test(clean[next])) next++;
+        if (clean[next] === '{') continue;
+
+        out.push({
+          type: 'missing-braces',
+          index: m.index,
+          message: `Plaats accolades na '${m[1]}(...)'. Gebruik '${m[1]} (...) { ... }'.`
+        });
+      }
+      return out;
+    }
+
+    function stripLineCommentForStyle(line){
+      let quote = '', escaped = false;
+      for (let i = 0; i < line.length - 1; i++){
+        const ch = line[i];
+        if (escaped){ escaped = false; continue; }
+        if (ch === "\\"){ escaped = true; continue; }
+        if (quote){ if (ch === quote) quote = ''; continue; }
+        if (ch === '"' || ch === "'" || ch === '`'){ quote = ch; continue; }
+        if (ch === '/' && line[i + 1] === '/') return line.slice(0, i);
+      }
+      return line;
+    }
+
+    function detectSemicolonStyleIssues(source){
+      const issues = [];
+      const lines = String(source || '').replace(/\r\n/g, '\n').split('\n');
+      const statementStart = /^(?:let|const|var)\s+|^(?:[A-Za-z_$][\w$]*\s*=)|^(?:[A-Za-z_$][\w$]*\.)?[A-Za-z_$][\w$]*\s*\(/;
+      const controlStart = /^(?:if|else|for|while|switch|try|catch|finally|function|class)\b/;
+      for (let i = 0; i < lines.length; i++){
+        const raw = stripLineCommentForStyle(lines[i]);
+        const line = raw.trim();
+        if (!line) continue;
+        if (line.endsWith(';') || line.endsWith('{') || line.endsWith('}') || line.endsWith(':') || line.endsWith(',')) continue;
+        if (controlStart.test(line)) continue;
+        if (!statementStart.test(line)) continue;
+        issues.push({
+          type: 'missing-semicolon-style',
+          line: i + 1,
+          col: raw.length,
+          message: "Stijl: sluit deze instructie af met een puntkomma (;)."
+        });
+      }
+      return issues;
+    }
+
+    // Specifieke check: while(notDone) i.p.v. while(notDone())
+    function detectNotDoneCallIssues(clean){
+      const out = [];
+      const n = clean.length;
+      for (let i=0;i<n;i++){
+        if (clean.slice(i,i+5)==='while'){
+          const prev = clean[i-1]||'';
+          if (/[A-Za-z0-9_$]/.test(prev)) continue;
+          let j=i+5; while (j<n && /\s/.test(clean[j])) j++;
+          if (clean[j] !== '(') continue;
+          let depth=0, start=j, k=j;
+          for (;k<n;k++){
+            const ch = clean[k];
+            if (ch==='(') depth++;
+            else if (ch===')'){ depth--; if (depth===0) break; }
+          }
+          if (depth!==0) continue;
+          const cond = clean.slice(start+1, k);
+          const idx = cond.indexOf('notDone');
+          if (idx>=0){
+            const after = cond.slice(idx + 'notDone'.length);
+            if (!/^\s*\(/.test(after)){
+              out.push({
+                type:'notDone-parens',
+                index: start + 1 + idx,
+                message:"Gebruik ‘notDone()’ met haakjes: ‘while (notDone()) { … }’."
+              });
+            }
+          }
+          i = k;
+        }
+      }
+      return out;
+    }
+
+    // Verzamel alle hints uit de statische analyses
+    function detectCommonIssues(source, mode){
+      const clean = stripStringsAndComments(source);
+      const hints = [];
+
+      hints.push(...detectUnknownCalls(source, mode));
+      hints.push(...detectLiteralInfiniteLoops(clean));
+
+      const eqHits = findSingleEqualsInIfOrWhile(clean);
+      for (const h of eqHits){
+        const pos = indexToLineCol(source, h.globalIndex);
+        hints.push({
+          type: 'assignment-in-condition',
+          line: pos.line, col: pos.col,
+          message: "Je gebruikt '=' in een voorwaarde. Bedoel je '==' of '==='?",
+          remedy: "Vervang '=' door '==' (waarde) of '===' (type + waarde)."
+        });
+      }
+
+      detectForHeaderIssues(clean).forEach(h=>{
+        const pos = indexToLineCol(source, h.index);
+        hints.push({ ...h, line:pos.line, col:pos.col });
+      });
+      detectBraceStyleForTeaching(clean).forEach(h=>{
+        const pos = indexToLineCol(source, h.index);
+        hints.push({ ...h, line:pos.line, col:pos.col });
+      });
+      detectNotDoneCallIssues(clean).forEach(h=>{
+        const pos = indexToLineCol(source, h.index);
+        hints.push({ ...h, line:pos.line, col:pos.col });
+      });
+
+      return hints;
+    }
+
+    // ---------- Blockly helpers ----------
+    function _getJSGen(){
+      const legacy = Blockly.JavaScript || null;
+      const modern = Blockly.javascriptGenerator || null;
+      return {legacy, modern};
+    }
+    function _setGenStmt(type, makeCode){
+      const {legacy, modern} = _getJSGen();
+      if (modern && modern.forBlock){ modern.forBlock[type] = (block, gen)=> makeCode(block, gen); }
+      if (legacy && legacy.forBlock){ legacy.forBlock[type] = (block, gen)=> makeCode(block, gen); }
+      if (legacy){ legacy[type] = (block)=> makeCode(block, legacy); }
+    }
+    function _setGenExpr(type, makeCodeAndOrder){
+      const {legacy, modern} = _getJSGen();
+      if (modern && modern.forBlock){ modern.forBlock[type] = (block, gen)=> makeCodeAndOrder(block, gen); }
+      if (legacy && legacy.forBlock){ legacy.forBlock[type] = (block, gen)=> makeCodeAndOrder(block, gen); }
+      if (legacy){ legacy[type] = (block)=> makeCodeAndOrder(block, legacy); }
+    }
+
+const tabMaze1 = $('tab-maze1'), tabMaze2 = $('tab-maze2'),
+      tabTurtle1 = $('tab-turtle1'), tabTurtle2 = $('tab-turtle2');
+
+const controlsM1 = $('controls-maze1'), controlsM2 = $('controls-maze2'), controlsT = $('controls-turtle');
+const levelSel1 = $('level-select-1'), levelSel2 = $('level-select-2');
+const speed1 = $('speed-range-1'), speed2 = $('speed-range-2');
+const speedLbl1 = $('speed-label-1'), speedLbl2 = $('speed-label-2');
+
+const turtleStack = $('turtle-stack'), mazeCanvas = $('mazeCanvas');
+const previewNote = $('previewNote'), modeTitle = $('mode-title');
+const blocksInfo = $('blocks-info');
+const editorNote = $('editorNote');
+
+const blocklyArea = $('blocklyArea'), blocklyDiv = $('blocklyDiv');
+const cliWrap = $('cli-wrap'), cliEditor = $('cli-editor'), cliConsole = $('cli-console');
+
+const bgCanvas = $('turtle-bg');
+const drawCanvas = $('turtle-draw');
+const curCanvas = $('turtle-cur');
+let ctxBG, ctxDraw, ctxCur;
+
+const overlay = $('success-overlay'),
+      closeSuccess = $('close-success'),
+      successCode = $('success-code'),
+      successMsg  = $('success-message'),
+      successFeedback = $('success-feedback');
+const copySolution = $('copy-solution'); 
+const progressSummary = $('progress-summary');
+const resetProgressBtn = $('reset-progress');
+const resetModal = $('reset-modal');
+const resetCurrentBtn = $('reset-current');
+const resetAllBtn = $('reset-all');
+const resetCancelBtn = $('reset-cancel');
+const resetCurrentContext = $('reset-current-context');
+
+const randomControls        = $('random-controls');
+const randomDifficultyInput = $('random-difficulty');
+const randomDifficultyLabel = $('random-difficulty-label');
+
+if (randomDifficultyInput && randomDifficultyLabel) {
+
+  randomDifficulty = Number(randomDifficultyInput.value || '2');
+
+  const updateRandomLabel = () => {
+    const val = Number(randomDifficultyInput.value || '2');
+    let txt = 'Gemiddeld';
+    if (val === 1) txt = 'Makkelijk';
+    else if (val === 3) txt = 'Moeilijk';
+    randomDifficultyLabel.textContent = txt;
+  };
+
+
+  updateRandomLabel();
+
+  randomDifficultyInput.addEventListener('input', (e) => {
+    randomDifficulty = Number(e.target.value || '2');
+    updateRandomLabel();
+    
+    //Als level 11 (random) geselecteerd is, laad een nieuw random doolhof
+    const isRandomSelected =
+      (levelSel1 && parseInt(levelSel1.value || '1', 10) === RANDOM_LEVEL_INDEX) ||
+      (levelSel2 && parseInt(levelSel2.value || '1', 10) === RANDOM_LEVEL_INDEX);
+
+    if (isRandomSelected) {
+      // Gebruik de huidige sliderwaarde als moeilijkheid
+      loadLevel(RANDOM_LEVEL_INDEX, { difficulty: randomDifficulty });
+    }
+  });
+}
+
+
+
+    let activeMode = 'maze1';
+    let workspace;
+    let lastRunCode = '';
+    let lastMode = 'maze1';
+    let lastExerciseKey = null;
+    let currentSessionStartedAt = Date.now();
+
+    function syncGlobals(){
+      window.activeMode = activeMode;
+      window.lastRunCode = lastRunCode;
+      window.workspace = workspace;
+    }
+
+    function syncLayoutVars(){
+      const header = document.querySelector('header');
+      const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 64;
+      document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+    }
+
+    const PROGRESS_STORAGE_KEY = 'aik_blockly_progress_v1';
+    const MAZE_STARTER_XML = `
+  <xml>
+    <block type="controls_whileUntil" x="20" y="20">
+      <field name="MODE">WHILE</field>
+      <value name="BOOL"><block type="maze_not_done"></block></value>
+      <statement name="DO">
+        <block type="controls_if">
+          <mutation else="1"></mutation>
+          <value name="IF0"><block type="maze_path_ahead"></block></value>
+          <statement name="DO0"><block type="maze_move_forward"></block></statement>
+          <statement name="ELSE"><block type="maze_turn_left"></block></statement>
+        </block>
+      </statement>
+    </block>
+  </xml>`;
+    const MODE_META = {
+      maze1: { label: 'Maze (Blokken)', levels: () => TOTAL_LEVELS },
+      maze2: { label: 'Maze (Code)', levels: () => TOTAL_LEVELS },
+      turtle_blocks: { label: 'Turtle (Blokken)', levels: () => 9 },
+      turtle_cli: { label: 'Turtle (Code)', levels: () => 9 }
+    };
+    let saveWorkTimer = null;
+    let suppressProgressSave = false;
+
+    function readProgressStore(){
+      try {
+        return JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) || '{}') || {};
+      } catch (_) {
+        return {};
+      }
+    }
+
+    function writeProgressStore(store){
+      try {
+        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(store));
+      } catch (_) {}
+    }
+
+    function clearProgressStore(){
+      try {
+        localStorage.removeItem(PROGRESS_STORAGE_KEY);
+      } catch (_) {
+        writeProgressStore({});
+      }
+    }
+
+    function getCurrentLevelForMode(mode = activeMode){
+      if (mode === 'maze1') return parseInt(levelSel1?.value || '1', 10) || 1;
+      if (mode === 'maze2') return parseInt(levelSel2?.value || '1', 10) || 1;
+      return parseInt(document.getElementById('turtle-level')?.value || '1', 10) || 1;
+    }
+
+    function makeExerciseKey(mode = activeMode, level = getCurrentLevelForMode(mode)){
+      return `${mode}:level-${level}`;
+    }
+
+    function getProgressRecord(key = makeExerciseKey()){
+      const store = readProgressStore();
+      return store[key] || {};
+    }
+
+    function setProgressRecord(key, patch){
+      if (suppressProgressSave) return getProgressRecord(key);
+      const store = readProgressStore();
+      store[key] = { ...(store[key] || {}), ...patch, updatedAt: new Date().toISOString() };
+      writeProgressStore(store);
+      renderProgressSummary();
+      return store[key];
+    }
+
+    function getGeneratedWorkspaceCode(){
+      if (!workspace || !window.Blockly) return '';
+      try {
+        const J = Blockly.JavaScript || Blockly.javascriptGenerator;
+        return (J && J.workspaceToCode) ? String(J.workspaceToCode(workspace) || '') : '';
+      } catch (_) {
+        return '';
+      }
+    }
+
+    function saveWorkForKey(key = lastExerciseKey){
+      if (suppressProgressSave) return;
+      if (!key) return;
+      const keyMode = String(key).split(':')[0] || activeMode;
+      const keyLevel = parseInt((String(key).match(/level-(\d+)/) || [])[1] || '', 10) || getCurrentLevelForMode(keyMode);
+      const previous = getProgressRecord(key);
+      const elapsed = Math.max(0, Date.now() - currentSessionStartedAt);
+      const patch = {
+        mode: keyMode,
+        level: keyLevel,
+        label: MODE_META[keyMode]?.label || keyMode,
+        workMs: Number(previous.workMs || 0) + elapsed
+      };
+      if (activeMode === 'maze1' || activeMode === 'turtle_blocks') {
+        try {
+          const xml = Blockly.Xml.workspaceToDom(workspace);
+          patch.workspaceXml = Blockly.Xml.domToText(xml);
+          patch.code = getGeneratedWorkspaceCode();
+        } catch (_) {}
+      } else if (cliEditor) {
+        patch.code = String(cliEditor.value || '');
+      }
+      setProgressRecord(key, patch);
+      currentSessionStartedAt = Date.now();
+    }
+
+    function scheduleWorkSave(){
+      if (suppressProgressSave) return;
+      window.clearTimeout(saveWorkTimer);
+      saveWorkTimer = window.setTimeout(() => {
+        saveWorkForKey(lastExerciseKey || makeExerciseKey());
+      }, 350);
+    }
+
+    function restoreWorkForCurrentExercise(){
+      const key = makeExerciseKey();
+      const rec = getProgressRecord(key);
+      if ((activeMode === 'maze1' || activeMode === 'turtle_blocks') && rec.workspaceXml && workspace && window.Blockly) {
+        try {
+          workspace.clear();
+          const xml = Blockly.utils.xml.textToDom(rec.workspaceXml);
+          Blockly.Xml.domToWorkspace(xml, workspace);
+          updateCapacityBadge();
+          fitBlockly();
+        } catch (_) {}
+      } else if ((activeMode === 'maze2' || activeMode === 'turtle_cli') && typeof rec.code === 'string' && cliEditor) {
+        cliEditor.value = rec.code;
+      }
+      lastExerciseKey = key;
+      currentSessionStartedAt = Date.now();
+      renderProgressSummary();
+    }
+
+    function bumpAttempt(){
+      const key = makeExerciseKey();
+      const rec = getProgressRecord(key);
+      setProgressRecord(key, {
+        attempts: Number(rec.attempts || 0) + 1,
+        mode: activeMode,
+        level: getCurrentLevelForMode(),
+        label: MODE_META[activeMode]?.label || activeMode
+      });
+      saveWorkForKey(key);
+    }
+
+    function markCurrentExerciseCompleted(feedbackText){
+      const key = makeExerciseKey();
+      setProgressRecord(key, {
+        completed: true,
+        completedAt: new Date().toISOString(),
+        feedback: feedbackText,
+        mode: activeMode,
+        level: getCurrentLevelForMode(),
+        label: MODE_META[activeMode]?.label || activeMode
+      });
+      saveWorkForKey(key);
+    }
+
+    function progressTotals(){
+      const total = Object.values(MODE_META).reduce((sum, meta) => sum + Number(meta.levels()), 0);
+      const store = readProgressStore();
+      const completed = Object.keys(store).filter(key => store[key] && store[key].completed).length;
+      return { completed, total };
+    }
+
+    function renderProgressSummary(){
+      if (!progressSummary) return;
+      const { completed, total } = progressTotals();
+      progressSummary.textContent = `Voortgang: ${completed}/${total}`;
+    }
+
+    function describeCurrentExercise(){
+      const meta = MODE_META[activeMode] || { label: activeMode };
+      return `${meta.label}, level ${getCurrentLevelForMode()}`;
+    }
+
+    function openResetModal(){
+      if (!resetModal) return;
+      if (resetCurrentContext){
+        resetCurrentContext.textContent = `Kies wat je wil wissen. Huidige oefening: ${describeCurrentExercise()}.`;
+      }
+      resetModal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+      resetCurrentBtn?.focus();
+    }
+
+    function closeResetModal(){
+      if (!resetModal) return;
+      resetModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+      resetProgressBtn?.focus();
+    }
+
+    function replaceProgressStoreRecord(key){
+      const store = readProgressStore();
+      delete store[key];
+      writeProgressStore(store);
+    }
+
+    function loadStarterWorkspaceForMode(){
+      if (!workspace || !window.Blockly) return;
+      workspace.clear();
+      if (activeMode === 'maze1') {
+        try {
+          const xml = Blockly.utils.xml.textToDom(MAZE_STARTER_XML);
+          Blockly.Xml.domToWorkspace(xml, workspace);
+        } catch (_) {}
+      }
+      updateCapacityBadge();
+      fitBlockly();
+    }
+
+    function resetVisibleWorkSurface(){
+      suppressProgressSave = true;
+      window.clearTimeout(saveWorkTimer);
+      try {
+        lastRunCode = '';
+        syncGlobals();
+        if (activeMode === 'maze1' || activeMode === 'turtle_blocks') {
+          loadStarterWorkspaceForMode();
+        } else if (cliEditor) {
+          cliEditor.value = '';
+          if (cliConsole) {
+            cliConsole.innerHTML = '<div class="log-line log-info">Console verschijnt hier. Voer uit om te starten.</div>';
+          }
+        }
+        if (typeof stopPlayback === 'function') stopPlayback();
+        if (activeMode === 'maze1' || activeMode === 'maze2') {
+          if (typeof mazeReset === 'function') mazeReset();
+          if (typeof resizeMazeCanvas === 'function') resizeMazeCanvas();
+        } else {
+          if (typeof turtleStop === 'function') turtleStop();
+          if (typeof turtleReset === 'function') turtleReset();
+        }
+      } finally {
+        suppressProgressSave = false;
+        currentSessionStartedAt = Date.now();
+        lastExerciseKey = makeExerciseKey();
+        renderProgressSummary();
+      }
+    }
+
+    function resetCurrentExerciseProgress(){
+      replaceProgressStoreRecord(makeExerciseKey());
+      resetVisibleWorkSurface();
+      editorNote.textContent = `Voortgang voor ${describeCurrentExercise()} werd gewist.`;
+    }
+
+    function resetAllCourseProgress(){
+      clearProgressStore();
+      resetVisibleWorkSurface();
+      editorNote.textContent = 'Alle Blockly-voortgang werd gewist.';
+    }
+
+    const CORE_CONCEPTS = {
+      sequence: {
+        nl: 'eenvoudige sequentie',
+        cue: 'stappen in volgorde'
+      },
+      selection: {
+        nl: 'selectie',
+        cue: 'kiezen met if/else'
+      },
+      conditionalIteration: {
+        nl: 'voorwaardelijke herhaling',
+        cue: 'herhalen zolang iets waar is'
+      },
+      limitedIteration: {
+        nl: 'begrensde herhaling',
+        cue: 'een vast aantal keer herhalen'
+      }
+    };
+
+    const MAZE_LEVEL_FEEDBACK = {
+      1: { focus: 'eerste stappen', concepts: ['sequence'], done: 'Je zette losse stappen in een correcte volgorde.', next: 'Probeer hardop te voorspellen waar Pegman na elke stap staat.' },
+      2: { focus: 'draaien en vooruitgaan', concepts: ['sequence'], done: 'Je combineerde vooruitgaan met draaien in een duidelijke volgorde.', next: 'Let op het verschil tussen links en rechts vanuit het perspectief van Pegman.' },
+      3: { focus: 'rechte herhaling', concepts: ['limitedIteration'], done: 'Je herhaalt dezelfde stap een vast aantal keer.', next: 'Controleer hoeveel keer de stap echt nodig is.' },
+      4: { focus: 'trap-patroon herhalen', concepts: ['sequence', 'limitedIteration'], done: 'Je herhaalt een vast patroon van stappen en bochten.', next: 'Zoek de kleinste bouwsteen die terugkomt.' },
+      5: { focus: 'vaste route verkorten', concepts: ['sequence', 'limitedIteration'], done: 'Je combineert losse stappen met een vaste herhaling.', next: 'Splits de route in wat maar een keer gebeurt en wat terugkomt.' },
+      6: { focus: 'kiezen tijdens herhalen', concepts: ['selection', 'conditionalIteration'], done: 'Je herhaalt tot het doel en kiest onderweg wat er moet gebeuren.', next: 'Controleer altijd of je lus ooit kan stoppen.' },
+      7: { focus: 'links en rechts testen', concepts: ['selection', 'conditionalIteration'], done: 'Je gebruikt meerdere richtingen om een route te kiezen.', next: 'Vergelijk of links eerst testen een ander gedrag geeft dan rechts eerst testen.' },
+      8: { focus: 'strategie combineren', concepts: ['sequence', 'selection', 'conditionalIteration'], done: 'Je combineerde beweging, keuzes en herhaling tot een volledige strategie.', next: 'Beschrijf je strategie in een zin voordat je naar code gaat.' },
+      9: { focus: 'minder blokken', concepts: ['selection', 'conditionalIteration'], done: 'Je loste het level op door patronen in je route te herkennen.', next: 'Zoek welke reeks blokken eigenlijk een herhaalbaar patroon vormt.' },
+      10: { focus: 'einddoolhof', concepts: ['sequence', 'selection', 'conditionalIteration'], done: 'Je past meerdere Maze-ideeën samen toe.', next: 'Probeer je oplossing nu in Code-modus te schrijven.' },
+      11: { focus: 'random doolhof', concepts: ['selection', 'conditionalIteration'], done: 'Je oplossing werkt op een onbekend doolhof.', next: 'Maak je strategie zo algemeen mogelijk, niet alleen passend voor een vaste kaart.' }
+    };
+
+    const TURTLE_LEVEL_FEEDBACK = {
+      1: { focus: 'lijn en richting', concepts: ['sequence'], done: 'Je controleert de richting van de turtle en tekent doelgericht.', next: 'Verander de afstand en voorspel eerst wat er zal gebeuren.' },
+      2: { focus: 'rechte hoek', concepts: ['sequence'], done: 'Je gebruikt draaien om een hoek te maken.', next: 'Controleer of je vanuit de turtle denkt, niet vanuit jezelf.' },
+      3: { focus: 'vierkant', concepts: ['limitedIteration'], done: 'Je maakte een figuur met gelijke zijden en rechte hoeken.', next: 'Een vierkant is vier keer dezelfde bouwsteen: probeer dit met een for-lus.' },
+      4: { focus: 'driehoek', concepts: ['limitedIteration'], done: 'Je gebruikte een herhaalbare bouwsteen met een andere draaihoek dan bij een vierkant.', next: 'Denk aan buitenhoeken: de turtle draait niet altijd de hoek die je in de figuur ziet.' },
+      5: { focus: 'trap', concepts: ['sequence', 'limitedIteration'], done: 'Je herkende een herhalende bouwsteen in de tekening.', next: 'Geef de bouwsteen een vaste volgorde en herhaal die met een lus.' },
+      6: { focus: 'coordinaten', concepts: ['sequence'], done: 'Je gebruikt posities op het assenstelsel.', next: 'Controleer voor elke verplaatsing of de pen omhoog of omlaag moet staan.' },
+      7: { focus: 'meerdere vormen', concepts: ['sequence', 'limitedIteration'], done: 'Je splitst een grotere tekening op in kleinere stukken.', next: 'Zoek welk stuk je opnieuw kan gebruiken.' },
+      8: { focus: 'kleur en lijndikte', concepts: ['sequence'], done: 'Je stuurt je tekening met eigenschappen zoals kleur of lijndikte.', next: 'Laat een waarde veranderen in een lus om een patroon rijker te maken.' },
+      9: { focus: 'creatieve transfer', concepts: ['sequence', 'limitedIteration'], done: 'Je combineert beweging, hoeken, peninstellingen en herhaling.', next: 'Leg uit welke drie keuzes je tekening het meest bepalen.' }
+    };
+
+    function getLevelFeedbackMeta(mode = activeMode, level = getCurrentLevelForMode(mode)){
+      if (mode === 'maze1' || mode === 'maze2') return MAZE_LEVEL_FEEDBACK[level] || MAZE_LEVEL_FEEDBACK[1];
+      return TURTLE_LEVEL_FEEDBACK[level] || TURTLE_LEVEL_FEEDBACK[1];
+    }
+
+    function conceptLabel(key){
+      const concept = CORE_CONCEPTS[key];
+      return concept ? concept.nl : key;
+    }
+
+    function conceptSummary(keys = []){
+      return keys.map(conceptLabel).join(', ');
+    }
+
+    function feedbackConceptKeys(meta, code){
+      const source = String(code || '');
+      const keys = new Set(meta.concepts || []);
+      const hasCode = source.trim().length > 0;
+      const usesIf = /\bif\s*\(/.test(source);
+      const usesWhile = /\bwhile\s*\(/.test(source);
+      const usesBoundedLoop = /\bfor\s*\(/.test(source);
+
+      if (hasCode) {
+        if (keys.has('selection') && !usesIf) keys.delete('selection');
+        if (keys.has('conditionalIteration') && !usesWhile) keys.delete('conditionalIteration');
+        if (keys.has('limitedIteration') && !usesBoundedLoop) keys.delete('limitedIteration');
+      }
+
+      if (usesIf) keys.add('selection');
+      if (usesWhile) {
+        if (!usesBoundedLoop) keys.delete('limitedIteration');
+        keys.add('conditionalIteration');
+      }
+      if (usesBoundedLoop) {
+        keys.add('limitedIteration');
+      }
+
+      if (!keys.size && hasCode) keys.add('sequence');
+      return Array.from(keys);
+    }
+
+    function codeStats(code){
+      const source = String(code || '');
+      return {
+        hasLoop: /\b(?:while|for)\s*\(/.test(source),
+        hasWhile: /\bwhile\s*\(/.test(source),
+        hasFor: /\bfor\s*\(/.test(source),
+        hasIf: /\bif\s*\(/.test(source),
+        hasMazeSensor: /isPathAhead\s*\(|isPathLeft\s*\(|isPathRight\s*\(|mazePathAhead\s*\(|mazePathLeft\s*\(|mazePathRight\s*\(/.test(source),
+        hasLeftRightSensor: /isPathLeft\s*\(|isPathRight\s*\(|mazePathLeft\s*\(|mazePathRight\s*\(/.test(source),
+        hasColour: /setPenColour\s*\(/.test(source),
+        hasWidth: /setLineWidth\s*\(/.test(source),
+        hasGoto: /goTo\s*\(/.test(source),
+        actionCount: (source.match(/\b(?:moveForward|moveBackward|turnLeft|turnRight|penUp|penDown|setPenColour|setLineWidth|goTo|writeText|mazeMoveForward|mazeTurnLeft|mazeTurnRight)\s*\(/g) || []).length,
+        lineCount: source.split('\n').filter(line => line.trim()).length
+      };
+    }
+
+    function summarizeSemicolonFeedback(code){
+      if (!(activeMode === 'maze2' || activeMode === 'turtle_cli')) return '';
+      const issues = detectSemicolonStyleIssues(code);
+      if (!issues.length) return '';
+      const shown = issues.slice(0, 3).map(item => `regel ${item.line}`).join(', ');
+      const extra = issues.length > 3 ? ` en ${issues.length - 3} andere regel(s)` : '';
+      return `<strong>Stijl:</strong> vergeet de puntkomma op ${shown}${extra} niet.`;
+    }
+
+    function buildLearningFeedback(result = null){
+      const levelNr = getCurrentLevelForMode();
+      const meta = getLevelFeedbackMeta(activeMode, levelNr);
+      const code = String(lastRunCode || '');
+      const concept = conceptSummary(feedbackConceptKeys(meta, code));
+      const parts = [
+        `<strong>Level ${levelNr}:</strong> jouw algoritme werkt. Proficiat!`,
+        `Deze oefening testte vooral: <strong>${concept}</strong>.`,
+        'Klaar voor de volgende uitdaging?'
+      ];
+
+      const semicolon = summarizeSemicolonFeedback(code);
+      if (semicolon) parts.push(semicolon);
+      return parts.join('<br>');
+    }
+
+    const MAX_BLOCKS_MAZE = [Infinity, Infinity, 3, 5, 6, 6, 6, 10, 7, 10, Infinity];
+    const MAZE_FREE_LIMIT_BLOCKS = new Set([
+      'maze_path_ahead',
+      'maze_path_left',
+      'maze_path_right',
+      'maze_not_done',
+      'logic_boolean',
+      'logic_compare',
+      'logic_operation',
+      'math_number'
+    ]);
+
+    function fitBlockly() {
+      if (!workspace) return;
+      const r = blocklyArea.getBoundingClientRect();
+      blocklyDiv.style.left = 0;
+      blocklyDiv.style.top = 0;
+      blocklyDiv.style.width = r.width + 'px';
+      blocklyDiv.style.height = r.height + 'px';
+      if (window.Blockly && Blockly.svgResize) Blockly.svgResize(workspace);
+    }
+    window.addEventListener('resize', () => {
+      syncLayoutVars();
+      fitBlockly();
+    });
+
+    function registerBlocks(){
+      if (!Blockly.Blocks['turtle_move_forward']) {
+        Blockly.defineBlocksWithJsonArray([
+          { type:'turtle_move_forward', message0:'ga vooruit %1', args0:[{type:'input_value',name:'DIST',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
+          { type:'turtle_move_backward', message0:'ga achteruit %1', args0:[{type:'input_value',name:'DIST',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
+          { type:'turtle_turn_left', message0:'draai links %1 °', args0:[{type:'input_value',name:'ANGLE',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
+          { type:'turtle_turn_right', message0:'draai rechts %1 °', args0:[{type:'input_value',name:'ANGLE',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
+          { type:'turtle_goto', message0:'ga naar x %1 y %2', args0:[{type:'input_value',name:'X',check:'Number'},{type:'input_value',name:'Y',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
+          { type:'turtle_pen_up', message0:'pen omhoog', previousStatement:null, nextStatement:null, colour:280 },
+          { type:'turtle_pen_down', message0:'pen omlaag', previousStatement:null, nextStatement:null, colour:280 },
+          { type:'turtle_set_width', message0:'zet lijndikte %1', args0:[{type:'input_value',name:'W',check:'Number'}], previousStatement:null, nextStatement:null, colour:280 },
+          { type:'turtle_set_color',
+  message0:'zet penkleur R %1 G %2 B %3',
+  args0:[
+    { type:'input_value', name:'R', check:'Number' },
+    { type:'input_value', name:'G', check:'Number' },
+    { type:'input_value', name:'B', check:'Number' }
+  ],
+  previousStatement:null,
+  nextStatement:null,
+  colour:280
+},
+
+    { type:'turtle_write_text', message0:'schrijf tekst %1',
+      args0:[{type:'input_value',name:'TXT',check:'String'}],
+      previousStatement:null, nextStatement:null, colour:280 },
+
+    { type:'turtle_fit', message0:'pas tekening in beeld',
+      previousStatement:null, nextStatement:null, colour:280 }
+        ]);
+      }
+      if (!Blockly.Blocks['maze_move_forward']) {
+        Blockly.defineBlocksWithJsonArray([
+          { type:'maze_move_forward', message0:'stap vooruit', previousStatement:null, nextStatement:null, colour:200 },
+          { type:'maze_turn_left',    message0:'draai links',  previousStatement:null, nextStatement:null, colour:200 },
+          { type:'maze_turn_right',   message0:'draai rechts', previousStatement:null, nextStatement:null, colour:200 },
+          { type:'maze_path_ahead',   message0:'pad voor mij?', output:'Boolean', colour:0 },
+          { type:'maze_path_left',    message0:'pad links?',    output:'Boolean', colour:0 },
+          { type:'maze_path_right',   message0:'pad rechts?',   output:'Boolean', colour:0 },
+          { type:'maze_not_done',     message0:'niet klaar?',   output:'Boolean', colour:0 }
+        ]);
+      }
+    }
+
+    function _numArg(g, b, name, fallback){
+      if (b && b.getInputTargetBlock){
+        const t = b.getInputTargetBlock(name);
+        if (t && t.type === 'math_number'){
+          const f = t.getField && t.getField('NUM');
+          if (f){ return String(+f.getValue()); }
+        }
+      }
+      const J = g || Blockly.JavaScript;
+      const ORDER = (Blockly.JavaScript && Blockly.JavaScript.ORDER_ATOMIC) || 0;
+      const code = J.valueToCode(b, name, ORDER) || String(fallback);
+      return `(+(${code}))`;
+    }
+
+function ensureTurtleGenerators(){
+  _setGenStmt('turtle_move_forward', (b,g)=> { const d=_numArg(g,b,'DIST',0); return `moveForward(${d});\n`; });
+  _setGenStmt('turtle_move_backward',(b,g)=> { const d=_numArg(g,b,'DIST',0); return `moveBackward(${d});\n`; });
+  _setGenStmt('turtle_turn_left',    (b,g)=> { const a=_numArg(g,b,'ANGLE',0); return `turnLeft(${a});\n`; });
+  _setGenStmt('turtle_turn_right',   (b,g)=> { const a=_numArg(g,b,'ANGLE',0); return `turnRight(${a});\n`; });
+  _setGenStmt('turtle_goto',         (b,g)=> {
+    const x=_numArg(g,b,'X',0), y=_numArg(g,b,'Y',0);
+    return `goTo(${x}, ${y});\n`;
+  });
+  _setGenStmt('turtle_pen_up',   ()=> `penUp();\n`);
+  _setGenStmt('turtle_pen_down', ()=> `penDown();\n`);
+  _setGenStmt('turtle_set_width',(b,g)=> { const w=_numArg(g,b,'W',1); return `setLineWidth(${w});\n`; });
+_setGenStmt('turtle_set_color', (b, g) => {
+  const hasRGB =
+    typeof b.getInput === 'function' &&
+    (b.getInput('R') || b.getInput('G') || b.getInput('B'));
+
+  if (hasRGB) {
+    const r  = _numArg(g, b, 'R', 0);
+    const gg = _numArg(g, b, 'G', 0);
+    const bb = _numArg(g, b, 'B', 0);
+    return `setPenColour(${r}, ${gg}, ${bb});\n`;
+  }
+  const hex =
+    (b.getField && (b.getFieldValue('COL') || b.getFieldValue('COLOUR') || b.getFieldValue('COLOR'))) ||
+    '#5200FF';
+  const safeHex = String(hex).replace(/'/g, "\\'");
+  return `setPenColour('${safeHex}');\n`;
+});
+
+  _setGenStmt('turtle_write_text', (b,g)=> {
+    const J=g||Blockly.JavaScript, ORDER=(Blockly.JavaScript && Blockly.JavaScript.ORDER_ATOMIC) || 0;
+    const txt = J.valueToCode(b,'TXT',ORDER) || '""';
+    return `writeText(${txt});\n`;
+  });
+  _setGenStmt('turtle_fit',       ()=> `if (typeof fitToDrawing==='function') fitToDrawing();\n`);
+}
+
+    function ensureMazeGenerators(){
+      const ORDER_CALL = (Blockly.JavaScript && Blockly.JavaScript.ORDER_FUNCTION_CALL) || 0;
+      _setGenStmt('maze_move_forward', ()=> `moveForward();\n`);
+      _setGenStmt('maze_turn_left',    ()=> `turnLeft();\n`);
+      _setGenStmt('maze_turn_right',   ()=> `turnRight();\n`);
+      _setGenExpr('maze_path_ahead',   ()=> [`isPathAhead()`, ORDER_CALL]);
+      _setGenExpr('maze_path_left',    ()=> [`isPathLeft()`, ORDER_CALL]);
+      _setGenExpr('maze_path_right',   ()=> [`isPathRight()`, ORDER_CALL]);
+      _setGenExpr('maze_not_done',     ()=> [`notDone()`, ORDER_CALL]);
+    }
+
+    registerBlocks();
+    ensureTurtleGenerators();
+    ensureMazeGenerators();
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      syncLayoutVars();
+      if (Blockly && Blockly.setLocale && Blockly.Msg && Blockly.Msg.nl){
+        Blockly.setLocale(Blockly.Msg.nl);
+      }
+
+      workspace = Blockly.inject('blocklyDiv', {
+        toolbox: $('toolbox-maze'),
+        trashcan: true,
+        renderer: 'zelos',
+        grid: { spacing: 20, length: 3, colour: '#eee', snap: true },
+        zoom: { controls: true, wheel: true },
+        maxBlocks: Infinity
+      });
+      window.workspace = workspace;
+      fitBlockly();
+
+      workspace.addChangeListener(updateCapacityBadge);
+      workspace.addChangeListener((event) => {
+        if (event && event.isUiEvent) return;
+        scheduleWorkSave();
+      });
+
+      const startXml = Blockly.utils.xml.textToDom(MAZE_STARTER_XML);
+      Blockly.Xml.domToWorkspace(startXml, workspace);
+
+      ctxBG   = bgCanvas.getContext('2d');
+      ctxDraw = drawCanvas.getContext('2d');
+      ctxCur  = curCanvas.getContext('2d');
+
+      bindSpeedLabel(speed1, speedLbl1);
+      bindSpeedLabel(speed2, speedLbl2);
+
+      setMode('maze1');
+      loadAssets().then(()=>{
+        populateLevelSelect(levelSel1);
+        populateLevelSelect(levelSel2);
+function setMazeLevel(idx){
+  const num      = parseInt(idx || '1', 10);
+  const clamped  = Math.max(1, Math.min(TOTAL_LEVELS, num));
+  const value    = String(clamped);
+
+  if (levelSel1) levelSel1.value = value;
+  if (levelSel2) levelSel2.value = value;
+
+  const isRandom = (clamped === RANDOM_LEVEL_INDEX);
+
+  // Toon/verberg de inline random-controls span
+  if (randomControls){
+    randomControls.classList.toggle('hidden', !isRandom);
+  }
+
+  // Kies moeilijkheid op basis van de slider
+  const diff = randomDifficultyInput
+    ? Number(randomDifficultyInput.value || '2')
+    : randomDifficulty;
+
+  if (isRandom){
+    loadLevel(RANDOM_LEVEL_INDEX, { difficulty: diff });
+  } else {
+    loadLevel(clamped);
+  }
+
+  mazeReset();
+  resizeMazeCanvas();
+  applyMaxBlocks();
+}
+
+if (levelSel1) levelSel1.addEventListener('change', () => {
+  saveWorkForKey(lastExerciseKey);
+  setMazeLevel(levelSel1.value);
+  restoreWorkForCurrentExercise();
+});
+if (levelSel2) levelSel2.addEventListener('change', () => {
+  saveWorkForKey(lastExerciseKey);
+  setMazeLevel(levelSel2.value);
+  restoreWorkForCurrentExercise();
+});
+
+const INIT_LEVEL = Math.max(1, Math.min(TOTAL_LEVELS, parseInt(urlQS.get('level') || '1', 10) || 1));
+if (levelSel1) levelSel1.value = String(INIT_LEVEL);
+if (levelSel2) levelSel2.value = String(INIT_LEVEL);
+setMazeLevel(INIT_LEVEL);
+restoreWorkForCurrentExercise();
+mazeReset();
+resizeMazeCanvas();
+
+        initTurtleUIOnce();
+      });
+    });
+
+    function loadToolbox(id){
+      workspace.updateToolbox($(id));
+      workspace.clear();
+      fitBlockly();
+      updateCapacityBadge();
+    }
+
+    function computeMaxBlocks(){
+  if (activeMode !== 'maze1') return Infinity;
+  const idx = Math.max(1, parseInt(levelSel1?.value || '1', 10));
+  const v = MAX_BLOCKS_MAZE[idx-1];
+  return (typeof v === 'number' ? v : Infinity);
+}
+    function isCountedMazeBlock(block){
+      if (!block) return false;
+      if (typeof block.isShadow === 'function' && block.isShadow()) return false;
+      return !MAZE_FREE_LIMIT_BLOCKS.has(block.type);
+    }
+    function countMazeBlocksForLimit(){
+      if (!workspace) return 0;
+      return workspace.getAllBlocks(false).filter(isCountedMazeBlock).length;
+    }
+    function getMazeBlockLimitInfo(){
+      const limit = computeMaxBlocks();
+      const used = countMazeBlocksForLimit();
+      return { used, limit, over: Number.isFinite(limit) && used > limit };
+    }
+    function applyMaxBlocks(){
+      workspace.options.maxBlocks = Infinity;
+      updateCapacityBadge();
+    }
+    function updateCapacityBadge(){
+      if (activeMode === 'maze1' && workspace) {
+        const info = getMazeBlockLimitInfo();
+        blocksInfo.textContent = '— ' + info.used + '/' + (info.limit === Infinity ? '∞' : info.limit) + ' blokken';
+        blocksInfo.classList.toggle('over-limit', info.over);
+        blocksInfo.title = "Voorwaarden zoals 'niet klaar?' en 'pad voor mij?' tellen niet mee voor de bloklimiet.";
+        return;
+      }
+      const used = (activeMode==='turtle_blocks') && workspace ? workspace.getAllBlocks(false).filter(block => !(typeof block.isShadow === 'function' && block.isShadow())).length : 0;
+      blocksInfo.textContent = '— ' + used + '/∞';
+      blocksInfo.classList.remove('over-limit');
+      blocksInfo.removeAttribute('title');
+    }
+
+    // ─────────────────────────────────────────────
+    // MAZE engine + assets + frames
+    // ─────────────────────────────────────────────
+    const mctx = mazeCanvas.getContext('2d');
+
+    const SKIN = {
+      tiles: 'assets/tiles_pegman.png',
+      sprite: 'assets/pegman.png',
+      marker: 'assets/marker.png',
+      win: 'assets/win.mp3',
+      fail: 'assets/fail_pegman.mp3'
+    };
+    (function maybeApplyEmbedded(){
+      const EMBED = window.AIK_EMBEDDED_ASSETS || null;
+      if (!EMBED) return;
+      if (EMBED.tiles)  SKIN.tiles  = EMBED.tiles;
+      if (EMBED.sprite) SKIN.sprite = EMBED.sprite;
+      if (EMBED.marker) SKIN.marker = EMBED.marker;
+    })();
+
+    const INLINE_TEXTURES_FOR_PDF = /^https?:$/.test(location.protocol);
+
+    async function fetchAsDataURI(url){
+      try{
+        const u = new URL(url, location.href);
+        const hereHttp = /^https?:$/.test(location.protocol);
+        const urlHttp  = /^https?:$/.test(u.protocol);
+        if (!hereHttp || !urlHttp) return null;
+        if (u.origin !== location.origin) return null;
+        const res = await fetch(u.href, { cache: 'force-cache' });
+        if (!res.ok) return null;
+        const blob = await res.blob();
+        return await new Promise((resolve)=>{
+          const fr = new FileReader();
+          fr.onload = () => resolve(fr.result);
+          fr.readAsDataURL(blob);
+        });
+      }catch(_){ return null; }
+    }
+
+    const IMG = { tiles: new Image(), sprite: new Image(), marker: new Image() };
+    let ASSETS_READY = false;
+
+    async function loadAssets(){
+      IMG.tiles  = new Image();
+      IMG.sprite = new Image();
+      IMG.marker = new Image();
+
+      [ [IMG.tiles,  SKIN.tiles],
+        [IMG.sprite, SKIN.sprite],
+        [IMG.marker, SKIN.marker]
+      ].forEach(([img, src])=>{
+        if (!/^data:/.test(src) && !isSameOrigin(src)) img.crossOrigin = 'anonymous';
+      });
+
+      let tilesSrc  = INLINE_TEXTURES_FOR_PDF ? (await fetchAsDataURI(SKIN.tiles))  : null;
+      let spriteSrc = INLINE_TEXTURES_FOR_PDF ? (await fetchAsDataURI(SKIN.sprite)) : null;
+      let markerSrc = INLINE_TEXTURES_FOR_PDF ? (await fetchAsDataURI(SKIN.marker)) : null;
+
+      IMG.tiles.src  = tilesSrc  || SKIN.tiles;
+      IMG.sprite.src = spriteSrc || SKIN.sprite;
+      IMG.marker.src = markerSrc || SKIN.marker;
+
+      await new Promise((resolve)=>{
+        let left = 3;
+        const done = () => { if (--left === 0) { ASSETS_READY = true; drawMaze(mazeState); resolve(); } };
+        const fail = (e)  => { console.warn('Maze assets konden niet geladen worden', e); if (--left === 0) { drawMaze(mazeState); resolve(); } };
+        IMG.tiles.onload  = done; IMG.tiles.onerror  = fail;
+        IMG.sprite.onload = done; IMG.sprite.onerror = fail;
+        IMG.marker.onload = done; IMG.marker.onerror = fail;
+      });
+    }
+
+    const SND = { win: new Audio(SKIN.win), fail: new Audio(SKIN.fail) };
+    SND.win.volume = 0.6; SND.fail.volume = 0.55;
+
+    const TILE_SHAPES = {
+      '10010':[4,0], '10001':[3,3], '11000':[0,1], '10100':[0,2],
+      '11010':[4,1], '10101':[3,2], '10110':[0,0], '10011':[2,0],
+      '11001':[4,2], '11100':[2,3], '11110':[1,1], '10111':[1,0],
+      '11011':[2,1], '11101':[1,2], '11111':[2,2],
+      'null0':[4,3], 'null1':[3,0], 'null2':[3,1], 'null3':[0,3], 'null4':[1,3],
+    };
+
+    const ORIENT_TOTAL = 16;
+    const DIR_TO_BASE_POSE = [4, 0, 12, 8];
+
+    function getOGLevel(index = 1){
+      const src = window.AIK_GENERATED?.maze;
+      if (src?.levels?.length){
+        const L = src.levels.find(l => l.id === index) || src.levels[index-1] || src.levels[0];
+        const grid = L.grid.map(row => row.slice());
+        if (L.start) grid[L.start.y][L.start.x] = 'S';
+        if (L.goal)  grid[L.goal.y][L.goal.x]   = 'G';
+        return { grid, cell: L.cell || 50 };
+      }
+      return null;
+    }
+
+    const FALLBACK = {
+      cell: 64,
+      grid: [
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,'S',1,1,0,1,1,1,1,0],
+        [0,0,0,1,0,1,0,0,1,0],
+        [0,1,1,1,1,1,0,1,1,0],
+        [0,1,0,0,0,1,0,1,0,0],
+        [0,1,1,1,0,1,1,1,0,0],
+        [0,0,0,1,0,0,0,1,0,0],
+        [0,1,1,1,1,1,0,1,1,0],
+        [0,1,0,0,0,1,1,1,'G',0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ]
+    };
+
+    // Basis: aantal handgemaakte levels
+const BASE_TOTAL_LEVELS = (window.AIK_GENERATED?.maze?.levels?.length) || 10;
+
+// "Officieel" random level = level BASE_TOTAL_LEVELS + 1
+const RANDOM_LEVEL_INDEX = BASE_TOTAL_LEVELS + 1;
+
+// Totaal aantal levels in de dropdown (inclusief random)
+const TOTAL_LEVELS = RANDOM_LEVEL_INDEX;
+
+let level = FALLBACK;
+    
+// ---------------- Random Maze generator (Level 11) ----------------
+// Genereert een doolhof met oneven binnenmaat en muurborder eromheen.
+// difficulty: 1 (klein) – 3 (groot)
+function difficultyToCells(diff){
+  const d = Math.max(1, Math.min(3, diff|0));
+  if (d === 1) return 9;   // klein
+  if (d === 2) return 11;  // medium
+  return 13;               // groot
+}
+
+function generateRandomMazeLevel(diff){
+  const cells = difficultyToCells(diff);
+  const rows = cells + 2;  // +2 voor de vaste muurborder
+  const cols = cells + 2;
+
+  // Start met overal muren (0)
+  const grid = Array.from({length: rows}, () =>
+    Array.from({length: cols}, () => 0)
+  );
+
+  // Alle "cellen" op oneven coördinaten als mogelijke paden markeren (voor DFS)
+  for (let y = 1; y < rows - 1; y += 2){
+    for (let x = 1; x < cols - 1; x += 2){
+      grid[y][x] = 1;
+    }
+  }
+
+  const startX = 1;
+  const startY = 1;
+  const goalX  = cols - 2;
+  const goalY  = rows - 2;
+
+  const stack = [{x:startX, y:startY}];
+  const visited = new Set();
+  visited.add(`${startX},${startY}`);
+
+  const dirs = [
+    {dx:  2, dy:  0},
+    {dx: -2, dy:  0},
+    {dx:  0, dy:  2},
+    {dx:  0, dy: -2},
+  ];
+
+  while (stack.length){
+    const current = stack[stack.length - 1];
+    const candidates = dirs
+      .map(d => ({ dx:d.dx, dy:d.dy, nx: current.x + d.dx, ny: current.y + d.dy }))
+      .filter(p =>
+        p.nx > 0 && p.nx < cols - 1 &&
+        p.ny > 0 && p.ny < rows - 1 &&
+        !visited.has(`${p.nx},${p.ny}`)
+      );
+
+    if (!candidates.length){
+      stack.pop();
+      continue;
+    }
+
+    const choice = candidates[Math.floor(Math.random() * candidates.length)];
+    const wallX = current.x + choice.dx / 2;
+    const wallY = current.y + choice.dy / 2;
+
+    // Verbind huidige cel met de gekozen buur
+    grid[wallY][wallX] = 1;
+    grid[choice.ny][choice.nx] = 1;
+
+    visited.add(`${choice.nx},${choice.ny}`);
+    stack.push({x:choice.nx, y:choice.ny});
+  }
+
+  // Start & goal plaatsen
+  grid[startY][startX] = 'S';
+  grid[goalY][goalX]   = 'G';
+
+  return { grid, cell: 50 }; 
+}
+    
+
+function populateLevelSelect(sel){
+  if (!sel) return;
+  sel.innerHTML = '';
+  for (let i=1; i<=TOTAL_LEVELS; i++){
+    const opt = document.createElement('option');
+    opt.value = i;
+    if (i === RANDOM_LEVEL_INDEX){
+      opt.textContent = 'Level ' + i + ' — Willekeurig';
+    } else {
+      opt.textContent = 'Level ' + i;
+    }
+    sel.appendChild(opt);
+  }
+}
+
+    function fitMazeCanvasToContainer(){
+      const wrap = mazeCanvas.closest('.canvas-wrap');
+      if (!wrap) return 640;
+      const styles = getComputedStyle(wrap);
+      const padX = parseFloat(styles.paddingLeft || '0') + parseFloat(styles.paddingRight || '0');
+      const padY = parseFloat(styles.paddingTop || '0') + parseFloat(styles.paddingBottom || '0');
+      const availableWidth = Math.max(0, wrap.clientWidth - padX);
+      const availableHeight = Math.max(0, wrap.clientHeight - padY);
+      const fallback = Math.min(640, availableWidth || 640);
+      const size = Math.max(160, Math.floor(Math.min(640, availableWidth || fallback, availableHeight || fallback)));
+      mazeCanvas.style.width = size + 'px';
+      mazeCanvas.style.height = size + 'px';
+      return size;
+    }
+
+    function resizeMazeCanvas(){
+      if (!mazeCanvas || mazeCanvas.classList.contains('hidden')) return;
+      const cssSize = fitMazeCanvasToContainer();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      mazeCanvas.width = Math.round(cssSize * dpr);
+      mazeCanvas.height = Math.round(cssSize * dpr);
+      mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      mctx.imageSmoothingEnabled = false;
+      drawMaze(mazeState);
+    }
+    window.addEventListener('resize', resizeMazeCanvas);
+function loadLevel(idx, opts = {}){
+  if (idx === RANDOM_LEVEL_INDEX){
+    const diff = (typeof opts.difficulty === 'number')
+      ? opts.difficulty
+      : 2; // fallback
+
+    level = generateRandomMazeLevel(diff);
+
+    const url = new URL(location.href);
+    url.searchParams.set('level', String(RANDOM_LEVEL_INDEX));
+    history.replaceState(null, '', url.toString());
+  } else {
+    const og = getOGLevel(idx);
+    level = og || FALLBACK;
+
+    const url = new URL(location.href);
+    url.searchParams.set('level', String(idx));
+    history.replaceState(null, '', url.toString());
+  }
+
+  stopPlayback();
+  mazeReset();
+  resizeMazeCanvas();
+}
+
+    function findStart(){
+      for (let y=0;y<level.grid.length;y++)
+        for (let x=0;x<level.grid[0].length;x++)
+          if (level.grid[y][x]==='S') return {x,y};
+      return {x:1,y:1};
+    }
+
+    const mazeState = { x:1, y:1, dir:0, pose: DIR_TO_BASE_POSE[0] };
+    function degForDir(dir){ return [0, -90, 180, 90][dir] || 0; }
+
+    function drawMaze(state){
+      const rect = mazeCanvas.getBoundingClientRect();
+      const cssW = Math.max(1, Math.floor(rect.width));
+      const cssH = Math.max(1, Math.floor(rect.height));
+
+      const rows = level.grid.length;
+      const cols = level.grid[0].length;
+      const c = Math.floor(Math.min(cssW / cols, cssH / rows));
+      const usedW = c * cols, usedH = c * rows;
+      const offX = Math.floor((cssW - usedW) / 2);
+      const offY = Math.floor((cssH - usedH) / 2);
+
+      const ctx = mctx;
+      ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+      ctx.clearRect(0,0,mazeCanvas.width,mazeCanvas.height);
+      ctx.restore();
+
+      if (!ASSETS_READY) {
+        for(let y=0;y<rows;y++){
+          for(let x=0;x<cols;x++){
+            const v=level.grid[y][x];
+            ctx.fillStyle = v===0 ? '#1A224C' : '#eef2ff';
+            ctx.fillRect(offX + x*c, offY + y*c, c, c);
+            if (v==='G'){
+              ctx.fillStyle = '#03ddef';
+              ctx.fillRect(offX + x*c+Math.max(4, c*0.12), offY + y*c+Math.max(4, c*0.12), c - Math.max(8, c*0.24), c - Math.max(8, c*0.24));
+            }
+          }
+        }
+        const cx = offX + state.x*c + c/2, cy = offY + state.y*c + c/2;
+        ctx.save(); ctx.translate(cx,cy);
+        const a = degForDir(state.dir);
+        ctx.rotate(a * Math.PI/180);
+        const tip = Math.max(12, Math.floor(c*0.32)), base = Math.max(7, Math.floor(c*0.18));
+        ctx.beginPath(); ctx.moveTo(tip,0); ctx.lineTo(-base, base); ctx.lineTo(-base,-base); ctx.closePath();
+        ctx.fillStyle='#5200FF'; ctx.shadowColor='#3700B3'; ctx.shadowBlur=6; ctx.fill();
+        ctx.restore();
+        if (state.issue === 'wall') {
+          ctx.save();
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = Math.max(3, Math.floor(c * 0.08));
+          ctx.strokeRect(offX + state.x*c + c*0.12, offY + state.y*c + c*0.12, c*0.76, c*0.76);
+          ctx.restore();
+        }
+        return;
+      }
+
+      ctx.imageSmoothingEnabled = false;
+
+      const tileW = Math.floor(IMG.tiles.width / 5), tileH = Math.floor(IMG.tiles.height / 4);
+      const frameW = Math.floor(IMG.sprite.width / 21), frameH = IMG.sprite.height;
+      const pegScale = c / tileW;
+      const markerScale = c / tileW;
+
+      const isOpenCell = (x,y)=>{
+        const v = level.grid?.[y]?.[x];
+        return v !== 0 && v !== undefined;
+      };
+      const norm = (x,y)=> (x<0||x>=cols||y<0||y>=rows) ? '0' : (isOpenCell(x,y) ? '1' : '0');
+
+      for(let y=0;y<rows;y++){
+        for(let x=0;x<cols;x++){
+          let key = norm(x,y) + norm(x,y-1) + norm(x+1,y) + norm(x,y+1) + norm(x-1,y);
+          if (!TILE_SHAPES[key]) key = (key==='00000') ? 'null0' : ('null' + (((x+y)%4)+1));
+          const [cxAtlas, cyAtlas] = TILE_SHAPES[key];
+          ctx.drawImage(IMG.tiles, cxAtlas*tileW, cyAtlas*tileH, tileW, tileH, offX + x*c, offY + y*c, c, c);
+        }
+      }
+
+      for(let y=0;y<rows;y++){
+        for(let x=0;x<cols;x++){
+          if (level.grid[y][x] === 'G'){
+            const w = Math.round(IMG.marker.width  * markerScale * 0.9);
+            const h = Math.round(IMG.marker.height * markerScale * 0.9);
+            const dx = offX + x*c + Math.floor((c - w)/2);
+            const dy = offY + y*c + Math.floor((c - h)/2);
+            ctx.drawImage(IMG.marker, dx, dy, w, h);
+          }
+        }
+      }
+
+      const pegW = Math.round(frameW * pegScale);
+      const pegH = Math.round(frameH * pegScale);
+      const px = offX + state.x*c + Math.floor(c/2);
+      const py = offY + state.y*c + Math.floor(c/2);
+
+      let poseIndex = (typeof state.pose === 'number') ? state.pose : DIR_TO_BASE_POSE[state.dir];
+      poseIndex = Math.max(0, Math.min(ORIENT_TOTAL - 1, poseIndex));
+
+      ctx.drawImage(
+        IMG.sprite,
+        poseIndex * frameW, 0, frameW, frameH,
+        Math.floor(px - pegW/2), Math.floor(py - pegH/2), pegW, pegH
+      );
+
+      if (state.issue === 'wall') {
+        ctx.save();
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = Math.max(3, Math.floor(c * 0.08));
+        ctx.strokeRect(offX + state.x*c + c*0.12, offY + state.y*c + c*0.12, c*0.76, c*0.76);
+        ctx.restore();
+      }
+    }
+
+    function frontDelta(dir){ return [{dx:1,dy:0},{dx:0,dy:-1},{dx:-1,dy:0},{dx:0,dy:1}][dir]; }
+    function leftDelta(dir){ return frontDelta((dir+1)%4); }
+    function rightDelta(dir){ return frontDelta((dir+3)%4); }
+    function isOpen(x,y){ const v=level.grid?.[y]?.[x]; return v===1 || v==='S' || v==='G'; }
+
+    function mazeReset(){
+      const s = findStart();
+      mazeState.x=s.x; mazeState.y=s.y; mazeState.dir=0;
+      mazeState.pose = DIR_TO_BASE_POSE[mazeState.dir];
+      drawMaze(mazeState);
+    }
+
+    // Maximale hoeveelheid frames in de animatie voor Maze (beperkt oneindige lussen)
+    const MAX_MAZE_FRAMES = 5000;
+    const MAX_DEBUG_PLAYBACK_FRAMES = 120;
+
+    let frames = []; let timer = null; let frameIdx = 0;
+    let pendingMazeFeedback = null;
+    function pushFrame(extra = null){
+      if (frames.length >= MAX_MAZE_FRAMES) {
+        throw new Error('Je programma produceert te veel stappen (mogelijk oneindige lus in Maze).');
+      }
+      frames.push({ x:mazeState.x, y:mazeState.y, dir:mazeState.dir, pose: mazeState.pose, ...(extra || {}) });
+    }
+    function mazeStateAtGoal(){
+      return level.grid?.[mazeState.y]?.[mazeState.x] === 'G';
+    }
+    function limitDebugPlaybackFrames(){
+      if (frames.length > MAX_DEBUG_PLAYBACK_FRAMES) {
+        frames = frames.slice(0, MAX_DEBUG_PLAYBACK_FRAMES);
+      }
+    }
+    function queueMazeFeedbackAfterPlayback(message, pillText, options = {}){
+      pendingMazeFeedback = {
+        message,
+        pillText,
+        title: options.title || 'Nog niet gelukt'
+      };
+      if (options.limitFrames) limitDebugPlaybackFrames();
+    }
+    function stopPlayback(){ frames = []; frameIdx = 0; pendingMazeFeedback = null; if (timer){ clearTimeout(timer); timer = null; } }
+
+    function sliderDelay(input){
+      const min = parseInt(input.min || '10',10);
+      const max = parseInt(input.max || '1000',10);
+      const v   = parseInt(input.value || String(min),10);
+      return (min + max - v);
+    }
+    function currentSpeed(){
+      const input = (activeMode==='maze1') ? speed1 : speed2;
+      return sliderDelay(input);
+    }
+    function bindSpeedLabel(input, label){
+      if (!input || !label) return;
+      const update = ()=> label.textContent = `Snelheid: ${sliderDelay(input)} ms/stap`;
+      update();
+      input.addEventListener('input', update);
+    }
+
+    function playNext(){
+      if (frameIdx >= frames.length){
+        timer = null;
+        if (mazeStateAtGoal()) {
+          try{ SND.win.currentTime = 0; SND.win.play(); }catch(_){}
+          showSuccessModal(null, { type: 'maze', frames: frames.length, stepCount });
+        } else {
+          const hitWall = frames.some(frame => frame.issue === 'wall');
+          const fallbackMessage = hitWall
+            ? 'Nog niet gelukt. De rode markering toont waar Pegman tegen een muur liep. Bekijk de stap net daarvoor en pas je keuze aan.'
+            : 'Nog niet gelukt. Pegman eindigde niet op het doel. Bekijk waar hij stopt en pas je algoritme aan.';
+          const feedback = pendingMazeFeedback || {
+            message: fallbackMessage,
+            pillText: 'Nog niet aan het doel',
+            title: 'Nog niet gelukt'
+          };
+          pendingMazeFeedback = null;
+          showErrorModal(feedback.message, feedback.pillText, { title: feedback.title });
+        }
+        return;
+      }
+      const f = frames[frameIdx++];
+      drawMaze(f);
+
+      const isTurnTween = typeof f.ang === 'number';
+      const baseDelay = pendingMazeFeedback ? Math.min(currentSpeed(), 160) : currentSpeed();
+      const delay = isTurnTween ? Math.max(10, baseDelay * 0.4) : baseDelay;
+
+      timer = setTimeout(playNext, delay);
+    }
+
+    // Beveiliging op totaal aantal stappen studentencode (Maze + Turtle)
+    let stepCount = 0;
+    const MAX_STEPS = 4000;
+    function _tick(){
+      stepCount++;
+      if (stepCount > MAX_STEPS) {
+        throw new Error('Je programma loopt te lang (mogelijk oneindige lus).');
+      }
+    }
+
+    let lastFailAt = 0;
+
+    function tweenTurn(kind){
+      const step = (kind === 'R') ? +1 : -1;
+      for (let i=0; i<4; i++){
+        mazeState.pose = (mazeState.pose + step + ORIENT_TOTAL) % ORIENT_TOTAL;
+        pushFrame();
+      }
+    }
+
+    // Maze acties met stap-teller om oneindige lussen te detecteren
+window.mazeMoveForward = function () {
+  _tick(); // elke verplaatsing telt als stap
+  const {dx,dy}=frontDelta(mazeState.dir);
+  const nx=mazeState.x+dx, ny=mazeState.y+dy;
+  if (isOpen(nx,ny)) {
+    mazeState.x = nx; 
+    mazeState.y = ny;
+  } else {
+    const now = performance.now();
+    if (now - lastFailAt > 150) {
+      try {
+        SND.fail.currentTime = 0;
+        SND.fail.play();
+      } catch(_) {}
+      lastFailAt = now;
+    }
+  }
+  pushFrame(isOpen(nx,ny) ? null : { issue: 'wall' });
+};
+
+window.mazeTurnLeft  = function(){
+  _tick(); // draaien telt ook als stap
+  mazeState.dir = (mazeState.dir+1)%4;
+  tweenTurn('L');
+  pushFrame();
+};
+
+window.mazeTurnRight = function(){
+  _tick(); // idem
+  mazeState.dir = (mazeState.dir+3)%4;
+  tweenTurn('R');
+  pushFrame();
+};
+
+// Maze-queries tellen nu óók stappen, zodat while(notDone())-lussen afgebroken worden
+window.mazePathAhead = function(){
+  _tick(); // check naar voren telt als stap
+  const {dx,dy}=frontDelta(mazeState.dir);
+  return isOpen(mazeState.x+dx, mazeState.y+dy);
+};
+window.mazePathLeft  = function(){
+  _tick(); // check links
+  const {dx,dy}=leftDelta(mazeState.dir);
+  return isOpen(mazeState.x+dx, mazeState.y+dy);
+};
+window.mazePathRight = function(){
+  _tick(); // check rechts
+  const {dx,dy}=rightDelta(mazeState.dir);
+  return isOpen(mazeState.x+dx, mazeState.y+dy);
+};
+window.mazeAtGoal    = function(){
+  _tick(); // ook doel-check telt, voor lussen die alleen notDone()/atGoal gebruiken
+  return level.grid[mazeState.y][mazeState.x]==='G';
+};
+
+// CLI & Blocks-vriendelijke aliassen
+window.moveForward  = window.mazeMoveForward;
+window.turnLeft     = window.mazeTurnLeft;
+window.turnRight    = window.mazeTurnRight;
+window.isPathAhead  = window.mazePathAhead;
+window.isPathLeft   = window.mazePathLeft;
+window.isPathRight  = window.mazePathRight;
+window.atGoal       = window.mazeAtGoal;
+
+// notDone gebruikt nu de teller via mazeAtGoal()
+window.notDone = function(){
+  // Let op: mazeAtGoal() roept _tick() al aan
+  return !window.mazeAtGoal();
+};
+
+    $('run-maze1').addEventListener('click', ()=>{
+      const J = Blockly.JavaScript || Blockly.javascriptGenerator;
+      const codeRaw = (J && J.workspaceToCode) ? J.workspaceToCode(workspace) : Blockly.JavaScript.workspaceToCode(workspace);
+      const code = String(codeRaw || '');
+      if (!code.trim()){ alert('Voeg eerst blokken toe.'); return; }
+      const blockLimit = getMazeBlockLimitInfo();
+      if (blockLimit.over) {
+        showErrorModal(
+          `Je gebruikt ${blockLimit.used} blokken. De limiet voor dit level is ${blockLimit.limit}. Voorwaarden zoals 'niet klaar?' en 'pad voor mij?' tellen niet mee.`,
+          'Bloklimiet',
+          {
+            title: 'Bloklimiet',
+            feedback: '<strong>Tip:</strong> zoek welke stap of reeks stappen echt herhaald kan worden. Sensoren en voorwaarden zijn gratis in deze telling.'
+          }
+        );
+        return;
+      }
+      bumpAttempt();
+      lastRunCode = code; lastMode = 'maze1'; syncGlobals();
+      stopPlayback(); mazeReset(); frames = []; pushFrame();
+      stepCount = 0;
+      try{
+        // Strakkere limiet voor Maze (Blokken)
+        const protectedCode = loopProtect(code, 20000);
+        const run = new Function(
+          'moveForward','turnLeft','turnRight','isPathAhead','isPathLeft','isPathRight','notDone','atGoal',
+          protectedCode
+        );
+        run(moveForward, turnLeft, turnRight, isPathAhead, isPathLeft, isPathRight, notDone, atGoal);
+            }catch(e){
+        console.error(e);
+        const baseMsg = (e && e.message) ? String(e.message) : 'Onbekende fout in je blokken-code.';
+        const isLoopError = baseMsg.toLowerCase().includes('oneindige lus') || baseMsg.toLowerCase().includes('loopt te lang');
+        const finalMsg = isLoopError
+          ? 'Je programma loopt te lang (mogelijk oneindige lus). Controleer je while/for-lussen.'
+          : 'Fout in je blokken-code: ' + baseMsg;
+        if (frames.length > 1) {
+          queueMazeFeedbackAfterPlayback(finalMsg, isLoopError ? 'Mogelijk oneindige lus' : 'Programma gestopt', {
+            title: isLoopError ? 'Mogelijk oneindige lus' : 'Programma gestopt',
+            limitFrames: isLoopError
+          });
+          frameIdx = 0; playNext();
+        } else {
+          showErrorModal(finalMsg, isLoopError ? 'Mogelijk oneindige lus' : 'Fout in code', {
+            title: isLoopError ? 'Mogelijk oneindige lus' : 'Fout in code'
+          });
+        }
+        return;
+      }
+      frameIdx = 0; playNext();
+    });
+
+    function consoleClear(){ cliConsole.innerHTML = ''; }
+    function consolePrint(msg, cls='log-info'){
+      const line = document.createElement('div');
+      line.className = 'log-line ' + cls;
+      line.textContent = msg;
+      cliConsole.appendChild(line);
+      cliConsole.scrollTop = cliConsole.scrollHeight;
+    }
+    function parseError(e){
+      const out = { line:null, col:null, message:(e && e.message)||'Onbekende fout' };
+      const s = (e && e.stack) || '';
+      let m = s.match(/<anonymous>:(\d+):(\d+)/);
+      if (!m) m = s.match(/Function code:(\d+):(\d+)/);
+      if (!m) m = s.match(/anonymous.*?:(\d+):(\d+)/);
+      if (m){ out.line=+m[1]; out.col=+m[2]; return out; }
+      m = s.match(/line (\d+)(?:.*column (\d+))?/i);
+      if (m){ out.line=+m[1]; out.col=m[2]?+m[2]:null; }
+      return out;
+    }
+    function showCodeFrame(src, line, col){
+      const lines = String(src).split('\n');
+      const i = Math.max(1, Math.min(lines.length, line||1));
+      const from = Math.max(1, i-1);
+      const to   = Math.min(lines.length, i+1);
+      const pad = String(to).length;
+      let html = '';
+      for (let n=from;n<=to;n++){
+        html += `<div><span class="code-num">${String(n).padStart(pad,' ')}</span>${escapeHtml(lines[n-1])}</div>`;
+        if (n===i && col && col>0){
+          const caret = '&nbsp;'.repeat((pad+1) + Math.max(0,col-1));
+          html += `<div class="code-caret">${caret}^</div>`;
+        }
+      }
+      return `<div class="code-frame">${html}</div>`;
+    }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+    $('run-maze2').addEventListener('click', ()=>{
+      const code = String(cliEditor.value || '');
+      consoleClear();
+      if (!code.trim()){ consolePrint('Geen code gevonden. Typ eerst je instructies.', 'log-warn'); return; }
+      bumpAttempt();
+
+      const hints = detectCommonIssues(code, window.activeMode);
+      if (hints.length){
+        for (const h of hints){
+          if (h.type === 'unknown-call'){
+            consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col})`, 'log-warn');
+          } else if (h.type === 'assignment-in-condition'){
+            consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col}). Tip: ${h.remedy}`, 'log-warn');
+          } else {
+            consolePrint(`${h.message} (regel ${h.line || '?'}${h.col ? ', kolom ' + h.col : ''})`, 'log-warn');
+          }
+        }
+        consolePrint('Los deze punten eerst op en klik opnieuw op Uitvoeren.', 'log-warn');
+        return;
+      }
+
+      lastRunCode = code; lastMode = 'maze2'; syncGlobals();
+      stopPlayback(); mazeReset(); frames = []; pushFrame(); stepCount = 0;
+
+      const studentConsole = { log: (...args)=> consolePrint(args.map(String).join(' '), 'log-info') };
+
+      const mf = ()=> mazeMoveForward();
+      const tl = ()=> mazeTurnLeft();
+      const tr = ()=> mazeTurnRight();
+      const pa = ()=> mazePathAhead();
+      const pl = ()=> mazePathLeft();
+      const pr = ()=> mazePathRight();
+      const ag = ()=> mazeAtGoal();
+      const nd = ()=> !mazeAtGoal();
+
+      try{
+        // Strakkere limiet voor Maze (Code)
+        const protectedCode = loopProtect(code, 20000);
+        const run = new Function(
+          'moveForward','turnLeft','turnRight','isPathAhead','isPathLeft','isPathRight','notDone','atGoal',
+          'mazeMoveForward','mazeTurnLeft','mazeTurnRight','mazePathAhead','mazePathLeft','mazePathRight','mazeAtGoal',
+          'console',
+          protectedCode
+        );
+        run(mf, tl, tr, pa, pl, pr, nd, ag,
+            mazeMoveForward, mazeTurnLeft, mazeTurnRight, mazePathAhead, mazePathLeft, mazePathRight, mazeAtGoal,
+            studentConsole);
+            }catch(e){
+        console.error(e);
+        const info = parseError(e);
+        const msg  = (info && info.message) ? info.message : (e && e.message) ? String(e.message) : 'Onbekende fout';
+        const lower = msg.toLowerCase();
+        const isLoopError = lower.includes('oneindige lus') || lower.includes('loopt te lang');
+
+        if (isLoopError) {
+          const finalMsg = 'Je programma loopt te lang (mogelijk oneindige lus). Controleer je while/for-lussen en zorg dat de conditie ooit onwaar wordt.';
+          consolePrint(finalMsg, 'log-error');
+          if (frames.length > 1) {
+            queueMazeFeedbackAfterPlayback(finalMsg, 'Mogelijk oneindige lus', {
+              title: 'Mogelijk oneindige lus',
+              limitFrames: true
+            });
+            frameIdx = 0; playNext();
+          } else {
+            showErrorModal(finalMsg, 'Mogelijk oneindige lus', { title: 'Mogelijk oneindige lus' });
+          }
+          return;
+        }
+
+        const undef = (e && (String(e.message).match(/(?:is not defined|Can't find variable):?\s*([A-Za-z_]\w*)/)));
+        if (undef){
+          const name = undef[1];
+          const allowed = Array.from(makeAllowedSet(window.activeMode));
+          const suggestion = closestAllowed(name, allowed);
+          consolePrint(
+            `Onbekende naam ‘${name}’. ${suggestion ? `Bedoel je ‘${suggestion}()’ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
+            'log-error'
+          );
+        } else {
+          if (info.line){
+            consolePrint(`Fout op regel ${info.line}${info.col?`, kolom ${info.col}`:''}: ${msg}`, 'log-error');
+            const frameHTML = showCodeFrame(code, info.line, info.col);
+            const div = document.createElement('div');
+            div.innerHTML = frameHTML;
+            cliConsole.appendChild(div.firstChild);
+          } else {
+            consolePrint(`Fout: ${msg}`, 'log-error');
+          }
+        }
+
+        if (frames.length > 1) {
+          queueMazeFeedbackAfterPlayback(
+            'Je programma stopte onderweg. Bekijk eerst de animatie; de technische fout staat onder de editor.',
+            'Programma gestopt',
+            { title: 'Programma gestopt' }
+          );
+          frameIdx = 0; playNext();
+        } else {
+          editorNote.textContent = 'Bekijk de foutmelding onder de editor en voer daarna opnieuw uit.';
+        }
+        return;
+      }
+      frameIdx = 0; playNext();
+    });
+
+    const TURTLE = {
+      x:0, y:0, ang:0, penDown:true, show:true,
+      color:'#5200FF', width:2,
+      minX:0, maxX:0, minY:0, maxY:0
+    };
+    const TURTLE_CHECK = { checkLineW: 12, minRecall: 0.85, minPrecision: 0.70 };
+    // Per-level overrides voor Turtle-controle
+    const TURTLE_LEVEL_CHECK = {
+  7: { 
+    minRecall: 0.97,
+    minPrecision: 0.80
+  }
+  // Later kan je hier andere levels toevoegen indien nodig
+};
+    function getTurtleCheckParams(level) {
+  const base = TURTLE_CHECK;
+  const ov = TURTLE_LEVEL_CHECK[level] || {};
+  return {
+    checkLineW: ov.checkLineW ?? base.checkLineW,
+    minRecall: ov.minRecall ?? base.minRecall,
+    minPrecision: ov.minPrecision ?? base.minPrecision
+  };
+}
+    let STROKES = [];
+    const TURTLE_STARTS = [
+      {x:0, y:0, ang:90}, {x:0, y:0, ang:108}, {x:0, y:0, ang:0},
+      {x:0, y:0, ang:0}, {x:0, y:0, ang:0}, {x:0, y:0, ang:0},
+      {x:0, y:0, ang:0}, {x:0, y:0, ang:0}, {x:0, y:0, ang:0}
+    ];
+    const TURTLE_LEVELS = 9;
+    const turtleLevelSel = (function(){
+      const s = document.getElementById('turtle-level');
+      s.innerHTML = '';
+      for (let i=1;i<=TURTLE_LEVELS;i++){
+        const o = document.createElement('option'); o.value = i; o.textContent = 'Level '+i; s.appendChild(o);
+      }
+      return s;
+    })();
+
+    const speedT = $('speed-range-t');
+    const speedLblT = $('speed-label-t');
+    bindSpeedLabel(speedT, speedLblT);
+    function turtleDelay(){ return sliderDelay(speedT); }
+
+    function measureTurtleBox(){
+      const wrap = document.querySelector('.canvas-wrap');
+      const r = wrap.getBoundingClientRect();
+      const size = Math.floor(Math.min(r.width, r.height));
+      turtleStack.style.width  = size + 'px';
+      turtleStack.style.height = size + 'px';
+      return turtleStack.getBoundingClientRect();
+    }
+
+    function resizeTurtleCanvas(){
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const rect = measureTurtleBox();
+      [bgCanvas,drawCanvas,curCanvas].forEach(cv=>{
+        cv.width  = Math.round(rect.width * dpr);
+        cv.height = Math.round(rect.height * dpr);
+        const c = cv.getContext('2d');
+        c.setTransform(dpr,0,0,dpr,0,0);
+      });
+      redrawTurtleBackground();
+      drawCursorOnly();
+    }
+    window.addEventListener('resize', resizeTurtleCanvas);
+
+    function clearLayer(ctx, canvas){
+      ctx.save();
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.restore();
+    }
+    function clearDrawLayer(){ clearLayer(ctxDraw, drawCanvas); STROKES = []; }
+    function clearCursorLayer(){ clearLayer(ctxCur, curCanvas); }
+
+    function worldToCanvas(x,y){
+      const rect = bgCanvas.getBoundingClientRect();
+      const cx = rect.width/2, cy = rect.height/2;
+      return { X: cx + x, Y: cy - y };
+    }
+
+    function drawGrid(cell){
+      clearLayer(ctxBG, bgCanvas);
+      const rect = bgCanvas.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+
+      ctxBG.save();
+      ctxBG.strokeStyle = 'rgba(26,34,76,0.08)';
+      ctxBG.lineWidth = 1;
+      for (let x = 0; x <= w; x += cell){
+        ctxBG.beginPath(); ctxBG.moveTo(x,0); ctxBG.lineTo(x,h); ctxBG.stroke();
+      }
+      for (let y = 0; y <= h; y += cell){
+        ctxBG.beginPath(); ctxBG.moveTo(0,y); ctxBG.lineTo(0,y); ctxBG.stroke();
+        ctxBG.beginPath(); ctxBG.moveTo(0,y); ctxBG.lineTo(w,y); ctxBG.stroke();
+      }
+      ctxBG.strokeStyle = 'rgba(82,0,255,0.25)';
+      ctxBG.beginPath(); ctxBG.moveTo(0,h/2); ctxBG.lineTo(w,h/2); ctxBG.stroke();
+      ctxBG.beginPath(); ctxBG.moveTo(w/2,0); ctxBG.lineTo(w/2,h); ctxBG.stroke();
+      ctxBG.restore();
+    }
+
+    function drawOGAnswer(level){
+      ctxBG.save();
+      ctxBG.globalAlpha = 0.22;
+      ctxBG.strokeStyle = '#0f172a';
+      ctxBG.lineWidth = 3;
+
+      const rect = bgCanvas.getBoundingClientRect();
+      const wc = (x,y)=>({ X: rect.width/2 + x, Y: rect.height/2 - y });
+
+      const tmp = {x:0,y:0,a:0};
+      const mv = (d)=>{
+        const rad = tmp.a * Math.PI/180;
+        const nx = tmp.x + d * Math.cos(rad);
+        const ny = tmp.y + d * Math.sin(rad);
+        const p1 = wc(tmp.x, tmp.y), p2 = wc(nx, ny);
+        ctxBG.beginPath(); ctxBG.moveTo(p1.X, p1.Y); ctxBG.lineTo(p2.X, p2.Y); ctxBG.stroke();
+        tmp.x = nx; tmp.y = ny;
+      };
+      const tr = (deg)=>{ tmp.a = (tmp.a + deg) % 360; };
+      const moveTo = (x,y)=>{ tmp.x = x; tmp.y = y; };
+      const star = (len)=>{ for (let i=0;i<5;i++){ mv(len); tr(144);} };
+
+      switch(level){
+        case 1: for (let i=0;i<4;i++){ mv(100); tr(90); } break;
+        case 2: for (let i=0;i<5;i++){ mv(100); tr(72); } break;
+        case 3: star(100); break;
+        case 4: star(50); moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180)); mv(20); break;
+        case 5:
+          for (let i=0;i<4;i++){
+            star(50);
+            moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180));
+            tr(90);
+          }
+          break;
+        case 6:
+          for (let i=0;i<3;i++){
+            star(50);
+            moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180));
+            tr(120);
+          }
+          tr(-90); mv(100); tr(90); mv(50);
+          break;
+        case 7:
+          for (let i=0;i<3;i++){
+            star(50);
+            moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180));
+            tr(120);
+          }
+          tr(-90); mv(100); tr(90);
+          for (let i=0;i<4;i++){ mv(50); mv(-50); tr(45); }
+          break;
+        case 8:
+          for (let i=0;i<3;i++){
+            star(50);
+            moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180));
+            tr(120);
+          }
+          tr(-90); mv(100); tr(90);
+          for (let i=0;i<360;i++){ mv(50); mv(-50); tr(1); }
+          break;
+        case 9:
+          for (let i=0;i<3;i++){
+            star(50);
+            moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180));
+            tr(120);
+          }
+          tr(-90); mv(100); tr(90);
+          for (let i=0;i<360;i++){ mv(50); mv(-50); tr(1); }
+          tr(120); mv(20);
+          for (let i=0;i<360;i++){ mv(50); mv(-50); tr(1); }
+          break;
+      }
+
+      ctxBG.restore();
+    }
+
+    function redrawTurtleBackground(){
+      drawGrid(50);
+      const level = parseInt(turtleLevelSel.value || '1', 10);
+      drawOGAnswer(level);
+    }
+
+    function drawCursorOnly(){
+      clearCursorLayer();
+      if (!TURTLE.show) return;
+      const {X,Y} = worldToCanvas(TURTLE.x, TURTLE.y);
+      const r = 10 + TURTLE.width;
+      ctxCur.save();
+      ctxCur.translate(X,Y);
+      ctxCur.rotate((-TURTLE.ang) * Math.PI/180);
+      ctxCur.lineWidth = 2;
+      ctxCur.strokeStyle = TURTLE.color;
+      ctxCur.fillStyle = TURTLE.color;
+      ctxCur.beginPath(); ctxCur.arc(0,0,r,0,Math.PI*2); ctxCur.stroke();
+      ctxCur.beginPath(); ctxCur.moveTo(r+6,0); ctxCur.lineTo(4,6); ctxCur.lineTo(4,-6); ctxCur.closePath(); ctxCur.fill();
+      ctxCur.restore();
+    }
+
+    function strokeTo(x2,y2){
+      const x1 = TURTLE.x, y1 = TURTLE.y;
+      const {X:x1c, Y:y1c} = worldToCanvas(x1, y1);
+      const {X:x2c, Y:y2c} = worldToCanvas(x2, y2);
+      ctxDraw.save();
+      ctxDraw.lineCap = 'round';
+      ctxDraw.lineJoin = 'round';
+      ctxDraw.strokeStyle = TURTLE.color;
+      ctxDraw.lineWidth = TURTLE.width;
+      ctxDraw.beginPath();
+      ctxDraw.moveTo(x1c, y1c);
+      ctxDraw.lineTo(x2c, y2c);
+      ctxDraw.stroke();
+      ctxDraw.restore();
+
+      STROKES.push({ x1, y1, x2, y2, width: TURTLE.width, color: TURTLE.color });
+    }
+
+    // Turtle-kern met _tick() zodat ook daar het staplimiet geldt
+    function turtleMove(dist){
+      _tick();
+      const rad = TURTLE.ang * Math.PI/180;
+      const nx = TURTLE.x + dist * Math.cos(rad);
+      const ny = TURTLE.y + dist * Math.sin(rad);
+      if (TURTLE.penDown){ strokeTo(nx, ny); }
+      TURTLE.x = nx; TURTLE.y = ny;
+      TURTLE.minX = Math.min(TURTLE.minX, nx); TURTLE.maxX = Math.max(TURTLE.maxX, nx);
+      TURTLE.minY = Math.min(TURTLE.minY, ny); TURTLE.maxY = Math.max(TURTLE.maxY, ny);
+      drawCursorOnly();
+    }
+    function turtleTurn(deg){
+      _tick();
+      TURTLE.ang = ((TURTLE.ang + deg) % 360 + 360) % 360;
+      drawCursorOnly();
+    }
+    function turtleGoTo(x,y){
+      _tick();
+      if (TURTLE.penDown){ strokeTo(x,y); }
+      TURTLE.x=x; TURTLE.y=y;
+      TURTLE.minX = Math.min(TURTLE.minX, x); TURTLE.maxX = Math.max(TURTLE.maxX, x);
+      TURTLE.minY = Math.min(TURTLE.minY, y); TURTLE.maxY = Math.max(TURTLE.maxY, y);
+      drawCursorOnly();
+    }
+    function turtleText(txt){
+      _tick();
+      const {X,Y} = worldToCanvas(TURTLE.x, TURTLE.y);
+      ctxDraw.save();
+      ctxDraw.translate(X,Y);
+      ctxDraw.rotate((-TURTLE.ang) * Math.PI/180);
+      ctxDraw.fillStyle = TURTLE.color;
+      ctxDraw.font = '16px Arial';
+      ctxDraw.fillText(String(txt), 0, 0);
+      ctxDraw.restore();
+      drawCursorOnly();
+    }
+
+    function drawExpectedTo(ctx, W, H, level, lineW){
+      const wc = (x,y)=>({ X: W/2 + x, Y: H/2 - y });
+
+      ctx.save();
+      ctx.lineWidth = lineW;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#000';
+
+      const tmp = {x:0,y:0,a:0};
+      const mv = (d)=>{
+        const rad = tmp.a*Math.PI/180;
+        const nx = tmp.x + d*Math.cos(rad), ny = tmp.y + d*Math.sin(rad);
+        const p1 = wc(tmp.x,tmp.y), p2 = wc(nx,ny);
+        ctx.beginPath(); ctx.moveTo(p1.X,p1.Y); ctx.lineTo(p2.X,p2.Y); ctx.stroke();
+        tmp.x = nx; tmp.y = ny;
+      };
+      const tr = (deg)=>{ tmp.a = (tmp.a + deg) % 360; };
+      const moveTo = (x,y)=>{ tmp.x=x; tmp.y=y; };
+      const star = (len)=>{ for (let i=0;i<5;i++){ mv(len); tr(144);} };
+
+      switch(level){
+        case 1: for (let i=0;i<4;i++){ mv(100); tr(90); } break;
+        case 2: for (let i=0;i<5;i++){ mv(100); tr(72); } break;
+        case 3: star(100); break;
+        case 4: star(50); moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180)); mv(20); break;
+        case 5:
+          for (let i=0;i<4;i++){ star(50); moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180)); tr(90); }
+          break;
+        case 6:
+          for (let i=0;i<3;i++){ star(50); moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180)); tr(120); }
+          tr(-90); mv(100); tr(90); mv(50); break;
+        case 7:
+          for (let i=0;i<3;i++){ star(50); moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180)); tr(120); }
+          tr(-90); mv(100); tr(90);
+          for (let i=0;i<4;i++){ mv(50); mv(-50); tr(45); } break;
+        case 8:
+          for (let i=0;i<3;i++){ star(50); moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180)); tr(120); }
+          tr(-90); mv(100); tr(90);
+          for (let i=0;i<360;i++){ mv(50); mv(-50); tr(1); } break;
+        case 9:
+          for (let i=0;i<3;i++){ star(50); moveTo(tmp.x + 150*Math.cos(tmp.a*Math.PI/180), tmp.y + 150*Math.sin(tmp.a*Math.PI/180)); tr(120); }
+          tr(-90); mv(100); tr(90);
+          for (let i=0;i<360;i++){ mv(50); mv(-50); tr(1); }
+          tr(120); mv(20);
+          for (let i=0;i<360;i++){ mv(50); mv(-50); tr(1); } break;
+      }
+      ctx.restore();
+    }
+
+    function renderStrokesTo(ctx, W, H, forceW=null){
+      const wc = (x,y)=>({ X: W/2 + x, Y: H/2 - y });
+      ctx.save();
+      for (const s of STROKES){
+        const p1 = wc(s.x1, s.y1), p2 = wc(s.x2, s.y2);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = forceW ? forceW : s.width;
+        ctx.strokeStyle = '#000';
+        ctx.beginPath();
+        ctx.moveTo(p1.X, p1.Y);
+        ctx.lineTo(p2.X, p2.Y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function checkTurtleSolution() {
+  // Lees de gekozen Turtle-oefening uit.
+  const level = parseInt(turtleLevelSel.value || '1', 10);
+
+  // Haal controleparameters op (globale defaults + eventuele level override)
+  const { checkLineW, minRecall, minPrecision } = getTurtleCheckParams(level);
+
+  // Bepaal de canvasafmetingen
+  const rect = bgCanvas.getBoundingClientRect();
+  const W = Math.max(1, Math.floor(rect.width));
+  const H = Math.max(1, Math.floor(rect.height));
+
+  // Maak tijdelijke canvassen aan voor vergelijking
+  const expC = document.createElement('canvas'); 
+  expC.width = W; 
+  expC.height = H;
+
+  const stuC = document.createElement('canvas'); 
+  stuC.width = W; 
+  stuC.height = H;
+
+  const exp = expC.getContext('2d', { willReadFrequently: true });
+  const stu = stuC.getContext('2d', { willReadFrequently: true });
+
+  // Teken de verwachte vorm (solution contour) en de studententekening
+  drawExpectedTo(exp, W, H, level, checkLineW);
+  renderStrokesTo(stu, W, H, checkLineW);
+
+  // Lees de pixeldatasets
+  const expData = exp.getImageData(0, 0, W, H).data;
+  const stuData = stu.getImageData(0, 0, W, H).data;
+
+  // Tel overlappende en niet-overlappende pixels
+  let E = 0, // aantal verwachte (exp) pixels
+      S = 0, // aantal student (stu) pixels
+      I = 0; // intersectie (exp ∧ stu)
+
+  for (let i = 0; i < expData.length; i += 4) {
+    const e = expData[i + 3] > 0; // alpha > 0 = 'actief'
+    const s = stuData[i + 3] > 0;
+    if (e) E++;
+    if (s) S++;
+    if (e && s) I++;
+  }
+
+  // Recall, precision en IoU berekenen
+  const recall = E ? (I / E) : 0;
+  const precision = S ? (I / S) : 0;
+  const iou = (E + S - I) ? (I / (E + S - I)) : 0;
+
+  // Slagen of falen op basis van thresholds
+  const pass = (recall >= minRecall) && (precision >= minPrecision);
+
+  return { pass, recall, precision, iou };
+}
+
+    function applyTurtleStartForLevel(){
+      const level = parseInt(turtleLevelSel.value || '1', 10);
+      const s = TURTLE_STARTS[level-1];
+      if (s && typeof s.x === 'number' && typeof s.y === 'number'){
+        TURTLE.x = s.x; TURTLE.y = s.y; TURTLE.ang = (typeof s.ang==='number')? s.ang : 0;
+      }else{
+        TURTLE.x = 0; TURTLE.y = 0; TURTLE.ang = 0;
+      }
+    }
+
+    function turtleReset(){
+      TURTLE.penDown = true; TURTLE.show = true;
+      TURTLE.color = '#5200FF'; TURTLE.width = 2;
+      TURTLE.minX=TURTLE.maxX=TURTLE.minY=TURTLE.maxY=0;
+      STROKES = [];
+      clearDrawLayer();
+      applyTurtleStartForLevel();
+      drawCursorOnly();
+    }
+
+    // Maximale aantal Turtle-tekeningenstappen tijdens opname
+    const MAX_TURTLE_STEPS = 5000;
+
+    const TREC = { recording:false, steps:[], timer:null, idx:0 };
+
+    function enqueueStep(fn){
+      if (TREC.recording) {
+        if (TREC.steps.length >= MAX_TURTLE_STEPS) {
+          throw new Error('Je programma tekent te veel stappen (mogelijk oneindige lus in Turtle).');
+        }
+        TREC.steps.push(fn);
+        return;
+      }
+      fn();
+    }
+    function turtlePlay(done){
+      TREC.idx = 0;
+      const next = ()=>{
+        if (TREC.idx >= TREC.steps.length){ TREC.timer = null; done && done(); return; }
+        const fn = TREC.steps[TREC.idx++];
+        try{ fn(); }catch(e){ console.error(e); }
+        TREC.timer = setTimeout(next, turtleDelay());
+      };
+      next();
+    }
+    function turtleStop(){ if (TREC.timer){ clearTimeout(TREC.timer); TREC.timer=null; } TREC.steps=[]; TREC.idx=0; }
+
+    function isMazeMode(){ return activeMode === 'maze1' || activeMode === 'maze2'; }
+
+    window.moveForward = function(d){
+      if (isMazeMode()) return window.mazeMoveForward();
+      return enqueueStep(()=> turtleMove(+d||0));
+    };
+    window.moveBackward = function(d){
+      if (isMazeMode()) return;
+      return enqueueStep(()=> turtleMove(-(+d||0)));
+    };
+    window.turnLeft = function(a){
+      if (isMazeMode()) return window.mazeTurnLeft();
+      return enqueueStep(()=> turtleTurn(+(+a||0)));
+    };
+    window.turnRight = function(a){
+      if (isMazeMode()) return window.mazeTurnRight();
+      return enqueueStep(()=> turtleTurn(-(+a||0)));
+    };
+    window.penUp  = function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.penDown=false; drawCursorOnly(); }); };
+    window.penDown= function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.penDown=true;  drawCursorOnly(); }); };
+    window.setLineWidth = function(w){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.width=Math.max(1,+w||1); drawCursorOnly(); }); };
+    function clampChannel(v){
+  v = Math.round(+v || 0);
+  return Math.max(0, Math.min(255, v));
+}
+
+window.setPenColour = function(r,g,b){
+  if (isMazeMode()) return;
+  return enqueueStep(()=> {
+    if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number'){
+
+      const R = clampChannel(r);
+      const G = clampChannel(g);
+      const B = clampChannel(b);
+      TURTLE.color = `rgb(${R},${G},${B})`;
+    } else if (typeof r === 'string'){
+
+      const parsed = parseColor(r);
+      if (parsed){
+        TURTLE.color = parsed;
+      }
+
+    }
+    drawCursorOnly();
+  });
+};
+    window.goTo = function(x,y){ if (!isMazeMode()) return enqueueStep(()=> turtleGoTo(+x||0,+y||0)); };
+    window.writeText = function(t){ if (!isMazeMode()) return enqueueStep(()=> turtleText(t)); };
+    window.showTurtle = function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.show=true; drawCursorOnly(); }); };
+    window.hideTurtle = function(){ if (!isMazeMode()) return enqueueStep(()=> { TURTLE.show=false; drawCursorOnly(); }); };
+
+    function initTurtleUIOnce(){
+      resizeTurtleCanvas();
+      redrawTurtleBackground();
+      turtleReset();
+    }
+
+    $('run-turtle-blocks').addEventListener('click', ()=>{
+      resizeTurtleCanvas();
+      turtleStop();
+      turtleReset();
+
+      const J = Blockly.JavaScript || Blockly.javascriptGenerator;
+      const codeRaw = (J && J.workspaceToCode) ? J.workspaceToCode(workspace) : Blockly.JavaScript.workspaceToCode(workspace);
+      const code = String(codeRaw || '');
+      if (!code.trim()){ alert('Voeg eerst blokken toe.'); return; }
+      bumpAttempt();
+      lastRunCode = code; lastMode = 'turtle_blocks'; syncGlobals();
+
+      TREC.steps = [];
+      TREC.recording = true;
+      try{
+        // Iets hogere limiet voor Turtle-tekeningen
+        const protectedCode = loopProtect(code, 50000);
+        const run = new Function(
+          'moveForward','moveBackward','turnLeft','turnRight','penUp','penDown',
+          'setPenColour','setLineWidth','goTo','writeText','fitToDrawing',
+          protectedCode
+        );
+        run(moveForward, moveBackward, turnLeft, turnRight, penUp, penDown,
+            setPenColour, setLineWidth, goTo, writeText, (typeof fitToDrawing==='function'?fitToDrawing:()=>{}));
+      }catch(e){
+        console.error(e);
+        TREC.recording = false;
+        alert('Fout in je blokken-code: ' + e.message);
+        return;
+      }
+      TREC.recording = false;
+
+      turtlePlay(()=>{
+        const res = checkTurtleSolution();
+        if (res.pass){ showSuccessModal(null, res); }
+      });
+    });
+
+    $('run-turtle-cli').addEventListener('click', ()=>{
+      resizeTurtleCanvas();
+      turtleStop();
+      turtleReset();
+
+      const code = String(cliEditor.value || '');
+      consoleClear();
+      if (!code.trim()){
+        const msg = 'Geen code gevonden. Typ eerst je instructies (bv. een vierkant tekenen).';
+        const div = document.createElement('div'); div.className='log-line log-warn'; div.textContent = msg; cliConsole.appendChild(div);
+        return;
+      }
+      bumpAttempt();
+
+      const hints = detectCommonIssues(code, window.activeMode);
+      if (hints.length){
+        for (const h of hints){
+          if (h.type === 'unknown-call'){
+            consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col})`, 'log-warn');
+          } else if (h.type === 'assignment-in-condition'){
+            consolePrint(`${h.message} (regel ${h.line}, kolom ${h.col}). Tip: ${h.remedy}`, 'log-warn');
+          } else {
+            consolePrint(`${h.message} (regel ${h.line || '?'}${h.col ? ', kolom ' + h.col : ''})`, 'log-warn');
+          }
+        }
+        consolePrint('Los deze punten eerst op en klik opnieuw op Uitvoeren.', 'log-warn');
+        return;
+      }
+
+      lastRunCode = code; lastMode = 'turtle_cli'; syncGlobals();
+
+      const studentConsole = { log: (...args)=> {
+        const line=document.createElement('div'); line.className='log-line ' + 'log-info';
+        line.textContent = args.map(String).join(' '); cliConsole.appendChild(line); cliConsole.scrollTop=cliConsole.scrollHeight;
+      }};
+
+      TREC.steps = [];
+      TREC.recording = true;
+      try{
+        // Iets hogere limiet voor Turtle-code
+        const protectedCode = loopProtect(code, 50000);
+        const run = new Function(
+          'moveForward','moveBackward','turnLeft','turnRight','penUp','penDown',
+          'setPenColour','setLineWidth','goTo','writeText','fitToDrawing','console',
+          protectedCode
+        );
+        run(moveForward, moveBackward, turnLeft, turnRight, penUp, penDown,
+            setPenColour, setLineWidth, goTo, writeText, (typeof fitToDrawing==='function'?fitToDrawing:()=>{}),
+            studentConsole);
+            }catch(e){
+        TREC.recording = false;
+        const info = parseError(e);
+        const msg  = (info && info.message) ? info.message : (e && e.message) ? String(e.message) : 'Onbekende fout';
+        const lower = msg.toLowerCase();
+        const isLoopError = lower.includes('oneindige lus') || lower.includes('loopt te lang');
+
+        if (isLoopError) {
+          const finalMsg = 'Je programma loopt te lang (mogelijk oneindige lus). Controleer je while/for-lussen en zorg dat de conditie ooit onwaar wordt.';
+          consolePrint(finalMsg, 'log-error');
+          showErrorModal(finalMsg, 'Mogelijk oneindige lus');
+          return;
+        }
+
+        const undef = (e && (String(e.message).match(/(?:is not defined|Can't find variable):?\s*([A-Za-z_]\w*)/)));
+        if (undef){
+          const name = undef[1];
+          const allowed = Array.from(makeAllowedSet(window.activeMode));
+          const suggestion = closestAllowed(name, allowed);
+          consolePrint(
+            `Onbekende naam ‘${name}’. ${suggestion ? `Bedoel je ‘${suggestion}()’ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
+            'log-error'
+          );
+        } else {
+          const hdr = document.createElement('div');
+          hdr.className='log-line log-error';
+          hdr.textContent = info.line
+            ? `Fout op regel ${info.line}${info.col?`, kolom ${info.col}`:''}: ${msg}`
+            : `Fout: ${msg}`;
+          cliConsole.appendChild(hdr);
+          if (info.line){
+            const frameHTML = showCodeFrame(code, info.line, info.col);
+            const cont = document.createElement('div'); cont.innerHTML = frameHTML;
+            cliConsole.appendChild(cont.firstChild);
+          }
+        }
+
+        showErrorModal('Er is een fout opgetreden in je Turtle-code. Bekijk de console voor details.', 'Fout in Turtle-code');
+        return;
+      }
+      TREC.recording = false;
+
+      turtlePlay(()=>{
+        const res = checkTurtleSolution();
+        if (res.pass){ showSuccessModal(null, res); }
+      });
+    });
+
+    $('fit-turtle').addEventListener('click', ()=> { /* optioneel later invullen */ });
+
+    turtleLevelSel.addEventListener('change', ()=>{
+      saveWorkForKey(lastExerciseKey);
+      redrawTurtleBackground();
+      turtleReset();
+      restoreWorkForCurrentExercise();
+    });
+
+    function setMode(mode){
+      saveWorkForKey(lastExerciseKey);
+      activeMode = mode;
+      window.activeMode = mode;
+
+      tabMaze1.classList.toggle('active', mode==='maze1');
+      tabMaze2.classList.toggle('active', mode==='maze2');
+      tabTurtle1.classList.toggle('active', mode==='turtle_blocks');
+      tabTurtle2.classList.toggle('active', mode==='turtle_cli');
+
+      controlsM1.classList.toggle('hidden', mode!=='maze1');
+      controlsM2.classList.toggle('hidden', mode!=='maze2');
+      controlsT.classList.toggle('hidden', !(mode==='turtle_blocks' || mode==='turtle_cli'));
+
+      $('run-turtle-blocks').classList.toggle('hidden', mode!=='turtle_blocks');
+      $('run-turtle-cli').classList.toggle('hidden', mode!=='turtle_cli');
+
+      const useBlockly = (mode==='maze1' || mode==='turtle_blocks');
+      blocklyArea.classList.toggle('hidden', !useBlockly);
+      cliWrap.classList.toggle('hidden', useBlockly);
+
+      turtleStack.classList.toggle('hidden', !(mode==='turtle_blocks' || mode==='turtle_cli'));
+      mazeCanvas.classList.toggle('hidden', mode==='turtle_blocks' || mode==='turtle_cli');
+
+      if (mode==='maze1'){
+        modeTitle.textContent = 'OEFENINGEN';
+        previewNote.textContent = 'Maze: je algoritme speelt stap voor stap af. Pas de snelheid aan (tot 1000 ms).';
+        editorNote.textContent = 'Maze: bouw met blokken en voer uit om de route stap voor stap te testen.';
+        loadToolbox('toolbox-maze');
+        applyMaxBlocks();
+      } else if (mode==='maze2'){
+        modeTitle.textContent = 'OEFENINGEN';
+        previewNote.textContent = 'Maze (Code): typ je algoritme en bekijk stap-voor-stap de uitvoering. Fouten verschijnen onder de editor.';
+        editorNote.textContent = 'Tip: schrijf eerst de eenvoudige sequentie, voeg daarna selectie en voorwaardelijke herhaling toe.';
+        if (workspace){ workspace.options.maxBlocks = Infinity; updateCapacityBadge(); }
+      } else if (mode==='turtle_blocks'){
+        modeTitle.textContent = 'OEFENINGEN';
+        previewNote.textContent = 'Turtle: raster en doel-omtrek staan altijd aan. Gebruik blokken.';
+        editorNote.textContent = 'In Turtle is (0,0) het midden. Zoek herhalende bouwstenen voor begrensde herhaling.';
+        loadToolbox('toolbox-turtle');
+        if (workspace){ workspace.options.maxBlocks = Infinity; updateCapacityBadge(); }
+        initTurtleUIOnce();
+      } else {
+        modeTitle.textContent = 'OEFENINGEN';
+        previewNote.textContent = 'Turtle (Code): gebruik moveForward, turnLeft/Right, penUp/Down, setLineWidth, setPenColour, goTo.';
+        editorNote.textContent = 'In Turtle-code gebruik je eenvoudige sequentie voor stappen en begrensde herhaling voor vaste patronen.';
+        if (workspace){ workspace.options.maxBlocks = Infinity; updateCapacityBadge(); }
+        initTurtleUIOnce();
+
+        if (cliEditor && cliEditor.dataset.seeded !== 'turtle'){
+          cliEditor.value = ``;
+          cliEditor.dataset.seeded = 'turtle';
+          cliConsole.innerHTML = '<div class="log-line log-info">Console verschijnt hier. Voer uit om te starten.</div>';
+        }
+      }
+
+      restoreWorkForCurrentExercise();
+      stopPlayback();
+      if (mode==='maze1' || mode==='maze2'){ mazeReset(); resizeMazeCanvas(); }
+    }
+
+    tabMaze1.addEventListener('click', ()=> setMode('maze1'));
+    tabMaze2.addEventListener('click', ()=> setMode('maze2'));
+    tabTurtle1.addEventListener('click', ()=> setMode('turtle_blocks'));
+    tabTurtle2.addEventListener('click', ()=> setMode('turtle_cli'));
+    cliEditor?.addEventListener('input', scheduleWorkSave);
+
+    let justCompleted = false;
+    
+
+    const errorOverlay   = $('error-overlay');
+    const errorTitleEl   = $('error-title');
+    const errorMessageEl = $('error-message');
+    const errorFeedbackEl = $('error-feedback');
+    const errorPill      = $('error-pill');
+    const closeErrorBtn  = $('close-error');
+
+
+    function showErrorModal(message, pillText, options = {}) {
+      if (!errorOverlay || !errorMessageEl) return;
+      if (errorTitleEl) errorTitleEl.textContent = options.title || 'Feedback';
+      errorMessageEl.textContent = message || 'Onbekende fout in je code.';
+      if (errorFeedbackEl) {
+        if (options.feedback) {
+          errorFeedbackEl.innerHTML = options.feedback;
+        } else {
+          const maze = activeMode === 'maze1' || activeMode === 'maze2';
+          errorFeedbackEl.innerHTML = maze
+            ? '<strong>Debugtip:</strong> vertraag de animatie en controleer eerst de keuze: kijkt je algoritme naar het juiste pad voor het draait of vooruitgaat?'
+            : '<strong>Debugtip:</strong> test eerst een korte lijn, daarna een hoek, en pas daarna de volledige vorm. Controleer ook of de pen omhoog of omlaag staat.';
+        }
+      }
+      if (errorPill && pillText) {
+        errorPill.textContent = pillText;
+      } else if (errorPill) {
+        errorPill.textContent = 'Bekijk je uitvoering';
+      }
+      document.body.classList.add('modal-open');
+      errorOverlay.classList.remove('hidden');
+    }
+
+    function closeErrorModal() {
+      if (!errorOverlay) return;
+      errorOverlay.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    }
+
+    if (closeErrorBtn) {
+      closeErrorBtn.addEventListener('click', closeErrorModal);
+    }
+    if (errorOverlay) {
+      errorOverlay.addEventListener('click', (e) => {
+        if (e.target === errorOverlay) {
+          closeErrorModal();
+        }
+      });
+    }
+
+    resetProgressBtn?.addEventListener('click', openResetModal);
+    resetCurrentBtn?.addEventListener('click', () => {
+      closeResetModal();
+      resetCurrentExerciseProgress();
+    });
+    resetAllBtn?.addEventListener('click', () => {
+      closeResetModal();
+      resetAllCourseProgress();
+    });
+    resetCancelBtn?.addEventListener('click', closeResetModal);
+    resetModal?.addEventListener('click', (e) => {
+      if (e.target === resetModal) closeResetModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && resetModal && !resetModal.classList.contains('hidden')) {
+        closeResetModal();
+      }
+    });
+    
+    function showSuccessModal(msg, result = null){
+      justCompleted = true;
+      const feedback = buildLearningFeedback(result);
+      markCurrentExerciseCompleted(feedback.replace(/<br>/g, ' ').replace(/<[^>]+>/g, ''));
+      successMsg.textContent = msg || 'Je hebt het level voltooid.';
+      if (successFeedback) successFeedback.innerHTML = feedback;
+      successCode.textContent = String(lastRunCode || '').trim() || '// (geen code gevonden)';
+      document.body.classList.add('modal-open');
+      overlay.classList.remove('hidden');
+    }
+
+    const exportPdfSuccess = document.getElementById('export-pdf-success');
+    if (exportPdfSuccess){
+      exportPdfSuccess.addEventListener('click', () => {
+        if (window.ExportPDF && typeof ExportPDF.openModal === 'function'){
+          ExportPDF.openModal();
+        } else {
+          alert('PDF-export is nog niet geladen. Probeer even later opnieuw.');
+        }
+      });
+    }
+    function advanceToNextExerciseIfPossible(){
+      if (activeMode === 'maze1' || activeMode === 'maze2'){
+        const curr = parseInt((activeMode==='maze1'? levelSel1.value : levelSel2.value) || '1', 10);
+        if (curr < TOTAL_LEVELS){
+          const next = curr + 1;
+          if (levelSel1) levelSel1.value = String(next);
+          if (levelSel2) levelSel2.value = String(next);
+          loadLevel(next);
+          mazeReset(); resizeMazeCanvas();
+        }
+      } else if (activeMode === 'turtle_blocks' || activeMode === 'turtle_cli'){
+        const curr = parseInt(turtleLevelSel.value || '1', 10);
+        if (curr < 9){
+          turtleLevelSel.value = String(curr + 1);
+          turtleLevelSel.dispatchEvent(new Event('change'));
+        }
+      }
+    }
+    function closeSuccessModalAndMaybeAdvance(){
+      overlay.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+      if (justCompleted){
+        justCompleted = false;
+        advanceToNextExerciseIfPossible();
+      }
+    }
+    closeSuccess.addEventListener('click', closeSuccessModalAndMaybeAdvance);
+    overlay.addEventListener('click', (e)=>{ if (e.target === overlay){ closeSuccessModalAndMaybeAdvance(); }});
+    if (copySolution) {
+      copySolution.addEventListener('click', async ()=>{
+        try{
+          await navigator.clipboard.writeText(successCode.textContent || '');
+          copySolution.textContent = 'Gekopieerd!';
+          setTimeout(()=> copySolution.textContent = 'Kopieer code', 1200);
+        }catch(_){}
+      });
+    }
+
+    function getWS(){
+      try{
+        if (window.workspace) return window.workspace;
+        if (window.Blockly){
+          if (Blockly.getMainWorkspace) return Blockly.getMainWorkspace();
+          if (Blockly.common && Blockly.common.getMainWorkspace) return Blockly.common.getMainWorkspace();
+        }
+      }catch(_){}
+      return null;
+    }
+
+    async function getEditorSnapshotPNG(){
+      if (typeof html2canvas !== 'function') return null;
+
+      const isBlocks = (window.activeMode === 'maze1' || window.activeMode === 'turtle_blocks');
+      const rects = [];
+
+      if (isBlocks){
+        const bd = document.getElementById('blocklyDiv');
+        if (bd) rects.push(bd.getBoundingClientRect());
+        document.querySelectorAll('.blocklyToolboxDiv,.blocklyFlyout').forEach(el=>{
+          const r = el.getBoundingClientRect();
+          if (r && r.width>0 && r.height>0) rects.push(r);
+        });
+      } else {
+        const cli = document.getElementById('cli-wrap');
+        if (cli && !cli.classList.contains('hidden')) rects.push(cli.getBoundingClientRect());
+      }
+
+      const region = (function _unionRect(rects){
+        let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+        for (const r of rects){
+          if (!r) continue;
+          left = Math.min(left, r.left);
+          top = Math.min(top, r.top);
+          right = Math.max(right, r.right);
+          bottom = Math.max(bottom, r.bottom);
+        }
+        if (!isFinite(left) || !isFinite(top) || !isFinite(right) || !isFinite(bottom)) return null;
+        return { left, top, right, bottom, width: right-left, height: bottom-top };
+      })(rects);
+
+      if (!region || region.width < 10 || region.height < 10) return null;
+
+      const pad = 12;
+      const scale = Math.min(1.2, Math.max(1, (window.devicePixelRatio || 1)));
+
+      const full = await html2canvas(document.body, {
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        scale,
+        windowWidth: document.documentElement.clientWidth,
+        windowHeight: window.innerHeight,
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
+        ignoreElements: (el)=> el.classList?.contains('modal-overlay') || el.tagName === 'CANVAS'
+      });
+
+      const sx = Math.max(0, Math.round((region.left - pad) * scale));
+      const sy = Math.max(0, Math.round((region.top  - pad) * scale));
+      const sw = Math.round((region.width  + pad*2) * scale);
+      const sh = Math.round((region.height + pad*2) * scale);
+
+      const crop = document.createElement('canvas');
+      crop.width = sw; crop.height = sh;
+      const ctx = crop.getContext('2d');
+      ctx.drawImage(full, sx, sy, sw, sh, 0, 0, sw, sh);
+      return crop.toDataURL('image/png');
+    }
+
+    window.renderMazePlainPNGAtCurrentSize = function(){
+      const cvs = document.getElementById('mazeCanvas');
+      if (!cvs) return null;
+
+      const rect = cvs.getBoundingClientRect();
+      const W = Math.max(1, Math.floor(rect.width));
+      const H = Math.max(1, Math.floor(rect.height));
+
+      const off = document.createElement('canvas');
+      off.width = W; off.height = H;
+      const ctx = off.getContext('2d');
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0,0,W,H);
+
+      const rows = level.grid.length;
+      const cols = level.grid[0].length;
+      const c = Math.floor(Math.min(W / cols, H / rows));
+      const usedW = c * cols, usedH = c * rows;
+      const offX = Math.floor((W - usedW) / 2);
+      const offY = Math.floor((H - usedH) / 2);
+
+      for (let y=0; y<rows; y++){
+        for (let x=0; x<cols; x++){
+          const v = level.grid[y][x];
+          ctx.fillStyle = (v===0) ? '#1A224C' : '#eef2ff';
+          ctx.fillRect(offX + x*c, offY + y*c, c, c);
+          if (v === 'G'){
+            ctx.fillStyle = '#03ddef';
+            const pad = Math.max(4, Math.floor(c*0.12));
+            ctx.fillRect(offX + x*c + pad, offY + y*c + pad, c - pad*2, c - pad*2);
+          }
+        }
+      }
+
+      const cx = offX + mazeState.x*c + c/2;
+      const cy = offY + mazeState.y*c + c/2;
+      const a  = degForDir(mazeState.dir);
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(a * Math.PI/180);
+      const tip  = Math.max(12, Math.floor(c*0.32));
+      const base = Math.max(7,  Math.floor(c*0.18));
+      ctx.beginPath(); ctx.moveTo(tip,0); ctx.lineTo(-base, base); ctx.lineTo(-base,-base); ctx.closePath();
+      ctx.fillStyle = '#5200FF';
+      ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.restore();
+
+      return off.toDataURL('image/png');
+    };
+
+    window.__getMazeSimplifiedPNG = function(targetW, targetH){
+      try{
+        const W = Math.max(1, Math.round(targetW));
+        const H = Math.max(1, Math.round(targetH));
+        const off = document.createElement('canvas');
+        off.width = W; off.height = H;
+        const ctx = off.getContext('2d');
+
+        ctx.imageSmoothingEnabled = false;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0,0,W,H);
+
+        const rows = level.grid.length;
+        const cols = level.grid[0].length;
+        const c = Math.floor(Math.min(W/cols, H/rows));
+        const usedW = c * cols, usedH = c * rows;
+        const offX = Math.floor((W - usedW) / 2);
+        const offY = Math.floor((H - usedH) / 2);
+
+        for (let y=0;y<rows;y++){
+          for (let x=0;x<cols;x++){
+            const v = level.grid[y][x];
+            ctx.fillStyle = (v === 0) ? '#1A224C' : '#EEF2FF';
+            ctx.fillRect(offX + x*c, offY + y*c, c, c);
+            if (v === 'G'){
+              const pad = Math.max(4, Math.floor(c*0.12));
+              ctx.fillStyle = '#03ddef';
+              ctx.fillRect(offX + x*c + pad, offY + y*c + pad, c - 2*pad, c - 2*pad);
+            }
+          }
+        }
+
+        const angleDeg = degForDir(mazeState.dir);
+        const cx = offX + mazeState.x*c + c/2;
+        const cy = offY + mazeState.y*c + c/2;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angleDeg * Math.PI/180);
+        const tip = Math.max(12, Math.floor(c*0.32));
+        const base = Math.max(7, Math.floor(c*0.18));
+        ctx.beginPath(); ctx.moveTo(tip,0); ctx.lineTo(-base, base); ctx.lineTo(-base,-base); ctx.closePath();
+        ctx.fillStyle = '#5200FF';
+        ctx.fill();
+        ctx.restore();
+
+        return off.toDataURL('image/png');
+      }catch(e){
+        console.warn('Simplified Maze snapshot failed:', e);
+        return null;
+      }
+    };
+
+    window.getMazeCanvasPNGPreferTextures = function(){
+      const cvs = document.getElementById('mazeCanvas');
+      if (!cvs) return null;
+      try{
+        return cvs.toDataURL('image/png');
+      }catch(e){
+        if (typeof window.renderMazePlainPNGAtCurrentSize === 'function') {
+          return window.renderMazePlainPNGAtCurrentSize();
+        }
+        if (typeof window.__getMazeSimplifiedPNG === 'function') {
+          const rect = cvs.getBoundingClientRect();
+          const dpr  = Math.max(1, window.devicePixelRatio || 1);
+          return window.__getMazeSimplifiedPNG(
+            Math.round(rect.width * dpr),
+            Math.round(rect.height * dpr)
+          );
+        }
+        return null;
+      }
+    };
+
+    window.getActiveCanvasDataURL = function(){
+      if (!(activeMode==='turtle_blocks' || activeMode==='turtle_cli')) return null;
+      const stack = document.getElementById('turtle-stack');
+      if (!stack) return null;
+      const rect = stack.getBoundingClientRect();
+      const W = Math.max(1, Math.floor(rect.width));
+      const H = Math.max(1, Math.floor(rect.height));
+
+      const off = document.createElement('canvas');
+      off.width = W; off.height = H;
+      const ctx = off.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0,0,W,H);
+
+      function drawCopy(id){
+        const src = document.getElementById(id);
+        if (src && src.width && src.height){
+          ctx.drawImage(src, 0, 0, W, H);
+        }
+      }
+      drawCopy('turtle-bg');
+      drawCopy('turtle-draw');
+      drawCopy('turtle-cur');
+
+      return { data: off.toDataURL('image/png'), label: 'Turtle' };
+    };
+  </script>
+
+  <script>
+  // ======= ExportPDF (NL) =======
+  window.ExportPDF = (function () {
+    const COLOR_PURPLE = [82, 0, 255];
+    let opts = {
+      exerciseGetter: null,
+      rubric: { rows: ['Functioneel','Leesbaar','Programmeerconcept','Wiskundeconcept','Creativiteit'], values: null, include: true }
+    };
+
+    function $(id){ return document.getElementById(id); }
+    function sanitize(s){ return String(s||'').replace(/[^a-zA-Z0-9_\-]+/g, "_"); }
+    function getFromLS(key, fallback=''){ try{ return localStorage.getItem(key) || fallback; }catch(e){ return fallback; } }
+    function setLS(key, val){ try{ localStorage.setItem(key, val); }catch(e){} }
+    function formatDuur(ms){ const s = Math.max(0, Math.floor((ms||0)/1000)); const m = Math.floor(s/60), r = s%60; return (m>0 ? `${m}m ` : '') + `${r}s`; }
+    function margin(){ return 36; }
+    function pageH(pdf){ return pdf.internal.pageSize.height; }
+    function ensureSpace(pdf, height){ if (ExportPDF._cursorY + height > pageH(pdf) - margin()) { pdf.addPage(); ExportPDF._cursorY = margin(); } }
+
+    function getChapterInfo(){
+      const mode = window.activeMode;
+      if (mode === 'maze1') return { chapter: 'Maze (Blokken)', level: parseInt(document.getElementById('level-select-1')?.value||'1',10) };
+      if (mode === 'maze2') return { chapter: 'Maze (Code)',     level: parseInt(document.getElementById('level-select-2')?.value||'1',10) };
+      if (mode === 'turtle_blocks') return { chapter: 'Turtle (Blokken)', level: parseInt(document.getElementById('turtle-level')?.value||'1',10) };
+      if (mode === 'turtle_cli')    return { chapter: 'Turtle (Code)',    level: parseInt(document.getElementById('turtle-level')?.value||'1',10) };
+      return { chapter:'Oefening', level:1 };
+    }
+
+    function getExerciseName(){
+      const {chapter, level} = getChapterInfo();
+      return `${chapter} — Level ${level}`;
+    }
+
+    function getOpdrachtTekst(){
+      const el = document.getElementById('opdracht-tekst');
+      return el ? el.textContent.trim() : '';
+    }
+
+    function getCodeIfCodeMode(){
+      const mode = window.activeMode;
+      const isCodeMode = (mode === 'maze2' || mode === 'turtle_cli');
+      if (!isCodeMode) return '';
+      const cliVisible = !document.getElementById('cli-wrap')?.classList.contains('hidden');
+      if (cliVisible){
+        return String(document.getElementById('cli-editor')?.value || '');
+      }
+      if (window.workspace && window.Blockly){
+        const J = Blockly.JavaScript || Blockly.javascriptGenerator;
+        try{
+          return (J && J.workspaceToCode) ? J.workspaceToCode(window.workspace) : Blockly.JavaScript.workspaceToCode(window.workspace);
+        }catch(_){}
+      }
+      return String(window.lastRunCode || '');
+    }
+
+    async function getEditorSnapshotPNG(){ return await window.getEditorSnapshotPNG?.(); }
+
+    async function exportNow(){
+      const naam = document.getElementById('modal-naam').value.trim();
+      const klas = document.getElementById('modal-klas').value.trim();
+      if (!naam || !klas) { alert('Gelieve je naam en klas in te vullen.'); return; }
+
+      setLS('student_naam', naam);
+      setLS('student_klas', klas);
+
+      document.getElementById('pdf-modal').classList.add('hidden');
+      document.body.classList.remove('modal-open');
+
+      const opdracht   = getOpdrachtTekst();
+      const codeForPdf = getCodeIfCodeMode();
+      const editorPNG  = await getEditorSnapshotPNG();
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation:'portrait', unit:'pt', format:'a4' });
+      const contentW = 520;
+      ExportPDF._cursorY = margin();
+
+      const {chapter, level} = getChapterInfo();
+      const metaTitle = `${chapter} — Level ${level} — ${naam}`;
+      if (pdf.setProperties) pdf.setProperties({ title: metaTitle, author: 'AI in de Klas' });
+
+      pdf.setTextColor(...COLOR_PURPLE);
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(18);
+      pdf.text('Oefening Blockly', margin(), ExportPDF._cursorY); ExportPDF._cursorY += 28;
+
+      pdf.setTextColor(0,0,0);
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(12);
+      pdf.text(`Naam: ${naam}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 18;
+      pdf.text(`Klas: ${klas}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 18;
+      pdf.text(`Oefening: ${chapter} — Level ${level}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 24;
+
+      if (opdracht) {
+        const lines = pdf.splitTextToSize(opdracht, contentW);
+        const setBody = () => { pdf.setFont('helvetica','normal'); pdf.setFontSize(12); };
+        const setLabel= () => { pdf.setFont('helvetica','bold');  pdf.setFontSize(13); };
+
+        ensureSpace(pdf, 20);
+        pdf.setTextColor(...COLOR_PURPLE); setLabel();
+        pdf.text('Opdracht:', margin(), ExportPDF._cursorY); ExportPDF._cursorY += 16;
+
+        setBody(); pdf.setTextColor(0,0,0);
+        for (let i=0;i<lines.length;i++){
+          ensureSpace(pdf, 18);
+          pdf.text(lines[i], margin(), ExportPDF._cursorY);
+          ExportPDF._cursorY += 14;
+        }
+        ExportPDF._cursorY += 8;
+      }
+
+      if (editorPNG){
+        const img = new Image();
+        await new Promise(res=>{ img.onload = res; img.onerror = res; img.src = editorPNG; });
+        const maxW = contentW, maxH = 360;
+        let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+        const k = Math.min(maxW/w, maxH/h, 1);
+        w = Math.round(w*k); h = Math.round(h*k);
+
+        pdf.setTextColor(...COLOR_PURPLE);
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
+        ensureSpace(pdf, h + 26);
+        pdf.text('Editor snapshot:', margin(), ExportPDF._cursorY); ExportPDF._cursorY += 10;
+        pdf.addImage(editorPNG, 'PNG', margin(), ExportPDF._cursorY, w, h);
+        ExportPDF._cursorY += h + 16;
+      }
+
+      {
+        let oefSnapshotData = null;
+
+        if (window.activeMode === 'maze1' || window.activeMode === 'maze2') {
+          if (typeof window.getMazeCanvasPNGPreferTextures === 'function') {
+            oefSnapshotData = window.getMazeCanvasPNGPreferTextures();
+          } else if (typeof window.renderMazePlainPNGAtCurrentSize === 'function') {
+            oefSnapshotData = window.renderMazePlainPNGAtCurrentSize();
+          }
+        } else {
+          const layered = window.getActiveCanvasDataURL?.();
+          if (layered && layered.data) oefSnapshotData = layered.data;
+        }
+
+        if (oefSnapshotData) {
+          const img = new Image();
+          await new Promise(res => { img.onload = res; img.onerror = res; img.src = oefSnapshotData; });
+          const maxW = contentW, maxH = 420;
+          let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+          const k = Math.min(maxW / w, maxH / h, 1);
+          w = Math.round(w * k); h = Math.round(h * k);
+
+          pdf.setTextColor(...COLOR_PURPLE);
+          pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
+          ensureSpace(pdf, h + 26);
+          pdf.text(window.activeMode.startsWith('maze') ? 'Maze-weergave:' : 'Turtle-tekening:', margin(), ExportPDF._cursorY);
+          ExportPDF._cursorY += 10;
+          pdf.addImage(oefSnapshotData, 'PNG', margin(), ExportPDF._cursorY, w, h);
+          ExportPDF._cursorY += h + 20;
+        }
+      }
+
+      if (codeForPdf) {
+        const lines = pdf.splitTextToSize(codeForPdf, contentW);
+        const setCode = () => { pdf.setFont('courier','normal');  pdf.setFontSize(10); };
+        const setLabel= () => { pdf.setFont('helvetica','bold');  pdf.setFontSize(13); };
+
+        ensureSpace(pdf, 20);
+        pdf.setTextColor(...COLOR_PURPLE); setLabel();
+        pdf.text('Code:', margin(), ExportPDF._cursorY); ExportPDF._cursorY += 16;
+
+        pdf.setTextColor(0,0,0); setCode();
+        for (let i=0;i<lines.length;i++){
+          ensureSpace(pdf, 13);
+          pdf.text(lines[i], margin(), ExportPDF._cursorY);
+          ExportPDF._cursorY += 13;
+        }
+        ExportPDF._cursorY += 10;
+      }
+
+      {
+        pdf.setTextColor(...COLOR_PURPLE);
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
+        ensureSpace(pdf, 56);
+        pdf.text('Status oefening:', margin(), ExportPDF._cursorY); ExportPDF._cursorY += 16;
+
+        pdf.setTextColor(0,0,0);
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(12);
+        const rec = typeof getProgressRecord === 'function' ? getProgressRecord(makeExerciseKey()) : {};
+        pdf.text(rec.completed ? 'Status: voltooid' : 'Status: uitgevoerd', margin(), ExportPDF._cursorY); ExportPDF._cursorY += 16;
+        pdf.text(`Pogingen: ${Number(rec.attempts || 0)}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 16;
+        pdf.text(`Tijd besteed: ${formatDuur(Number(rec.workMs || 0))}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 20;
+      }
+
+      drawRubric(pdf, opts.rubric);
+
+      const {chapter: chName} = getChapterInfo();
+      const fname = `${sanitize(naam)}-${sanitize(klas)}-${sanitize(chName)}-Level_${String(level).padStart(2,'0')}.pdf`;
+      pdf.save(fname);
+    }
+
+    function drawRubric(pdf, config){
+      if (!config?.include) return;
+      const tableW = 520, colCrit = 180, colScore = 60, colFb = tableW - colCrit - colScore;
+      const headerH = 28, rowH = 44;
+
+      ensureSpace(pdf, 24);
+      pdf.setTextColor(...COLOR_PURPLE);
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
+      pdf.text('Beoordeling & Feedback leerkracht:', margin(), ExportPDF._cursorY);
+      ExportPDF._cursorY += 18;
+
+      const rows = Array.isArray(config.rows)&&config.rows.length?config.rows:['Functioneel','Leesbaar','Programmeerconcept','Wiskundeconcept','Creativiteit'];
+      const values = Array.isArray(config.values)?config.values:null;
+
+      let rowIndex = 0;
+      while (rowIndex < rows.length) {
+        const space = pageH(pdf) - ExportPDF._cursorY - margin();
+        const rowsFit = Math.max(1, Math.floor((space - headerH) / rowH));
+        const take = Math.min(rowsFit, rows.length - rowIndex);
+
+        const x = margin(), y = ExportPDF._cursorY;
+        pdf.setDrawColor(...COLOR_PURPLE); pdf.setLineWidth(0.8);
+        pdf.rect(x, y, tableW, headerH + take*rowH, 'S');
+        pdf.setFillColor(...COLOR_PURPLE); pdf.rect(x, y, tableW, headerH, 'F');
+
+        pdf.setTextColor(255,255,255);
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
+        pdf.text('Criterium', x + 8, y + 19);
+        pdf.text('Score',    x + colCrit + 12, y + 19);
+        pdf.text('Feedback', x + colCrit + colScore + 12, y + 19);
+
+        pdf.setDrawColor(...COLOR_PURPLE);
+        pdf.line(x + colCrit,            y, x + colCrit,            y + headerH + take*rowH);
+        pdf.line(x + colCrit + colScore, y, x + colCrit + colScore, y + headerH + take*rowH);
+
+        let rY = y + headerH;
+        for (let i = 0; i < take; i++) {
+          pdf.line(x, rY, x + tableW, rY);
+
+          pdf.setTextColor(...COLOR_PURPLE);
+          pdf.setFont('helvetica','bold'); pdf.setFontSize(12);
+          pdf.text(rows[rowIndex + i], x + 8, rY + 26);
+
+          const v = values && values[rowIndex + i] ? values[rowIndex + i] : null;
+          if (v?.score) {
+            pdf.setTextColor(0,0,0);
+            pdf.setFont('helvetica','normal'); pdf.setFontSize(12);
+            pdf.text(String(v.score), x + colCrit + 12, rY + 26);
+          }
+          if (v?.feedback) {
+            const fbLines = pdf.splitTextToSize(String(v.feedback), colFb - 16);
+            pdf.setTextColor(0,0,0);
+            pdf.setFont('helvetica','normal'); pdf.setFontSize(12);
+            let innerY = rY + 20;
+            for (const ln of fbLines) {
+              if (innerY > rY + rowH - 6) break;
+              pdf.text(ln, x + colCrit + colScore + 12, innerY);
+              innerY += 14;
+            }
+          }
+          rY += rowH;
+        }
+
+        ExportPDF._cursorY = y + headerH + take*rowH + 16;
+        rowIndex += take;
+        if (rowIndex < rows.length) {
+          if (ExportPDF._cursorY + headerH + rowH > pageH(pdf) - margin()) {
+            pdf.addPage(); ExportPDF._cursorY = margin();
+          }
+        }
+      }
+
+      ensureSpace(pdf, 110);
+      pdf.setTextColor(...COLOR_PURPLE);
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
+      pdf.text('Algemene feedback:', margin() + 8, ExportPDF._cursorY);
+
+      ExportPDF._cursorY += 8;
+      pdf.setDrawColor(...COLOR_PURPLE);
+      pdf.setLineWidth(0.8);
+      pdf.rect(margin(), ExportPDF._cursorY, 520, 90, 'S');
+      ExportPDF._cursorY += 90 + 16;
+    }
+
+    function openModal(){
+      const modal = document.getElementById('pdf-modal');
+      document.getElementById('modal-naam').value = getFromLS('student_naam','');
+      document.getElementById('modal-klas').value = getFromLS('student_klas','');
+      modal.classList.remove('hidden'); document.body.classList.add('modal-open');
+      document.getElementById('modal-naam').focus();
+    }
+
+    function rebindPdfButton(){
+      const btn = document.getElementById('btn-pdf');
+      if (!btn) return;
+      const clone = btn.cloneNode(true);
+      btn.parentNode.replaceChild(clone, btn);
+      clone.addEventListener('click', openModal);
+    }
+
+    function init(userOpts={}){
+      if (userOpts.rubric) opts.rubric = { ...opts.rubric, ...userOpts.rubric };
+      opts = { ...opts, ...userOpts, rubric: opts.rubric };
+
+      rebindPdfButton();
+
+      document.getElementById('close-pdf-modal')?.addEventListener('click', ()=>{
+        document.getElementById('pdf-modal').classList.add('hidden');
+        document.body.classList.remove('modal-open');
+      });
+      document.getElementById('pdf-modal')?.addEventListener('click', (e)=>{
+        if (e.target === document.getElementById('pdf-modal')){
+          document.getElementById('pdf-modal').classList.add('hidden');
+          document.body.classList.remove('modal-open');
+        }
+      });
+      document.getElementById('modal-ok')?.addEventListener('click', exportNow);
+    }
+
+    return { init, openModal, exportNow, _cursorY: 36 };
+  })();
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Verdediging: als ExportPDF nog niet geladen is, doe niets
+  if (!window.ExportPDF || typeof window.ExportPDF.init !== 'function') {
+    console.warn('ExportPDF.init niet beschikbaar op DOMContentLoaded');
+    return;
+  }
+
+  // Hulpfunctie: haal veilig een level-nummer op
+  function getLevel(selectId) {
+    const el = document.getElementById(selectId);
+    if (!el) return 1;
+    const parsed = parseInt(el.value, 10);
+    return Number.isNaN(parsed) ? 1 : parsed;
+  }
+
+  function getExerciseLabel() {
+    const mode = window.activeMode; // verwacht: 'maze1', 'maze2', 'turtle_blocks', 'turtle_cli'
+    let chapter = 'Oefening';
+    let level   = 1;
+
+    switch (mode) {
+      case 'maze1':
+        chapter = 'Maze (Blokken)';
+        level   = getLevel('level-select-1');
+        break;
+      case 'maze2':
+        chapter = 'Maze (Code)';
+        level   = getLevel('level-select-2');
+        break;
+      case 'turtle_blocks':
+        chapter = 'Turtle (Blokken)';
+        level   = getLevel('turtle-level');   // zorg dat dit id echt bestaat
+        break;
+      case 'turtle_cli':
+        chapter = 'Turtle (Code)';
+        level   = getLevel('turtle-level');   // idem: zelfde dropdown voor beide Turtle-modes
+        break;
+      default:
+        // fallback blijft 'Oefening — Level 1'
+        break;
+    }
+
+    return `${chapter} — Level ${level}`;
+  }
+
+  ExportPDF.init({
+    exerciseGetter: getExerciseLabel,
+    rubric: {
+      include: true,
+      rows: [
+        'Functioneel',
+        'Leesbaar',
+        'Programmeerconcept',
+        'Wiskundeconcept',
+        'Creativiteit',
+      ],
+    },
+  });
+});
+  </script>
+
+  <button id="fab-help" class="fab-help" aria-label="Toon formularium" aria-pressed="false">?</button>
+
+  <!-- Oud overlay-sjabloon (nu ongebruikt, maar laten staan voor compatibiliteit) -->
+  <div id="pdf-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
+    <div class="modal">
+      <div class="modal-header">⤓ <span id="pdf-title">Exporteren naar PDF</span></div>
+      <div class="modal-body">
+        <div id="pdf-what" class="pill">Dit exporteert: …</div>
+        <label for="pdf-name" style="font-weight:700;margin-top:6px;">Naam (optioneel)</label>
+        <input id="pdf-name" class="btn" style="width:100%;" placeholder="Voornaam Naam" />
+        <div class="cap">De export bevat automatisch de juiste onderdelen per modus.</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="pdf-cancel">Annuleren</button>
+        <button class="btn primary" id="pdf-create">Maak PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <section id="print-sheet" aria-hidden="true">
+    <div class="print-wrap" id="print-wrap"></div>
+  </section>
+</body>
+</html>
