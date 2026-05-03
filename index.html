@@ -27,9 +27,9 @@
 
   <style>
     :root {
-      --brand: #5200ff;
-      --brand-dark: #3a00b8;
-      --accent: #03ddef;
+      --brand: #5200FF;
+      --brand-dark: #3700B3;
+      --accent: #3dffd0;
       --bg-soft: #f8f7f3;
       --panel: #ffffff;
       --soft: #f7f3ff;
@@ -210,27 +210,6 @@
       gap: 54px;
       padding-top: 70px;
       padding-bottom: 78px;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin: 0 0 14px;
-      color: var(--brand);
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-size: 0.88rem;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 12px;
-      height: 12px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 0 6px rgba(3, 221, 239, 0.18);
     }
 
     h1 {
@@ -450,6 +429,137 @@
       border-color: rgba(82, 0, 255, 0.28);
     }
 
+    .family-tree {
+      margin-top: 28px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: var(--card-shadow);
+      padding: 22px;
+      overflow: hidden;
+    }
+
+    .tree-root { display: flex; justify-content: center; margin-bottom: 22px; }
+
+    .tree-node {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(82, 0, 255, 0.08);
+    }
+
+    .tree-node strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--brand-dark);
+      font-size: 1.05rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .tree-node span { display: block; color: var(--muted); }
+
+    .tree-node.root {
+      width: min(560px, 100%);
+      text-align: center;
+      background: var(--brand);
+      border-color: var(--brand);
+    }
+
+    .tree-node.root strong,
+    .tree-node.root span { color: #fff; }
+
+    .tree-node:hover,
+    .tree-node:focus-visible {
+      transform: translateY(-2px);
+      border-color: var(--brand);
+      box-shadow: 0 18px 38px rgba(82, 0, 255, 0.14);
+      outline: none;
+    }
+
+    .tree-branches {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .tree-branches::before {
+      content: "";
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      width: 2px;
+      height: 22px;
+      background: var(--brand);
+      opacity: 0.32;
+    }
+
+    .tree-branch {
+      position: relative;
+      border: 1.5px dashed rgba(82, 0, 255, 0.28);
+      border-radius: 24px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(247, 243, 255, 0.92), rgba(255, 255, 255, 0.94));
+    }
+
+    .tree-branch::before {
+      content: "";
+      position: absolute;
+      top: -16px;
+      width: 50%;
+      height: 16px;
+      border-top: 2px solid rgba(82, 0, 255, 0.32);
+    }
+
+    .tree-branch:first-child::before { right: 0; border-left: 2px solid rgba(82, 0, 255, 0.32); border-radius: 14px 0 0 0; }
+    .tree-branch:last-child::before { left: 0; border-right: 2px solid rgba(82, 0, 255, 0.32); border-radius: 0 14px 0 0; }
+
+    .branch-title {
+      display: inline-flex;
+      margin-bottom: 14px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #0d2130;
+      padding: 8px 13px;
+      font-weight: 900;
+    }
+
+    .tree-stack { display: grid; gap: 12px; }
+
+    .tree-node.current {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 4px rgba(82, 0, 255, 0.08), 0 16px 32px rgba(82, 0, 255, 0.14);
+    }
+
+    .tree-node.bridge,
+    .tree-node.dodona {
+      background: linear-gradient(135deg, #ffffff, #dffff7);
+      border-color: rgba(3, 221, 239, 0.72);
+    }
+
+    .delphi-dodona-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .logic-note {
+      margin-top: 18px;
+      border-left: 6px solid var(--brand);
+      border-radius: 16px;
+      background: #fff;
+      padding: 16px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
     .split {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(320px, 0.75fr);
@@ -551,6 +661,10 @@
       .grid,
       .feature-grid,
       .path-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .tree-branches,
+      .delphi-dodona-pair { grid-template-columns: 1fr; }
+      .tree-branches::before,
+      .tree-branch::before { display: none; }
       .nav-links { display: none; }
       .cta-band { align-items: flex-start; flex-direction: column; }
     }
@@ -587,7 +701,7 @@
       <div class="nav-links" aria-label="Paginaonderdelen">
         <a href="#werking">Werking</a>
         <a href="#features">Onderdelen</a>
-        <a href="#groeipad">Groeipad</a>
+        <a href="#groeipad">Familie</a>
         <a href="#leerkrachten">Voor leerkrachten</a>
       </div>
       <a class="btn btn-primary btn-small" href="platform.html">Start leerplatform</a>
@@ -597,7 +711,6 @@
   <main id="main">
     <section class="section hero" id="top">
       <div>
-        <p class="eyebrow">Stap-voor-stap van blokken naar echte code</p>
         <h1>Blockly in de Klas</h1>
         <p class="hero-copy">
           Een kleine website om leerlingen te laten proeven van programmeren: Maze, Turtle, blokken en daarna
@@ -605,8 +718,7 @@
           lopen. Gemaakt om leerlingen te leren over concepten zoals sequentie, selectie en herhalingen. 
         </p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="platform.html">Start de Blockly-leeromgeving</a>
-          <a class="btn btn-secondary" href="#groeipad">Bekijk het groeipad</a>
+          <a class="btn btn-primary" href="platform.html">Start leerplatform</a>
         </div>
       </div>
 
@@ -709,35 +821,58 @@
     </section>
 
     <section class="section" id="groeipad">
-      <p class="section-kicker">Waar past Blockly tussen?</p>
-      <h2 class="section-title">Waar zet ik dit in de leerlijn?</h2>
+      <p class="section-kicker">Plaats in de familie</p>
+      <h2 class="section-title">Blockly zit aan het begin van de programmeertak.</h2>
       <p class="section-lede">
-        Blockly vult vooral het begin van de leerlijn: eerst de opgave ontleden, omzetten in tussenstappen en daarna leren bouwen met blokken of code.
-        Voor grotere reeksen, dashboards en opvolging blijven JS in de Klas, Project Delphi en bovenal Dodona logischer.
-        Dit project is bewust klein gehouden.
+        Blockly in de Klas is de opstap voor computationeel denken: eerst visueel redeneren met sequentie,
+        selectie en herhaling. Daarna kunnen dezelfde denkpatronen groeien richting JavaScript, Python en Dodona.
       </p>
-      <br>
-      <div class="path-grid">
-        <article class="path-card featured">
-          <div class="path-number">1</div>
-          <h3>Blockly in de Klas</h3>
-          <p>Visueel redeneren met blokken, Maze en Turtle. Focus op sequentie, selectie en twee soorten herhaling zonder meteen in syntaxmodus te belanden.</p>
-        </article>
-        <article class="path-card">
-          <div class="path-number">2</div>
-          <h3>JavaScript in de Klas</h3>
-          <p>Daarna worden dezelfde concepten echte JavaScript: console, canvas, turtle, testcases en lokale PDF-export.</p>
-        </article>
-        <article class="path-card">
-          <div class="path-number">3</div>
-          <h3>Project Delphi</h3>
-          <p>Python-oefeningen met meer tekstuele code, invoer, testcases en een stevige cursusstructuur.</p>
-        </article>
-        <article class="path-card">
-          <div class="path-number">4</div>
-          <h3>Dodona</h3>
-          <p>Wanneer je echte opvolging nodig hebt: reeksen, deadlines, dashboards, automatische evaluatie en klasbeheer. De real deal dus!</p>
-        </article>
+      <div class="family-tree" aria-label="Familieboom van de projecten">
+        <div class="tree-root">
+          <a class="tree-node root" href="https://www.aiindeklas.be" target="_blank" rel="noopener">
+                  <strong>Informaticawetenschappen in de klas</strong>
+                  <span>digitale systemen begrijpen, maken en kritisch gebruiken</span>
+                </a>
+        </div>
+        <div class="tree-branches">
+          <div class="tree-branch">
+            <div class="branch-title">Webontwikkeling</div>
+            <div class="tree-stack">
+              <a class="tree-node" href="../htmlindeklas-main/index.html">
+                  <strong>HTML in de Klas</strong>
+                  <span>structuur, inhoud, tags en attributen. Geen selectie, herhaling of algoritmische logica.</span>
+                </a>
+              <a class="tree-node bridge" href="../jsindeklas-main/index.html">
+                  <strong>JavaScript in de Klas</strong>
+                  <span>webpagina's krijgen gedrag, interactie en echte programmeerlogica.</span>
+                </a>
+            </div>
+          </div>
+          <div class="tree-branch">
+            <div class="branch-title">Computationeel denken en programmeren</div>
+            <div class="tree-stack">
+              <a class="tree-node current" href="index.html">
+                  <strong>Blockly in de Klas</strong>
+                  <span>visueel oefenen met sequentie, selectie, begrensde en voorwaardelijke herhaling.</span>
+                </a>
+              <a class="tree-node bridge" href="../jsindeklas-main/index.html">
+                  <strong>JavaScript in de Klas</strong>
+                  <span>dezelfde denkpatronen in echte code: if, loops, functies en variabelen.</span>
+                </a>
+              <div class="delphi-dodona-pair" aria-label="Project Delphi en Dodona">
+                <a class="tree-node" href="../delphi-main/index.html">
+                  <strong>Project Delphi</strong>
+                  <span>de kleinere, lichtere Python-oefenomgeving voor snel oefenen in de browser.</span>
+                </a>
+                <a class="tree-node dodona" href="https://dodona.be/nl/" target="_blank" rel="noopener">
+                  <strong>Dodona</strong>
+                  <span>de sterkere, volledige omgeving voor leertrajecten, evaluaties en klasopvolging.</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="logic-note">Kort gezegd: Blockly is waar leerlingen eerst leren denken als programmeur. Voor structurele opvolging, dashboards en evaluaties blijft Dodona de sterkste keuze.</div>
       </div>
     </section>
 
@@ -766,7 +901,7 @@
             beter dan meteen met accolades te gooien.
           </p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="platform.html">Open de app</a>
+            <a class="btn btn-primary" href="platform.html">Start leerplatform</a>
           </div>
         </aside>
       </div>
