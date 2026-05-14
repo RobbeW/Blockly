@@ -195,6 +195,156 @@
       .controls{padding:8px}
       .canvas-wrap{padding:8px}
     }
+
+    /* Platform visual consistency shared with the current landing pages. */
+    :root{
+      --brand-purple:#5200FF;
+      --brand-aqua:#3dffd0;
+      --brand-green:#3dffd0;
+      --accent:#3dffd0;
+      --bg:#f8f7f3;
+      --ink:#181421;
+      --muted:#625b70;
+      --card:#ffffff;
+      --border:#e2ddea;
+      --shadow:rgba(15,23,42,.08);
+    }
+
+    html,
+    body{
+      background:
+        radial-gradient(circle at top left, rgba(82,0,255,.08), transparent 34rem),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+      color:var(--ink);
+      font-family:Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    }
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:30;
+      overflow:visible;
+      border-bottom:0;
+      background:#160033;
+      color:#ffffff;
+      padding:1rem max(1rem, calc((100% - 1480px) / 2));
+    }
+
+    .ai-brand a{color:#ffffff}
+    .ai-dot{background:var(--brand-aqua)}
+
+    .tabs{
+      max-width:100%;
+      overflow-x:auto;
+      border-color:rgba(255,255,255,.22);
+      border-radius:999px;
+      scrollbar-width:thin;
+    }
+
+    .tab{
+      min-height:46px;
+      padding:13px 18px;
+      border-right-color:rgba(255,255,255,.18);
+      background:rgba(255,255,255,.1);
+      color:#ffffff;
+      white-space:nowrap;
+    }
+
+    .tab.active{
+      background:var(--brand-purple);
+      color:#ffffff;
+    }
+
+    .progress-chip{
+      min-height:46px;
+      border-color:rgba(255,255,255,.22);
+      background:rgba(255,255,255,.1);
+      color:#ffffff;
+    }
+
+    .btn{
+      min-height:46px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      padding:13px 18px;
+      font-weight:900;
+      line-height:1;
+      transition:transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+      white-space:nowrap;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+    }
+
+    .btn.primary,
+    #btn-pdf{
+      background:var(--brand-purple);
+      color:#ffffff;
+      border-color:var(--brand-purple);
+      box-shadow:0 16px 30px rgba(82,0,255,.23);
+    }
+
+    .panel,
+    .modal,
+    .form-drawer{
+      border-color:var(--border);
+      box-shadow:0 12px 34px rgba(15,23,42,.08);
+    }
+
+    .panel{
+      border-radius:8px;
+    }
+
+    .wrap{
+      background:transparent;
+    }
+
+    @media (max-width:900px){
+      header{
+        gap:.75rem;
+      }
+
+      .tabs{
+        width:100%;
+      }
+
+      .app-actions{
+        width:100%;
+      }
+    }
+
+    @media (max-width:560px){
+      .btn{
+        width:100%;
+        white-space:normal;
+      }
+
+      .tabs{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        overflow:visible;
+        border-radius:18px;
+      }
+
+      .tab{
+        justify-content:center;
+        white-space:normal;
+        text-align:center;
+      }
+
+      .app-actions{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:.55rem;
+      }
+
+      .panel{
+        border-radius:8px;
+      }
+    }
   </style>
 
   <!-- Blockly core + Dutch locale -->
