@@ -471,6 +471,48 @@
   <!-- jsPDF / html2canvas -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style id="platform-language-toggle-styles">
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(82, 0, 255, 0.22);
+  border-radius: 999px;
+  background: #fff;
+  padding: 4px;
+  box-shadow: 0 10px 24px rgba(82, 0, 255, 0.08);
+}
+.language-toggle button {
+  min-width: 44px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: transparent;
+  color: var(--muted, #625b70);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+.language-toggle button.is-active {
+  background: var(--brand, var(--brand-purple, var(--primary, #5200FF)));
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(82, 0, 255, 0.20);
+}
+.language-toggle button:focus-visible {
+  outline: 3px solid rgba(61, 255, 208, 0.75);
+  outline-offset: 2px;
+}
+.header-actions .language-toggle,
+.toolbar .language-toggle,
+.app-actions .language-toggle {
+  flex: 0 0 auto;
+}
+@media (max-width: 760px) {
+  .language-toggle { order: 2; }
+}
+</style>
 </head>
 <body>
   <header>
@@ -486,7 +528,12 @@
     </div>
 
     <div class="app-actions">
-      <div class="progress-chip" id="progress-chip" aria-live="polite">
+      
+      <div class="language-toggle" role="group" aria-label="Taalkeuze">
+        <button type="button" class="is-active" data-language-choice="nl" aria-pressed="true">NL</button>
+        <button type="button" data-language-choice="en" aria-pressed="false">ENG</button>
+      </div>
+<div class="progress-chip" id="progress-chip" aria-live="polite">
         <span class="progress-dot" aria-hidden="true"></span>
         <span id="progress-summary">Voortgang: 0/40</span>
       </div>
@@ -4300,5 +4347,395 @@ document.addEventListener('DOMContentLoaded', () => {
   <section id="print-sheet" aria-hidden="true">
     <div class="print-wrap" id="print-wrap"></div>
   </section>
+<script id="platform-language-toggle-script">
+(() => {
+  const LANGUAGE_KEY = "aiindeklas:index-language";
+  const TRANSLATIONS = {
+  "Taalkeuze": "Language selection",
+  "Startpagina": "Start page",
+  "Start platform": "Start platform",
+  "Start leerplatform": "Start learning platform",
+  "Niet verbonden": "Not connected",
+  "Verbind": "Connect",
+  "Verbinden": "Connecting",
+  "Bouw": "Build",
+  "Bouwen": "Building",
+  "Voorspel": "Predict",
+  "Voorspellen": "Predicting",
+  "Meet": "Measure",
+  "Meten": "Measuring",
+  "Vergelijk": "Compare",
+  "Vergelijken": "Comparing",
+  "Besluit": "Conclusion",
+  "Besluiten": "Concluding",
+  "Kalibreer": "Calibrate",
+  "Kalibreren": "Calibrating",
+  "Observeer": "Observe",
+  "Observeren": "Observing",
+  "Speel": "Play",
+  "Model": "Model",
+  "Kies model": "Choose model",
+  "Test": "Test",
+  "Testen": "Testing",
+  "Sorteer": "Sort",
+  "Sorteren": "Sorting",
+  "Menu": "Menu",
+  "Inhoud": "Contents",
+  "Sluiten": "Close",
+  "Sluiten X": "Close X",
+  "x": "x",
+  "X": "X",
+  "Oefening": "Exercise",
+  "OEFENING": "EXERCISE",
+  "Code-editor": "Code editor",
+  "Editor": "Editor",
+  "Uitvoeren": "Run",
+  "Uitvoer": "Output",
+  "Console-uitvoer": "Console output",
+  "Feedback": "Feedback",
+  "Status": "Status",
+  "Data": "Data",
+  "Diagnose": "Diagnostics",
+  "Nog geen data ontvangen.": "No data received yet.",
+  "Laatste regel: --": "Last line: --",
+  "Laatste code: --": "Last code: --",
+  "Rapport": "Report",
+  "Rapportinstellingen": "Report settings",
+  "Wie maakt dit rapport?": "Who is making this report?",
+  "Naam": "Name",
+  "Naam:": "Name:",
+  "Naam of namen": "Name or names",
+  "Klas": "Class",
+  "Klas:": "Class:",
+  "Annuleren": "Cancel",
+  "Annuleer": "Cancel",
+  "OK": "OK",
+  "Doorgaan": "Continue",
+  "Reset": "Reset",
+  "Genereer PDF": "Generate PDF",
+  "Maak PDF": "Create PDF",
+  "Exporteren": "Export",
+  "Exporteren naar PDF": "Export to PDF",
+  "Reeks exporteren naar PDF": "Export series to PDF",
+  "Vooruitgang wissen": "Clear progress",
+  "Voortgang wissen": "Clear progress",
+  "Alleen huidige oefening": "Current exercise only",
+  "Alle voortgang": "All progress",
+  "Volledige reeks": "Full series",
+  "Volledige cursus": "Full course",
+  "Kies wat je wil wissen.": "Choose what you want to clear.",
+  "Donker/Licht": "Dark/Light",
+  "Thema": "Theme",
+  "Donkere/lichte modus": "Dark/light mode",
+  "Donkere of lichte modus": "Dark or light mode",
+  "Formularium": "Reference sheet",
+  "HTML Formularium": "HTML reference sheet",
+  "Python Formularium": "Python reference sheet",
+  "Blockly Formularium": "Blockly reference sheet",
+  "Hulp": "Help",
+  "Help": "Help",
+  "Schema": "Diagram",
+  "Checklist": "Checklist",
+  "Onderzoeksvraag": "Research question",
+  "Hypothese": "Hypothesis",
+  "Besluit en reflectie": "Conclusion and reflection",
+  "Reflectie": "Reflection",
+  "Korte reflectie": "Short reflection",
+  "Waarde": "Value",
+  "Variabele": "Variable",
+  "Proef": "Trial",
+  "Duur": "Duration",
+  "Plek": "Location",
+  "Tijd": "Time",
+  "Bron": "Source",
+  "Klasse": "Class",
+  "Zekerheid": "Confidence",
+  "Verwacht": "Expected",
+  "Voorspeld": "Predicted",
+  "Verstuurd": "Sent",
+  "Projectstappen": "Project steps",
+  "Onderzoeksstappen": "Research steps",
+  "Auteur: Robbe Wulgaert · AI in de Klas · robbewulgaert.be · © 2026 Robbe Wulgaert. Alle rechten voorbehouden.": "Author: Robbe Wulgaert · AI in de Klas · robbewulgaert.be · © 2026 Robbe Wulgaert. All rights reserved.",
+  "Blockly in de Klas": "Blockly in the Classroom",
+  "· Maze & Turtle": "· Maze & Turtle",
+  "Maze (Blokken)": "Maze (Blocks)",
+  "Maze (Code)": "Maze (Code)",
+  "Turtle (Blokken)": "Turtle (Blocks)",
+  "Turtle (Code)": "Turtle (Code)",
+  "Wis opgeslagen voortgang": "Clear saved progress",
+  "⤓ Exporteren naar PDF": "⤓ Export to PDF",
+  "— 0/∞": "— 0/∞",
+  "// Tip: probeer stap voor stap te denken.\n// Oefen de syntax goed in. Werk niet alleen digitaal, maar ook schriftelijk!": "// Tip: try to think step by step.\n// Practise the syntax well. Do not work only digitally, but also on paper!",
+  "Console verschijnt hier. Gebruik console.log() of bekijk foutmeldingen hieronder.": "Console output appears here. Use console.log() or inspect error messages below.",
+  "Tip: gebruik in Maze (Blokken) de blokken; in Maze (Code) en Turtle (Code) typ je code. In Turtle is (0,0) het midden.": "Tip: use blocks in Maze (Blocks); type code in Maze (Code) and Turtle (Code). In Turtle, (0,0) is the centre.",
+  "Level": "Level",
+  "Snelheid (ms per stap)": "Speed (ms per step)",
+  "Gemiddeld": "Medium",
+  "Pas in beeld": "Fit to view",
+  "Maze: je algoritme speelt stap voor stap af. Pas de snelheid aan (tot 1000 ms).": "Maze: your algorithm runs step by step. Adjust the speed up to 1000 ms.",
+  "Doel": "Goal",
+  "Denk telkens in vier vragen:": "Think in four questions each time:",
+  "Welke stappen moeten na elkaar?": "Which steps must happen in order?",
+  "Wanneer moet ik kiezen?": "When do I need to choose?",
+  "Wanneer moet ik herhalen zolang iets waar is?": "When do I repeat while something is true?",
+  "Wanneer moet ik een vast aantal keer herhalen?": "When do I repeat a fixed number of times?",
+  "Vier programmeerconcepten": "Four programming concepts",
+  "Eenvoudige sequentie:": "Simple sequence:",
+  "losse instructies staan in de juiste volgorde.": "separate instructions are in the right order.",
+  "Selectie:": "Selection:",
+  "het programma kiest met": "the program chooses with",
+  "Voorwaardelijke herhaling:": "Conditional loop:",
+  "het programma herhaalt zolang een voorwaarde waar is, bijvoorbeeld": "the program repeats while a condition is true, for example",
+  "Begrensde herhaling:": "Counted loop:",
+  "het programma herhaalt een vooraf bepaald aantal keer, bijvoorbeeld met": "the program repeats a predefined number of times, for example with",
+  "Maze: denkstrategie": "Maze: thinking strategy",
+  "zet stappen in de juiste volgorde.": "put steps in the right order.",
+  "gebruik": "use",
+  "wanneer je moet kiezen.": "when you need to choose.",
+  "herhaal een stap of patroon een vast aantal keer.": "repeat a step or pattern a fixed number of times.",
+  "herhaal zolang je nog niet bij het doel bent.": "repeat while you have not reached the goal.",
+  "Sensoren:": "Sensors:",
+  "controleer": "check",
+  "pad voor mij?": "path ahead?",
+  "pad links?": "path left?",
+  "pad rechts?": "path right?",
+  "zolang niet klaar:": "while not done:",
+  "als pad voor mij:": "if path ahead:",
+  "stap vooruit": "step forward",
+  "anders:": "else:",
+  "draai links": "turn left",
+  "Maze: dezelfde gedachte in code": "Maze: the same idea in code",
+  "Let op de haakjes bij functies:": "Pay attention to brackets in functions:",
+  "Turtle: beweging": "Turtle: movement",
+  "herhaal een bouwsteen een vast aantal keer wanneer je een vorm of patroon tekent.": "repeat a building block a fixed number of times when drawing a shape or pattern.",
+  ": ga vooruit.": ": move forward.",
+  ": ga achteruit.": ": move backward.",
+  ": draai in graden.": ": turn in degrees.",
+  ": spring naar een coordinaat. Het midden is": ": jump to a coordinate. The centre is",
+  ": verplaatsen zonder of met tekenen.": ": move without or with drawing.",
+  "Turtle: tekenen": "Turtle: drawing",
+  ": kies een kleur.": ": choose a colour.",
+  ": kies een RGB-kleur.": ": choose an RGB colour.",
+  ": pas de lijndikte aan.": ": adjust line width.",
+  ": schrijf tekst op de huidige plaats.": ": write text at the current position.",
+  ": pas de tekening in beeld.": ": fit the drawing to the view.",
+  "Snelle foutcheck voor je op Uitvoeren klikt": "Quick error check before clicking Run",
+  "Heb je bij code functies met haakjes geschreven, zoals": "In code, did you write functions with brackets, such as",
+  "Verandert er iets in je": "Does something change in your",
+  "-lus, zodat de lus ooit stopt?": "loop, so that the loop eventually stops?",
+  "Test eerst een kleine lijn, daarna een vorm, daarna pas een patroon.": "Test a small line first, then a shape, and only then a pattern.",
+  "Staat de pen omhoog wanneer je alleen wil verplaatsen?": "Is the pen up when you only want to move?",
+  "Bij Maze: verlaag de snelheid en kijk waar je algoritme een verkeerde keuze maakt.": "In Maze: lower the speed and watch where your algorithm makes a wrong choice.",
+  "Bij Turtle: controleer hoeken. Een vierkant gebruikt meestal": "In Turtle: check angles. A square usually uses",
+  "graden, een gelijkzijdige driehoek": "degrees, an equilateral triangle",
+  "graden draaien.": "degrees of turning.",
+  "Kleurkiezer": "Colour picker",
+  "Zet penkleur": "Set pen colour",
+  "Werkt in Turtle-modus. In code kan je dezelfde kleur gebruiken met": "Works in Turtle mode. In code, you can use the same colour with",
+  "Exporteren en feedback": "Export and feedback",
+  "Exporteer jouw oefening als PDF om jouw werk in te dienen.": "Export your exercise as a PDF to submit your work.",
+  "Vul je volledige naam en klas in.": "Enter your full name and class.",
+  "De feedback kijkt niet alleen naar het resultaat, maar ook naar leesbaarheid, programmeerconcepten, wiskundig denken en creativiteit.": "Feedback looks not only at the result, but also at readability, programming concepts, mathematical thinking and creativity.",
+  "Credits en licentie": "Credits and licence",
+  "© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.": "© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.",
+  "Gebaseerd op oefeningen uit het open-source Blockly project door Google.": "Based on exercises from Google's open-source Blockly project.",
+  "Gebruik in eigen klas of onderwijscontext is toegelaten mits duidelijke naamsvermelding.": "Use in your own class or educational context is allowed with clear attribution.",
+  "Succes!": "Success!",
+  "Goed gedaan — doel bereikt": "Well done — goal reached",
+  "Je hebt het level voltooid.": "You completed the level.",
+  "Jouw oplossing (code)": "Your solution (code)",
+  "Naar volgend level!": "To the next level!",
+  "Bekijk je uitvoering": "Review your run",
+  "Verder oefenen": "Keep practising",
+  "Lokaal opgeslagen in deze browser": "Stored locally in this browser",
+  "Dit wist alleen Blockly-voortgang en opgeslagen werk. Je formularium-voorkeuren blijven behouden.": "This only clears Blockly progress and saved work. Your reference-sheet preferences are kept.",
+  "Naam (optioneel)": "Name (optional)",
+  "De export bevat automatisch de juiste onderdelen per modus.": "The export automatically includes the right parts for each mode."
+};
+  const PATTERNS = [
+  {
+    "pattern": "^Voortgang: (.+)$",
+    "replacement": "Progress: $1"
+  },
+  {
+    "pattern": "^Snelheid: (.+) ms/stap$",
+    "replacement": "Speed: $1 ms/step"
+  },
+  {
+    "pattern": "^Snelheid: (.+)$",
+    "replacement": "Speed: $1"
+  },
+  {
+    "pattern": "^Pogingen: (.+) \\| Tijd: (.+)$",
+    "replacement": "Attempts: $1 | Time: $2"
+  },
+  {
+    "pattern": "^Level (.+)$",
+    "replacement": "Level $1"
+  },
+  {
+    "pattern": "^Turtle Level$",
+    "replacement": "Turtle level"
+  },
+  {
+    "pattern": "^Open: (.+)$",
+    "replacement": "Open: $1"
+  },
+  {
+    "pattern": "^Gesloten: (.+)$",
+    "replacement": "Closed: $1"
+  },
+  {
+    "pattern": "^Status: (.+)$",
+    "replacement": "Status: $1"
+  },
+  {
+    "pattern": "^Ronde (.+)$",
+    "replacement": "Round $1"
+  },
+  {
+    "pattern": "^dt = (.+) s\\. (.+)$",
+    "replacement": "dt = $1 s. $2"
+  }
+];
+  const META = {
+  "title": "Blockly in the Classroom - Learning Platform",
+  "description": "Blockly in the Classroom learning platform for Maze, Turtle, blocks, code and computational thinking."
+};
+  const SKIP_SELECTOR = "script, style, noscript, textarea, input, canvas, svg, code, pre, kbd, samp, .CodeMirror, .cm-editor, .blocklySvg, .blocklyWidgetDiv, .blocklyTooltipDiv";
+  const textRecords = new WeakMap();
+  const attrRecords = [];
+  let currentLanguage = "nl";
+  let applying = false;
+  let originalTitle = document.title;
+  let originalDescription = null;
+  const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  function preserveOuterWhitespace(original, translated) {
+    const start = String(original).match(/^\s*/)?.[0] || "";
+    const end = String(original).match(/\s*$/)?.[0] || "";
+    return start + translated + end;
+  }
+  function translateKey(key) {
+    if (TRANSLATIONS[key]) return TRANSLATIONS[key];
+    for (const item of PATTERNS) {
+      const regex = new RegExp(item.pattern);
+      if (regex.test(key)) return key.replace(regex, item.replacement);
+    }
+    return null;
+  }
+  function shouldSkipNode(node) {
+    const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    return !element || element.closest(SKIP_SELECTOR);
+  }
+  function translateTextNode(node) {
+    if (shouldSkipNode(node)) return;
+    const raw = node.nodeValue;
+    const key = normalize(raw);
+    if (!key) return;
+    let record = textRecords.get(node);
+    if (!record) {
+      record = { original: raw, translatedByUs: false };
+      textRecords.set(node, record);
+    }
+    if (currentLanguage === "en") {
+      if (!record.translatedByUs) record.original = raw;
+      const translated = translateKey(key);
+      if (translated) {
+        node.nodeValue = preserveOuterWhitespace(raw, translated);
+        record.translatedByUs = true;
+      }
+    } else if (record.translatedByUs) {
+      node.nodeValue = record.original;
+      record.translatedByUs = false;
+    }
+  }
+  function collectAttributeRecords() {
+    if (attrRecords.length) return;
+    document.querySelectorAll("[aria-label], [alt], [title], [placeholder]").forEach((element) => {
+      if (element.closest(SKIP_SELECTOR)) return;
+      ["aria-label", "alt", "title", "placeholder"].forEach((attr) => {
+        if (element.hasAttribute(attr)) {
+          attrRecords.push({ element, attr, original: element.getAttribute(attr), translatedByUs: false });
+        }
+      });
+    });
+  }
+  function translateAttributes() {
+    collectAttributeRecords();
+    attrRecords.forEach((entry) => {
+      const current = entry.element.getAttribute(entry.attr) || "";
+      if (currentLanguage === "en") {
+        if (!entry.translatedByUs) entry.original = current;
+        const translated = translateKey(normalize(current));
+        if (translated) {
+          entry.element.setAttribute(entry.attr, translated);
+          entry.translatedByUs = true;
+        }
+      } else if (entry.translatedByUs) {
+        entry.element.setAttribute(entry.attr, entry.original);
+        entry.translatedByUs = false;
+      }
+    });
+  }
+  function translateTree(root = document.body) {
+    if (!root || shouldSkipNode(root)) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        return shouldSkipNode(node) || !normalize(node.nodeValue) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(translateTextNode);
+  }
+  function setLanguage(language) {
+    currentLanguage = language === "en" ? "en" : "nl";
+    applying = true;
+    translateTree(document.body);
+    translateAttributes();
+    document.documentElement.lang = currentLanguage === "en" ? "en" : "nl-BE";
+    document.title = currentLanguage === "en" && META.title ? META.title : originalTitle;
+    const description = document.querySelector('meta[name="description"]');
+    if (description) {
+      if (originalDescription === null) originalDescription = description.getAttribute("content") || "";
+      description.setAttribute("content", currentLanguage === "en" && META.description ? META.description : originalDescription);
+    }
+    document.querySelectorAll("[data-language-choice]").forEach((button) => {
+      const isActive = button.dataset.languageChoice === currentLanguage;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+    try { localStorage.setItem(LANGUAGE_KEY, currentLanguage); } catch (error) {}
+    applying = false;
+  }
+  function initLanguageToggle() {
+    document.querySelectorAll("[data-language-choice]").forEach((button) => {
+      button.addEventListener("click", () => setLanguage(button.dataset.languageChoice));
+    });
+    let saved = "nl";
+    try {
+      const requested = new URLSearchParams(window.location.search).get("lang");
+      saved = requested || localStorage.getItem(LANGUAGE_KEY) || "nl";
+    } catch (error) {}
+    setLanguage(saved === "en" ? "en" : "nl");
+    const observer = new MutationObserver((mutations) => {
+      if (applying || currentLanguage !== "en") return;
+      applying = true;
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE) translateTextNode(node);
+          else if (node.nodeType === Node.ELEMENT_NODE) translateTree(node);
+        });
+        if (mutation.type === "characterData") translateTextNode(mutation.target);
+      });
+      applying = false;
+    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    window.setPlatformLanguage = setLanguage;
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initLanguageToggle);
+  else initLanguageToggle();
+})();
+</script>
 </body>
 </html>
