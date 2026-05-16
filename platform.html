@@ -517,7 +517,7 @@
 <body>
   <header>
     <div class="ai-brand">
-      <div><a href="index.html">Blockly in de Klas</a> · Maze & Turtle</div>
+      <div><a href="index.html">Blockly in de Klas</a> Â· Maze & Turtle</div>
     </div>
 
     <div class="tabs" role="tablist" aria-label="Kies oefening">
@@ -538,14 +538,14 @@
         <span id="progress-summary">Voortgang: 0/40</span>
       </div>
       <button class="btn small" id="reset-progress" title="Wis opgeslagen voortgang">Voortgang wissen</button>
-      <button class="btn small" id="btn-pdf" title="Exporteer naar PDF">⤓ Exporteren naar PDF</button>
+      <button class="btn small" id="btn-pdf" title="Exporteer naar PDF">â¤“ Exporteren naar PDF</button>
     </div>
   </header>
 
   <main class="wrap">
 
     <section class="panel" aria-label="Editor">
-      <h3>Editor <span id="blocks-info" class="cap">— 0/∞</span></h3>
+      <h3>Editor <span id="blocks-info" class="cap">â€” 0/âˆž</span></h3>
       <div class="panel-body">
         <div id="blocklyArea">
           <div id="blocklyDiv" aria-label="Blockly werkruimte"></div>
@@ -614,7 +614,7 @@
         <button class="btn" id="fit-turtle">Pas in beeld</button>
 
         <label for="turtle-level" class="sr-only">Turtle Level</label>
-        <select class="btn" id="turtle-level" title="Kies level (1–9)"></select>
+        <select class="btn" id="turtle-level" title="Kies level (1â€“9)"></select>
 
         <label for="speed-range-t" class="sr-only">Snelheid (ms per stap)</label>
         <input type="range" class="btn" id="speed-range-t" min="10" max="1000" step="10" value="600" title="Snelheid (ms per stap)">
@@ -748,7 +748,7 @@
       <div class="form-card wide">
         <h4>Credits en licentie</h4>
         <ul>
-          <li>© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.</li>
+          <li>Â© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.</li>
           <li>Gebaseerd op oefeningen uit het open-source Blockly project door Google.</li>
           <li>Gebruik in eigen klas of onderwijscontext is toegelaten mits duidelijke naamsvermelding.</li>
         </ul>
@@ -828,9 +828,9 @@
   <!-- Success Modal -->
   <div id="success-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="success-title">
     <div class="modal">
-      <div class="modal-header">🎉 <span id="success-title">Succes!</span></div>
+      <div class="modal-header">ðŸŽ‰ <span id="success-title">Succes!</span></div>
       <div class="modal-body">
-        <span class="pill">Goed gedaan — doel bereikt</span>
+        <span class="pill">Goed gedaan â€” doel bereikt</span>
         <div id="success-message">Je hebt het level voltooid.</div>
         <div id="success-feedback" class="learning-feedback"></div>
         <div>
@@ -839,7 +839,7 @@
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn" id="export-pdf-success">⤓ Exporteren naar PDF</button>
+        <button class="btn" id="export-pdf-success">â¤“ Exporteren naar PDF</button>
         <button class="btn primary" id="close-success">Naar volgend level!</button>
       </div>
     </div>
@@ -882,7 +882,7 @@
   <!-- PDF Export Modal -->
   <div id="pdf-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
     <div class="modal" style="max-width:740px">
-      <div class="modal-header">⤓ Exporteren naar PDF</div>
+      <div class="modal-header">â¤“ Exporteren naar PDF</div>
       <div class="modal-body">
         <div class="field">
           <label for="modal-naam">Naam</label>
@@ -1161,8 +1161,8 @@
             issues.push({
               type: 'unknown-call', name, line: li+1, col,
               message: suggestion
-                ? `Onbekende functie ‘${name}()’. Bedoel je ‘${suggestion}()’?`
-                : `Onbekende functie ‘${name}()’. Kijk de naam na en gebruik alleen de toegelaten acties.`
+                ? `Onbekende functie â€˜${name}()â€™. Bedoel je â€˜${suggestion}()â€™?`
+                : `Onbekende functie â€˜${name}()â€™. Kijk de naam na en gebruik alleen de toegelaten acties.`
             });
           }
         }
@@ -1179,7 +1179,7 @@
       type:'infinite-loop',
       line:1,
       col:1,
-      message:"Oneindige lus ‘for(;;){...}’. Voeg een conditie en update toe of gebruik een teller."
+      message:"Oneindige lus â€˜for(;;){...}â€™. Voeg een conditie en update toe of gebruik een teller."
     });
   }
   // while(true) { ... } of while(1) { ... }
@@ -1188,7 +1188,7 @@
       type:'infinite-loop',
       line:1,
       col:1,
-      message:"Oneindige lus ‘while(true){...}’. Voeg een stopvoorwaarde toe."
+      message:"Oneindige lus â€˜while(true){...}â€™. Voeg een stopvoorwaarde toe."
     });
   }
   return hints;
@@ -1328,7 +1328,7 @@
               out.push({
                 type:'notDone-parens',
                 index: start + 1 + idx,
-                message:"Gebruik ‘notDone()’ met haakjes: ‘while (notDone()) { … }’."
+                message:"Gebruik â€˜notDone()â€™ met haakjes: â€˜while (notDone()) { â€¦ }â€™."
               });
             }
           }
@@ -1767,7 +1767,7 @@ if (randomDifficultyInput && randomDifficultyLabel) {
       7: { focus: 'links en rechts testen', concepts: ['selection', 'conditionalIteration'], done: 'Je gebruikt meerdere richtingen om een route te kiezen.', next: 'Vergelijk of links eerst testen een ander gedrag geeft dan rechts eerst testen.' },
       8: { focus: 'strategie combineren', concepts: ['sequence', 'selection', 'conditionalIteration'], done: 'Je combineerde beweging, keuzes en herhaling tot een volledige strategie.', next: 'Beschrijf je strategie in een zin voordat je naar code gaat.' },
       9: { focus: 'minder blokken', concepts: ['selection', 'conditionalIteration'], done: 'Je loste het level op door patronen in je route te herkennen.', next: 'Zoek welke reeks blokken eigenlijk een herhaalbaar patroon vormt.' },
-      10: { focus: 'einddoolhof', concepts: ['sequence', 'selection', 'conditionalIteration'], done: 'Je past meerdere Maze-ideeën samen toe.', next: 'Probeer je oplossing nu in Code-modus te schrijven.' },
+      10: { focus: 'einddoolhof', concepts: ['sequence', 'selection', 'conditionalIteration'], done: 'Je past meerdere Maze-ideeÃ«n samen toe.', next: 'Probeer je oplossing nu in Code-modus te schrijven.' },
       11: { focus: 'random doolhof', concepts: ['selection', 'conditionalIteration'], done: 'Je oplossing werkt op een onbekend doolhof.', next: 'Maak je strategie zo algemeen mogelijk, niet alleen passend voor een vaste kaart.' }
     };
 
@@ -1897,8 +1897,8 @@ if (randomDifficultyInput && randomDifficultyLabel) {
         Blockly.defineBlocksWithJsonArray([
           { type:'turtle_move_forward', message0:'ga vooruit %1', args0:[{type:'input_value',name:'DIST',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
           { type:'turtle_move_backward', message0:'ga achteruit %1', args0:[{type:'input_value',name:'DIST',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
-          { type:'turtle_turn_left', message0:'draai links %1 °', args0:[{type:'input_value',name:'ANGLE',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
-          { type:'turtle_turn_right', message0:'draai rechts %1 °', args0:[{type:'input_value',name:'ANGLE',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
+          { type:'turtle_turn_left', message0:'draai links %1 Â°', args0:[{type:'input_value',name:'ANGLE',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
+          { type:'turtle_turn_right', message0:'draai rechts %1 Â°', args0:[{type:'input_value',name:'ANGLE',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
           { type:'turtle_goto', message0:'ga naar x %1 y %2', args0:[{type:'input_value',name:'X',check:'Number'},{type:'input_value',name:'Y',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
           { type:'turtle_pen_up', message0:'pen omhoog', previousStatement:null, nextStatement:null, colour:280 },
           { type:'turtle_pen_down', message0:'pen omlaag', previousStatement:null, nextStatement:null, colour:280 },
@@ -2128,20 +2128,20 @@ resizeMazeCanvas();
     function updateCapacityBadge(){
       if (activeMode === 'maze1' && workspace) {
         const info = getMazeBlockLimitInfo();
-        blocksInfo.textContent = '— ' + info.used + '/' + (info.limit === Infinity ? '∞' : info.limit) + ' blokken';
+        blocksInfo.textContent = 'â€” ' + info.used + '/' + (info.limit === Infinity ? 'âˆž' : info.limit) + ' blokken';
         blocksInfo.classList.toggle('over-limit', info.over);
         blocksInfo.title = "Voorwaarden zoals 'niet klaar?' en 'pad voor mij?' tellen niet mee voor de bloklimiet.";
         return;
       }
       const used = (activeMode==='turtle_blocks') && workspace ? workspace.getAllBlocks(false).filter(block => !(typeof block.isShadow === 'function' && block.isShadow())).length : 0;
-      blocksInfo.textContent = '— ' + used + '/∞';
+      blocksInfo.textContent = 'â€” ' + used + '/âˆž';
       blocksInfo.classList.remove('over-limit');
       blocksInfo.removeAttribute('title');
     }
 
-    // ─────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // MAZE engine + assets + frames
-    // ─────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const mctx = mazeCanvas.getContext('2d');
 
     const SKIN = {
@@ -2267,7 +2267,7 @@ let level = FALLBACK;
     
 // ---------------- Random Maze generator (Level 11) ----------------
 // Genereert een doolhof met oneven binnenmaat en muurborder eromheen.
-// difficulty: 1 (klein) – 3 (groot)
+// difficulty: 1 (klein) â€“ 3 (groot)
 function difficultyToCells(diff){
   const d = Math.max(1, Math.min(3, diff|0));
   if (d === 1) return 9;   // klein
@@ -2285,7 +2285,7 @@ function generateRandomMazeLevel(diff){
     Array.from({length: cols}, () => 0)
   );
 
-  // Alle "cellen" op oneven coördinaten als mogelijke paden markeren (voor DFS)
+  // Alle "cellen" op oneven coÃ¶rdinaten als mogelijke paden markeren (voor DFS)
   for (let y = 1; y < rows - 1; y += 2){
     for (let x = 1; x < cols - 1; x += 2){
       grid[y][x] = 1;
@@ -2350,7 +2350,7 @@ function populateLevelSelect(sel){
     const opt = document.createElement('option');
     opt.value = i;
     if (i === RANDOM_LEVEL_INDEX){
-      opt.textContent = 'Level ' + i + ' — Willekeurig';
+      opt.textContent = 'Level ' + i + ' â€” Willekeurig';
     } else {
       opt.textContent = 'Level ' + i;
     }
@@ -2668,7 +2668,7 @@ window.mazeTurnRight = function(){
   pushFrame();
 };
 
-// Maze-queries tellen nu óók stappen, zodat while(notDone())-lussen afgebroken worden
+// Maze-queries tellen nu Ã³Ã³k stappen, zodat while(notDone())-lussen afgebroken worden
 window.mazePathAhead = function(){
   _tick(); // check naar voren telt als stap
   const {dx,dy}=frontDelta(mazeState.dir);
@@ -2868,7 +2868,7 @@ window.notDone = function(){
           const allowed = Array.from(makeAllowedSet(window.activeMode));
           const suggestion = closestAllowed(name, allowed);
           consolePrint(
-            `Onbekende naam ‘${name}’. ${suggestion ? `Bedoel je ‘${suggestion}()’ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
+            `Onbekende naam â€˜${name}â€™. ${suggestion ? `Bedoel je â€˜${suggestion}()â€™ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
             'log-error'
           );
         } else {
@@ -3257,7 +3257,7 @@ window.notDone = function(){
   // Tel overlappende en niet-overlappende pixels
   let E = 0, // aantal verwachte (exp) pixels
       S = 0, // aantal student (stu) pixels
-      I = 0; // intersectie (exp ∧ stu)
+      I = 0; // intersectie (exp âˆ§ stu)
 
   for (let i = 0; i < expData.length; i += 4) {
     const e = expData[i + 3] > 0; // alpha > 0 = 'actief'
@@ -3489,7 +3489,7 @@ window.setPenColour = function(r,g,b){
           const allowed = Array.from(makeAllowedSet(window.activeMode));
           const suggestion = closestAllowed(name, allowed);
           consolePrint(
-            `Onbekende naam ‘${name}’. ${suggestion ? `Bedoel je ‘${suggestion}()’ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
+            `Onbekende naam â€˜${name}â€™. ${suggestion ? `Bedoel je â€˜${suggestion}()â€™ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
             'log-error'
           );
         } else {
@@ -3976,7 +3976,7 @@ window.setPenColour = function(r,g,b){
 
     function getExerciseName(){
       const {chapter, level} = getChapterInfo();
-      return `${chapter} — Level ${level}`;
+      return `${chapter} â€” Level ${level}`;
     }
 
     function getOpdrachtTekst(){
@@ -4024,7 +4024,7 @@ window.setPenColour = function(r,g,b){
       ExportPDF._cursorY = margin();
 
       const {chapter, level} = getChapterInfo();
-      const metaTitle = `${chapter} — Level ${level} — ${naam}`;
+      const metaTitle = `${chapter} â€” Level ${level} â€” ${naam}`;
       if (pdf.setProperties) pdf.setProperties({ title: metaTitle, author: 'AI in de Klas' });
 
       pdf.setTextColor(...COLOR_PURPLE);
@@ -4035,7 +4035,7 @@ window.setPenColour = function(r,g,b){
       pdf.setFont('helvetica','normal'); pdf.setFontSize(12);
       pdf.text(`Naam: ${naam}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 18;
       pdf.text(`Klas: ${klas}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 18;
-      pdf.text(`Oefening: ${chapter} — Level ${level}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 24;
+      pdf.text(`Oefening: ${chapter} â€” Level ${level}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 24;
 
       if (opdracht) {
         const lines = pdf.splitTextToSize(opdracht, contentW);
@@ -4302,11 +4302,11 @@ document.addEventListener('DOMContentLoaded', () => {
         level   = getLevel('turtle-level');   // idem: zelfde dropdown voor beide Turtle-modes
         break;
       default:
-        // fallback blijft 'Oefening — Level 1'
+        // fallback blijft 'Oefening â€” Level 1'
         break;
     }
 
-    return `${chapter} — Level ${level}`;
+    return `${chapter} â€” Level ${level}`;
   }
 
   ExportPDF.init({
@@ -4330,9 +4330,9 @@ document.addEventListener('DOMContentLoaded', () => {
   <!-- Oud overlay-sjabloon (nu ongebruikt, maar laten staan voor compatibiliteit) -->
   <div id="pdf-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
     <div class="modal">
-      <div class="modal-header">⤓ <span id="pdf-title">Exporteren naar PDF</span></div>
+      <div class="modal-header">â¤“ <span id="pdf-title">Exporteren naar PDF</span></div>
       <div class="modal-body">
-        <div id="pdf-what" class="pill">Dit exporteert: …</div>
+        <div id="pdf-what" class="pill">Dit exporteert: â€¦</div>
         <label for="pdf-name" style="font-weight:700;margin-top:6px;">Naam (optioneel)</label>
         <input id="pdf-name" class="btn" style="width:100%;" placeholder="Voornaam Naam" />
         <div class="cap">De export bevat automatisch de juiste onderdelen per modus.</div>
@@ -4455,16 +4455,16 @@ document.addEventListener('DOMContentLoaded', () => {
   "Verstuurd": "Sent",
   "Projectstappen": "Project steps",
   "Onderzoeksstappen": "Research steps",
-  "Auteur: Robbe Wulgaert · AI in de Klas · robbewulgaert.be · © 2026 Robbe Wulgaert. Alle rechten voorbehouden.": "Author: Robbe Wulgaert · AI in de Klas · robbewulgaert.be · © 2026 Robbe Wulgaert. All rights reserved.",
+  "Auteur: Robbe Wulgaert Â· AI in de Klas Â· robbewulgaert.be Â· Â© 2026 Robbe Wulgaert. Alle rechten voorbehouden.": "Author: Robbe Wulgaert Â· AI in de Klas Â· robbewulgaert.be Â· Â© 2026 Robbe Wulgaert. All rights reserved.",
   "Blockly in de Klas": "Blockly in the Classroom",
-  "· Maze & Turtle": "· Maze & Turtle",
+  "Â· Maze & Turtle": "Â· Maze & Turtle",
   "Maze (Blokken)": "Maze (Blocks)",
   "Maze (Code)": "Maze (Code)",
   "Turtle (Blokken)": "Turtle (Blocks)",
   "Turtle (Code)": "Turtle (Code)",
   "Wis opgeslagen voortgang": "Clear saved progress",
-  "⤓ Exporteren naar PDF": "⤓ Export to PDF",
-  "— 0/∞": "— 0/∞",
+  "â¤“ Exporteren naar PDF": "â¤“ Export to PDF",
+  "â€” 0/âˆž": "â€” 0/âˆž",
   "// Tip: probeer stap voor stap te denken.\n// Oefen de syntax goed in. Werk niet alleen digitaal, maar ook schriftelijk!": "// Tip: try to think step by step.\n// Practise the syntax well. Do not work only digitally, but also on paper!",
   "Console verschijnt hier. Gebruik console.log() of bekijk foutmeldingen hieronder.": "Console output appears here. Use console.log() or inspect error messages below.",
   "Tip: gebruik in Maze (Blokken) de blokken; in Maze (Code) en Turtle (Code) typ je code. In Turtle is (0,0) het midden.": "Tip: use blocks in Maze (Blocks); type code in Maze (Code) and Turtle (Code). In Turtle, (0,0) is the centre.",
@@ -4537,11 +4537,11 @@ document.addEventListener('DOMContentLoaded', () => {
   "Vul je volledige naam en klas in.": "Enter your full name and class.",
   "De feedback kijkt niet alleen naar het resultaat, maar ook naar leesbaarheid, programmeerconcepten, wiskundig denken en creativiteit.": "Feedback looks not only at the result, but also at readability, programming concepts, mathematical thinking and creativity.",
   "Credits en licentie": "Credits and licence",
-  "© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.": "© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.",
+  "Â© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.": "Â© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.",
   "Gebaseerd op oefeningen uit het open-source Blockly project door Google.": "Based on exercises from Google's open-source Blockly project.",
   "Gebruik in eigen klas of onderwijscontext is toegelaten mits duidelijke naamsvermelding.": "Use in your own class or educational context is allowed with clear attribution.",
   "Succes!": "Success!",
-  "Goed gedaan — doel bereikt": "Well done — goal reached",
+  "Goed gedaan â€” doel bereikt": "Well done â€” goal reached",
   "Je hebt het level voltooid.": "You completed the level.",
   "Jouw oplossing (code)": "Your solution (code)",
   "Naar volgend level!": "To the next level!",
@@ -4602,21 +4602,26 @@ document.addEventListener('DOMContentLoaded', () => {
   "title": "Blockly in the Classroom - Learning Platform",
   "description": "Blockly in the Classroom learning platform for Maze, Turtle, blocks, code and computational thinking."
 };
-  const SKIP_SELECTOR = "script, style, noscript, textarea, input, canvas, svg, code, pre, kbd, samp, .CodeMirror, .cm-editor, .blocklySvg, .blocklyWidgetDiv, .blocklyTooltipDiv";
+  const SKIP_SELECTOR = "script, style, noscript, textarea, input, canvas, svg, iframe, code, pre, kbd, samp, [contenteditable='true'], .CodeMirror, .cm-editor, .blocklySvg, .blocklyWidgetDiv, .blocklyTooltipDiv";
+  const TRANSLATABLE_ATTRIBUTES = ["aria-label", "alt", "title", "placeholder"];
+  const OBSERVER_OPTIONS = { childList: true, subtree: true, characterData: true };
   const textRecords = new WeakMap();
-  const attrRecords = [];
+  const attrRecords = new WeakMap();
   let currentLanguage = "nl";
   let applying = false;
+  let observer = null;
+  let queuedMutations = [];
+  let translationScheduled = false;
   let originalTitle = document.title;
   let originalDescription = null;
-  const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  const normalize = (value) => String(value || "").replace(/s+/g, " ").trim();
   function preserveOuterWhitespace(original, translated) {
-    const start = String(original).match(/^\s*/)?.[0] || "";
-    const end = String(original).match(/\s*$/)?.[0] || "";
+    const start = String(original).match(/^s*/)?.[0] || "";
+    const end = String(original).match(/s*$/)?.[0] || "";
     return start + translated + end;
   }
   function translateKey(key) {
-    if (TRANSLATIONS[key]) return TRANSLATIONS[key];
+    if (Object.prototype.hasOwnProperty.call(TRANSLATIONS, key)) return TRANSLATIONS[key];
     for (const item of PATTERNS) {
       const regex = new RegExp(item.pattern);
       if (regex.test(key)) return key.replace(regex, item.replacement);
@@ -4627,58 +4632,96 @@ document.addEventListener('DOMContentLoaded', () => {
     const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
     return !element || element.closest(SKIP_SELECTOR);
   }
+  function setTextNodeValue(node, value, record) {
+    if (node.nodeValue !== value) node.nodeValue = value;
+    record.translated = value;
+    record.translatedByUs = true;
+  }
   function translateTextNode(node) {
-    if (shouldSkipNode(node)) return;
-    const raw = node.nodeValue;
-    const key = normalize(raw);
-    if (!key) return;
+    if (!node || node.nodeType !== Node.TEXT_NODE || shouldSkipNode(node)) return;
+    const raw = node.nodeValue || "";
+    if (!normalize(raw)) return;
     let record = textRecords.get(node);
     if (!record) {
-      record = { original: raw, translatedByUs: false };
+      record = { original: raw, translated: "", translatedByUs: false };
       textRecords.set(node, record);
     }
     if (currentLanguage === "en") {
-      if (!record.translatedByUs) record.original = raw;
-      const translated = translateKey(key);
-      if (translated) {
-        node.nodeValue = preserveOuterWhitespace(raw, translated);
-        record.translatedByUs = true;
+      if (record.translatedByUs && raw === record.translated) return;
+      record.original = raw;
+      const translated = translateKey(normalize(record.original));
+      if (!translated) {
+        record.translated = "";
+        record.translatedByUs = false;
+        return;
+      }
+      const next = preserveOuterWhitespace(record.original, translated);
+      if (next !== raw) setTextNodeValue(node, next, record);
+      else {
+        record.translated = "";
+        record.translatedByUs = false;
       }
     } else if (record.translatedByUs) {
-      node.nodeValue = record.original;
+      if (raw !== record.original) node.nodeValue = record.original;
+      record.translated = "";
       record.translatedByUs = false;
     }
   }
-  function collectAttributeRecords() {
-    if (attrRecords.length) return;
-    document.querySelectorAll("[aria-label], [alt], [title], [placeholder]").forEach((element) => {
-      if (element.closest(SKIP_SELECTOR)) return;
-      ["aria-label", "alt", "title", "placeholder"].forEach((attr) => {
-        if (element.hasAttribute(attr)) {
-          attrRecords.push({ element, attr, original: element.getAttribute(attr), translatedByUs: false });
-        }
-      });
-    });
+  function getAttributeRecord(element, attr, current) {
+    let records = attrRecords.get(element);
+    if (!records) {
+      records = new Map();
+      attrRecords.set(element, records);
+    }
+    if (!records.has(attr)) records.set(attr, { original: current, translated: "", translatedByUs: false });
+    return records.get(attr);
   }
-  function translateAttributes() {
-    collectAttributeRecords();
-    attrRecords.forEach((entry) => {
-      const current = entry.element.getAttribute(entry.attr) || "";
+  function translateElementAttributes(element) {
+    if (!element || element.nodeType !== Node.ELEMENT_NODE || element.closest(SKIP_SELECTOR)) return;
+    TRANSLATABLE_ATTRIBUTES.forEach((attr) => {
+      if (!element.hasAttribute(attr)) return;
+      const current = element.getAttribute(attr) || "";
+      if (!normalize(current)) return;
+      const record = getAttributeRecord(element, attr, current);
       if (currentLanguage === "en") {
-        if (!entry.translatedByUs) entry.original = current;
-        const translated = translateKey(normalize(current));
-        if (translated) {
-          entry.element.setAttribute(entry.attr, translated);
-          entry.translatedByUs = true;
+        if (record.translatedByUs && current === record.translated) return;
+        record.original = current;
+        const translated = translateKey(normalize(record.original));
+        if (!translated) {
+          record.translated = "";
+          record.translatedByUs = false;
+          return;
         }
-      } else if (entry.translatedByUs) {
-        entry.element.setAttribute(entry.attr, entry.original);
-        entry.translatedByUs = false;
+        if (translated !== current) {
+          element.setAttribute(attr, translated);
+          record.translated = translated;
+          record.translatedByUs = true;
+        } else {
+          record.translated = "";
+          record.translatedByUs = false;
+        }
+      } else if (record.translatedByUs) {
+        if (current !== record.original) element.setAttribute(attr, record.original);
+        record.translated = "";
+        record.translatedByUs = false;
       }
     });
   }
+  function translateAttributes(root = document.body) {
+    if (!root) return;
+    if (root.nodeType === Node.ELEMENT_NODE) translateElementAttributes(root);
+    if (root.querySelectorAll) {
+      root.querySelectorAll("[aria-label], [alt], [title], [placeholder]").forEach(translateElementAttributes);
+    }
+  }
   function translateTree(root = document.body) {
-    if (!root || shouldSkipNode(root)) return;
+    if (!root) return;
+    if (root.nodeType === Node.TEXT_NODE) {
+      translateTextNode(root);
+      return;
+    }
+    if (shouldSkipNode(root)) return;
+    translateAttributes(root);
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         return shouldSkipNode(node) || !normalize(node.nodeValue) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
@@ -4688,11 +4731,17 @@ document.addEventListener('DOMContentLoaded', () => {
     while (walker.nextNode()) nodes.push(walker.currentNode);
     nodes.forEach(translateTextNode);
   }
-  function setLanguage(language) {
-    currentLanguage = language === "en" ? "en" : "nl";
+  function pauseObserver(callback) {
+    if (observer) observer.disconnect();
     applying = true;
-    translateTree(document.body);
-    translateAttributes();
+    try {
+      callback();
+    } finally {
+      applying = false;
+      if (observer && document.body) observer.observe(document.body, OBSERVER_OPTIONS);
+    }
+  }
+  function syncChrome() {
     document.documentElement.lang = currentLanguage === "en" ? "en" : "nl-BE";
     document.title = currentLanguage === "en" && META.title ? META.title : originalTitle;
     const description = document.querySelector('meta[name="description"]');
@@ -4705,36 +4754,61 @@ document.addEventListener('DOMContentLoaded', () => {
       button.classList.toggle("is-active", isActive);
       button.setAttribute("aria-pressed", String(isActive));
     });
+  }
+  function setLanguage(language) {
+    currentLanguage = language === "en" ? "en" : "nl";
+    pauseObserver(() => {
+      translateTree(document.body);
+      syncChrome();
+    });
     try { localStorage.setItem(LANGUAGE_KEY, currentLanguage); } catch (error) {}
-    applying = false;
+  }
+  function processQueuedMutations() {
+    translationScheduled = false;
+    if (applying || currentLanguage !== "en" || !queuedMutations.length) {
+      queuedMutations = [];
+      return;
+    }
+    const mutations = queuedMutations;
+    queuedMutations = [];
+    pauseObserver(() => {
+      const roots = new Set();
+      const textNodes = new Set();
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE) textNodes.add(node);
+          else if (node.nodeType === Node.ELEMENT_NODE) roots.add(node);
+        });
+        if (mutation.type === "characterData") textNodes.add(mutation.target);
+      });
+      roots.forEach((root) => translateTree(root));
+      textNodes.forEach((node) => translateTextNode(node));
+    });
+  }
+  function scheduleMutationTranslation(mutations) {
+    if (applying || currentLanguage !== "en") return;
+    queuedMutations.push(...mutations);
+    if (translationScheduled) return;
+    translationScheduled = true;
+    const schedule = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
+    schedule(processQueuedMutations);
   }
   function initLanguageToggle() {
     document.querySelectorAll("[data-language-choice]").forEach((button) => {
       button.addEventListener("click", () => setLanguage(button.dataset.languageChoice));
     });
+    observer = new MutationObserver(scheduleMutationTranslation);
     let saved = "nl";
     try {
       const requested = new URLSearchParams(window.location.search).get("lang");
       saved = requested || localStorage.getItem(LANGUAGE_KEY) || "nl";
     } catch (error) {}
     setLanguage(saved === "en" ? "en" : "nl");
-    const observer = new MutationObserver((mutations) => {
-      if (applying || currentLanguage !== "en") return;
-      applying = true;
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.TEXT_NODE) translateTextNode(node);
-          else if (node.nodeType === Node.ELEMENT_NODE) translateTree(node);
-        });
-        if (mutation.type === "characterData") translateTextNode(mutation.target);
-      });
-      applying = false;
-    });
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     window.setPlatformLanguage = setLanguage;
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initLanguageToggle);
   else initLanguageToggle();
+
 })();
 </script>
 </body>
