@@ -517,7 +517,7 @@
 <body>
   <header>
     <div class="ai-brand">
-      <div><a href="index.html">Blockly in de Klas</a> Â· Maze & Turtle</div>
+      <div><a href="index.html">Blockly in de Klas</a> · Maze & Turtle</div>
     </div>
 
     <div class="tabs" role="tablist" aria-label="Kies oefening">
@@ -538,14 +538,14 @@
         <span id="progress-summary">Voortgang: 0/40</span>
       </div>
       <button class="btn small" id="reset-progress" title="Wis opgeslagen voortgang">Voortgang wissen</button>
-      <button class="btn small" id="btn-pdf" title="Exporteer naar PDF">â¤“ Exporteren naar PDF</button>
+      <button class="btn small" id="btn-pdf" title="Exporteer naar PDF">⤓ Exporteren naar PDF</button>
     </div>
   </header>
 
   <main class="wrap">
 
     <section class="panel" aria-label="Editor">
-      <h3>Editor <span id="blocks-info" class="cap">â€” 0/âˆž</span></h3>
+      <h3>Editor <span id="blocks-info" class="cap">— 0/∞</span></h3>
       <div class="panel-body">
         <div id="blocklyArea">
           <div id="blocklyDiv" aria-label="Blockly werkruimte"></div>
@@ -614,7 +614,7 @@
         <button class="btn" id="fit-turtle">Pas in beeld</button>
 
         <label for="turtle-level" class="sr-only">Turtle Level</label>
-        <select class="btn" id="turtle-level" title="Kies level (1â€“9)"></select>
+        <select class="btn" id="turtle-level" title="Kies level (1–9)"></select>
 
         <label for="speed-range-t" class="sr-only">Snelheid (ms per stap)</label>
         <input type="range" class="btn" id="speed-range-t" min="10" max="1000" step="10" value="600" title="Snelheid (ms per stap)">
@@ -748,7 +748,7 @@
       <div class="form-card wide">
         <h4>Credits en licentie</h4>
         <ul>
-          <li>Â© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.</li>
+          <li>© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.</li>
           <li>Gebaseerd op oefeningen uit het open-source Blockly project door Google.</li>
           <li>Gebruik in eigen klas of onderwijscontext is toegelaten mits duidelijke naamsvermelding.</li>
         </ul>
@@ -830,7 +830,7 @@
     <div class="modal">
       <div class="modal-header">ðŸŽ‰ <span id="success-title">Succes!</span></div>
       <div class="modal-body">
-        <span class="pill">Goed gedaan â€” doel bereikt</span>
+        <span class="pill">Goed gedaan — doel bereikt</span>
         <div id="success-message">Je hebt het level voltooid.</div>
         <div id="success-feedback" class="learning-feedback"></div>
         <div>
@@ -839,7 +839,7 @@
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn" id="export-pdf-success">â¤“ Exporteren naar PDF</button>
+        <button class="btn" id="export-pdf-success">⤓ Exporteren naar PDF</button>
         <button class="btn primary" id="close-success">Naar volgend level!</button>
       </div>
     </div>
@@ -882,7 +882,7 @@
   <!-- PDF Export Modal -->
   <div id="pdf-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
     <div class="modal" style="max-width:740px">
-      <div class="modal-header">â¤“ Exporteren naar PDF</div>
+      <div class="modal-header">⤓ Exporteren naar PDF</div>
       <div class="modal-body">
         <div class="field">
           <label for="modal-naam">Naam</label>
@@ -1161,8 +1161,8 @@
             issues.push({
               type: 'unknown-call', name, line: li+1, col,
               message: suggestion
-                ? `Onbekende functie â€˜${name}()â€™. Bedoel je â€˜${suggestion}()â€™?`
-                : `Onbekende functie â€˜${name}()â€™. Kijk de naam na en gebruik alleen de toegelaten acties.`
+                ? `Onbekende functie ‘${name}()’. Bedoel je ‘${suggestion}()’?`
+                : `Onbekende functie ‘${name}()’. Kijk de naam na en gebruik alleen de toegelaten acties.`
             });
           }
         }
@@ -1179,7 +1179,7 @@
       type:'infinite-loop',
       line:1,
       col:1,
-      message:"Oneindige lus â€˜for(;;){...}â€™. Voeg een conditie en update toe of gebruik een teller."
+      message:"Oneindige lus ‘for(;;){...}’. Voeg een conditie en update toe of gebruik een teller."
     });
   }
   // while(true) { ... } of while(1) { ... }
@@ -1188,7 +1188,7 @@
       type:'infinite-loop',
       line:1,
       col:1,
-      message:"Oneindige lus â€˜while(true){...}â€™. Voeg een stopvoorwaarde toe."
+      message:"Oneindige lus ‘while(true){...}’. Voeg een stopvoorwaarde toe."
     });
   }
   return hints;
@@ -1328,7 +1328,7 @@
               out.push({
                 type:'notDone-parens',
                 index: start + 1 + idx,
-                message:"Gebruik â€˜notDone()â€™ met haakjes: â€˜while (notDone()) { â€¦ }â€™."
+                message:"Gebruik ‘notDone()’ met haakjes: ‘while (notDone()) { … }’."
               });
             }
           }
@@ -1767,7 +1767,7 @@ if (randomDifficultyInput && randomDifficultyLabel) {
       7: { focus: 'links en rechts testen', concepts: ['selection', 'conditionalIteration'], done: 'Je gebruikt meerdere richtingen om een route te kiezen.', next: 'Vergelijk of links eerst testen een ander gedrag geeft dan rechts eerst testen.' },
       8: { focus: 'strategie combineren', concepts: ['sequence', 'selection', 'conditionalIteration'], done: 'Je combineerde beweging, keuzes en herhaling tot een volledige strategie.', next: 'Beschrijf je strategie in een zin voordat je naar code gaat.' },
       9: { focus: 'minder blokken', concepts: ['selection', 'conditionalIteration'], done: 'Je loste het level op door patronen in je route te herkennen.', next: 'Zoek welke reeks blokken eigenlijk een herhaalbaar patroon vormt.' },
-      10: { focus: 'einddoolhof', concepts: ['sequence', 'selection', 'conditionalIteration'], done: 'Je past meerdere Maze-ideeÃ«n samen toe.', next: 'Probeer je oplossing nu in Code-modus te schrijven.' },
+      10: { focus: 'einddoolhof', concepts: ['sequence', 'selection', 'conditionalIteration'], done: 'Je past meerdere Maze-ideeën samen toe.', next: 'Probeer je oplossing nu in Code-modus te schrijven.' },
       11: { focus: 'random doolhof', concepts: ['selection', 'conditionalIteration'], done: 'Je oplossing werkt op een onbekend doolhof.', next: 'Maak je strategie zo algemeen mogelijk, niet alleen passend voor een vaste kaart.' }
     };
 
@@ -1897,8 +1897,8 @@ if (randomDifficultyInput && randomDifficultyLabel) {
         Blockly.defineBlocksWithJsonArray([
           { type:'turtle_move_forward', message0:'ga vooruit %1', args0:[{type:'input_value',name:'DIST',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
           { type:'turtle_move_backward', message0:'ga achteruit %1', args0:[{type:'input_value',name:'DIST',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
-          { type:'turtle_turn_left', message0:'draai links %1 Â°', args0:[{type:'input_value',name:'ANGLE',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
-          { type:'turtle_turn_right', message0:'draai rechts %1 Â°', args0:[{type:'input_value',name:'ANGLE',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
+          { type:'turtle_turn_left', message0:'draai links %1 °', args0:[{type:'input_value',name:'ANGLE',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
+          { type:'turtle_turn_right', message0:'draai rechts %1 °', args0:[{type:'input_value',name:'ANGLE',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
           { type:'turtle_goto', message0:'ga naar x %1 y %2', args0:[{type:'input_value',name:'X',check:'Number'},{type:'input_value',name:'Y',check:'Number'}], previousStatement:null, nextStatement:null, colour:230 },
           { type:'turtle_pen_up', message0:'pen omhoog', previousStatement:null, nextStatement:null, colour:280 },
           { type:'turtle_pen_down', message0:'pen omlaag', previousStatement:null, nextStatement:null, colour:280 },
@@ -2128,20 +2128,19 @@ resizeMazeCanvas();
     function updateCapacityBadge(){
       if (activeMode === 'maze1' && workspace) {
         const info = getMazeBlockLimitInfo();
-        blocksInfo.textContent = 'â€” ' + info.used + '/' + (info.limit === Infinity ? 'âˆž' : info.limit) + ' blokken';
+        blocksInfo.textContent = '— ' + info.used + '/' + (info.limit === Infinity ? '∞' : info.limit) + ' blokken';
         blocksInfo.classList.toggle('over-limit', info.over);
         blocksInfo.title = "Voorwaarden zoals 'niet klaar?' en 'pad voor mij?' tellen niet mee voor de bloklimiet.";
         return;
       }
       const used = (activeMode==='turtle_blocks') && workspace ? workspace.getAllBlocks(false).filter(block => !(typeof block.isShadow === 'function' && block.isShadow())).length : 0;
-      blocksInfo.textContent = 'â€” ' + used + '/âˆž';
+      blocksInfo.textContent = '— ' + used + '/∞';
       blocksInfo.classList.remove('over-limit');
       blocksInfo.removeAttribute('title');
     }
-
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ------------------------------------------------------------
     // MAZE engine + assets + frames
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ------------------------------------------------------------
     const mctx = mazeCanvas.getContext('2d');
 
     const SKIN = {
@@ -2267,7 +2266,7 @@ let level = FALLBACK;
     
 // ---------------- Random Maze generator (Level 11) ----------------
 // Genereert een doolhof met oneven binnenmaat en muurborder eromheen.
-// difficulty: 1 (klein) â€“ 3 (groot)
+// difficulty: 1 (klein) – 3 (groot)
 function difficultyToCells(diff){
   const d = Math.max(1, Math.min(3, diff|0));
   if (d === 1) return 9;   // klein
@@ -2285,7 +2284,7 @@ function generateRandomMazeLevel(diff){
     Array.from({length: cols}, () => 0)
   );
 
-  // Alle "cellen" op oneven coÃ¶rdinaten als mogelijke paden markeren (voor DFS)
+  // Alle "cellen" op oneven coördinaten als mogelijke paden markeren (voor DFS)
   for (let y = 1; y < rows - 1; y += 2){
     for (let x = 1; x < cols - 1; x += 2){
       grid[y][x] = 1;
@@ -2350,7 +2349,7 @@ function populateLevelSelect(sel){
     const opt = document.createElement('option');
     opt.value = i;
     if (i === RANDOM_LEVEL_INDEX){
-      opt.textContent = 'Level ' + i + ' â€” Willekeurig';
+      opt.textContent = 'Level ' + i + ' ? Willekeurig';
     } else {
       opt.textContent = 'Level ' + i;
     }
@@ -2668,7 +2667,7 @@ window.mazeTurnRight = function(){
   pushFrame();
 };
 
-// Maze-queries tellen nu Ã³Ã³k stappen, zodat while(notDone())-lussen afgebroken worden
+// Maze-queries tellen nu óók stappen, zodat while(notDone())-lussen afgebroken worden
 window.mazePathAhead = function(){
   _tick(); // check naar voren telt als stap
   const {dx,dy}=frontDelta(mazeState.dir);
@@ -2868,7 +2867,7 @@ window.notDone = function(){
           const allowed = Array.from(makeAllowedSet(window.activeMode));
           const suggestion = closestAllowed(name, allowed);
           consolePrint(
-            `Onbekende naam â€˜${name}â€™. ${suggestion ? `Bedoel je â€˜${suggestion}()â€™ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
+            `Onbekende naam ?${name}?. ${suggestion ? `Bedoel je ?${suggestion}()? of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
             'log-error'
           );
         } else {
@@ -3257,7 +3256,7 @@ window.notDone = function(){
   // Tel overlappende en niet-overlappende pixels
   let E = 0, // aantal verwachte (exp) pixels
       S = 0, // aantal student (stu) pixels
-      I = 0; // intersectie (exp âˆ§ stu)
+      I = 0; // intersectie (exp ∧ stu)
 
   for (let i = 0; i < expData.length; i += 4) {
     const e = expData[i + 3] > 0; // alpha > 0 = 'actief'
@@ -3489,7 +3488,7 @@ window.setPenColour = function(r,g,b){
           const allowed = Array.from(makeAllowedSet(window.activeMode));
           const suggestion = closestAllowed(name, allowed);
           consolePrint(
-            `Onbekende naam â€˜${name}â€™. ${suggestion ? `Bedoel je â€˜${suggestion}()â€™ of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
+            `Onbekende naam ?${name}?. ${suggestion ? `Bedoel je ?${suggestion}()? of staat er een typefout?` : 'Kijk de naam en hoofdletters na.'}`,
             'log-error'
           );
         } else {
@@ -3976,7 +3975,7 @@ window.setPenColour = function(r,g,b){
 
     function getExerciseName(){
       const {chapter, level} = getChapterInfo();
-      return `${chapter} â€” Level ${level}`;
+      return `${chapter} — Level ${level}`;
     }
 
     function getOpdrachtTekst(){
@@ -4024,7 +4023,7 @@ window.setPenColour = function(r,g,b){
       ExportPDF._cursorY = margin();
 
       const {chapter, level} = getChapterInfo();
-      const metaTitle = `${chapter} â€” Level ${level} â€” ${naam}`;
+      const metaTitle = `${chapter} — Level ${level} — ${naam}`;
       if (pdf.setProperties) pdf.setProperties({ title: metaTitle, author: 'AI in de Klas' });
 
       pdf.setTextColor(...COLOR_PURPLE);
@@ -4035,7 +4034,7 @@ window.setPenColour = function(r,g,b){
       pdf.setFont('helvetica','normal'); pdf.setFontSize(12);
       pdf.text(`Naam: ${naam}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 18;
       pdf.text(`Klas: ${klas}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 18;
-      pdf.text(`Oefening: ${chapter} â€” Level ${level}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 24;
+      pdf.text(`Oefening: ${chapter} — Level ${level}`, margin(), ExportPDF._cursorY); ExportPDF._cursorY += 24;
 
       if (opdracht) {
         const lines = pdf.splitTextToSize(opdracht, contentW);
@@ -4302,11 +4301,11 @@ document.addEventListener('DOMContentLoaded', () => {
         level   = getLevel('turtle-level');   // idem: zelfde dropdown voor beide Turtle-modes
         break;
       default:
-        // fallback blijft 'Oefening â€” Level 1'
+        // fallback blijft 'Oefening — Level 1'
         break;
     }
 
-    return `${chapter} â€” Level ${level}`;
+    return `${chapter} — Level ${level}`;
   }
 
   ExportPDF.init({
@@ -4330,9 +4329,9 @@ document.addEventListener('DOMContentLoaded', () => {
   <!-- Oud overlay-sjabloon (nu ongebruikt, maar laten staan voor compatibiliteit) -->
   <div id="pdf-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-title">
     <div class="modal">
-      <div class="modal-header">â¤“ <span id="pdf-title">Exporteren naar PDF</span></div>
+      <div class="modal-header">⤓ <span id="pdf-title">Exporteren naar PDF</span></div>
       <div class="modal-body">
-        <div id="pdf-what" class="pill">Dit exporteert: â€¦</div>
+        <div id="pdf-what" class="pill">Dit exporteert: …</div>
         <label for="pdf-name" style="font-weight:700;margin-top:6px;">Naam (optioneel)</label>
         <input id="pdf-name" class="btn" style="width:100%;" placeholder="Voornaam Naam" />
         <div class="cap">De export bevat automatisch de juiste onderdelen per modus.</div>
@@ -4455,16 +4454,16 @@ document.addEventListener('DOMContentLoaded', () => {
   "Verstuurd": "Sent",
   "Projectstappen": "Project steps",
   "Onderzoeksstappen": "Research steps",
-  "Auteur: Robbe Wulgaert Â· AI in de Klas Â· robbewulgaert.be Â· Â© 2026 Robbe Wulgaert. Alle rechten voorbehouden.": "Author: Robbe Wulgaert Â· AI in de Klas Â· robbewulgaert.be Â· Â© 2026 Robbe Wulgaert. All rights reserved.",
+  "Auteur: Robbe Wulgaert · AI in de Klas · robbewulgaert.be · © 2026 Robbe Wulgaert. Alle rechten voorbehouden.": "Author: Robbe Wulgaert · AI in de Klas · robbewulgaert.be · © 2026 Robbe Wulgaert. All rights reserved.",
   "Blockly in de Klas": "Blockly in the Classroom",
-  "Â· Maze & Turtle": "Â· Maze & Turtle",
+  "· Maze & Turtle": "· Maze & Turtle",
   "Maze (Blokken)": "Maze (Blocks)",
   "Maze (Code)": "Maze (Code)",
   "Turtle (Blokken)": "Turtle (Blocks)",
   "Turtle (Code)": "Turtle (Code)",
   "Wis opgeslagen voortgang": "Clear saved progress",
-  "â¤“ Exporteren naar PDF": "â¤“ Export to PDF",
-  "â€” 0/âˆž": "â€” 0/âˆž",
+  "⤓ Exporteren naar PDF": "⤓ Export to PDF",
+  "— 0/∞": "— 0/∞",
   "// Tip: probeer stap voor stap te denken.\n// Oefen de syntax goed in. Werk niet alleen digitaal, maar ook schriftelijk!": "// Tip: try to think step by step.\n// Practise the syntax well. Do not work only digitally, but also on paper!",
   "Console verschijnt hier. Gebruik console.log() of bekijk foutmeldingen hieronder.": "Console output appears here. Use console.log() or inspect error messages below.",
   "Tip: gebruik in Maze (Blokken) de blokken; in Maze (Code) en Turtle (Code) typ je code. In Turtle is (0,0) het midden.": "Tip: use blocks in Maze (Blocks); type code in Maze (Code) and Turtle (Code). In Turtle, (0,0) is the centre.",
@@ -4537,11 +4536,11 @@ document.addEventListener('DOMContentLoaded', () => {
   "Vul je volledige naam en klas in.": "Enter your full name and class.",
   "De feedback kijkt niet alleen naar het resultaat, maar ook naar leesbaarheid, programmeerconcepten, wiskundig denken en creativiteit.": "Feedback looks not only at the result, but also at readability, programming concepts, mathematical thinking and creativity.",
   "Credits en licentie": "Credits and licence",
-  "Â© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.": "Â© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.",
+  "© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.": "© 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be.",
   "Gebaseerd op oefeningen uit het open-source Blockly project door Google.": "Based on exercises from Google's open-source Blockly project.",
   "Gebruik in eigen klas of onderwijscontext is toegelaten mits duidelijke naamsvermelding.": "Use in your own class or educational context is allowed with clear attribution.",
   "Succes!": "Success!",
-  "Goed gedaan â€” doel bereikt": "Well done â€” goal reached",
+  "Goed gedaan — doel bereikt": "Well done — goal reached",
   "Je hebt het level voltooid.": "You completed the level.",
   "Jouw oplossing (code)": "Your solution (code)",
   "Naar volgend level!": "To the next level!",
