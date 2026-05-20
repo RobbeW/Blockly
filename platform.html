@@ -15,6 +15,9 @@
 
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="shortcut icon" type="image/png" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700,900&display=swap">
 <link rel="stylesheet" href="common/common.css" />
   <meta name="color-scheme" content="light">
 
@@ -688,33 +691,217 @@ body > header .tab.active {
     min-width: 0;
   }
 }
+
+/* Shared learning-platform header rhythm. */
+body > header.topbar.learning-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 1px solid rgba(82, 0, 255, 0.12);
+  box-shadow: var(--platform-shadow);
+  color: var(--platform-ink);
+  backdrop-filter: blur(14px);
+}
+
+.topbar.learning-header .exercise-progress,
+.topbar.learning-header .tabs {
+  flex: 0 1 auto;
+  max-width: min(44vw, 620px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(82, 0, 255, 0.45) transparent;
+}
+
+.topbar.learning-header .tabs {
+  display: inline-flex;
+  flex-wrap: nowrap;
+}
+
+.topbar.learning-header .opdracht {
+  flex: 1 1 260px;
+  min-width: 200px;
+  max-width: 44rem;
+  line-height: 1.3;
+}
+
+.topbar.learning-header .opdracht strong {
+  color: var(--platform-ink);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.topbar.learning-header .opdracht span,
+.topbar.learning-header .opdracht .opdracht-tekst {
+  display: block;
+  color: var(--platform-muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar.learning-header .toolbar,
+.topbar.learning-header .app-actions {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.topbar.learning-header .language-toggle {
+  order: 0 !important;
+}
+
+.topbar.learning-header .toolbar > button,
+.topbar.learning-header .app-actions > button,
+.topbar.learning-header .app-actions > .btn {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(82, 0, 255, 0.18);
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: #ffffff;
+  color: var(--platform-brand-dark);
+  font: inherit;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: var(--platform-shadow);
+}
+
+.topbar.learning-header .progress-chip {
+  min-height: 42px;
+  padding: 9px 14px;
+  background: #ffffff;
+  color: var(--platform-brand-dark);
+  border-color: rgba(82, 0, 255, 0.18);
+  box-shadow: var(--platform-shadow);
+}
+
+.topbar.learning-header .toolbar > button:hover,
+.topbar.learning-header .toolbar > button:focus-visible,
+.topbar.learning-header .app-actions > button:hover,
+.topbar.learning-header .app-actions > button:focus-visible,
+.topbar.learning-header .app-actions > .btn:hover,
+.topbar.learning-header .app-actions > .btn:focus-visible {
+  background: #ffffff;
+  border-color: rgba(82, 0, 255, 0.45);
+  color: var(--platform-brand-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(82, 0, 255, 0.12);
+  outline: none;
+}
+
+body.dark > header.topbar.learning-header,
+html[data-theme="dark"] body > header.topbar.learning-header,
+html.dark body > header.topbar.learning-header {
+  background: rgba(35, 39, 46, 0.96);
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+body.dark .topbar.learning-header .opdracht strong,
+html[data-theme="dark"] .topbar.learning-header .opdracht strong,
+html.dark .topbar.learning-header .opdracht strong {
+  color: #ffffff;
+}
+
+body.dark .topbar.learning-header .opdracht span,
+html[data-theme="dark"] .topbar.learning-header .opdracht span,
+html.dark .topbar.learning-header .opdracht span {
+  color: #cbd2df;
+}
+
+@media (max-width: 900px) {
+  body > header.topbar.learning-header {
+    align-items: stretch;
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .topbar.learning-header .exercise-progress,
+  .topbar.learning-header .tabs,
+  .topbar.learning-header .opdracht,
+  .topbar.learning-header .toolbar,
+  .topbar.learning-header .app-actions {
+    flex-basis: 100%;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .topbar.learning-header .toolbar,
+  .topbar.learning-header .app-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar.learning-header .toolbar,
+  .topbar.learning-header .app-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topbar.learning-header .language-toggle,
+  .topbar.learning-header .toolbar > button,
+  .topbar.learning-header .app-actions > button,
+  .topbar.learning-header .app-actions > .btn,
+  .topbar.learning-header .progress-chip {
+    width: 100%;
+  }
+}
+
+@media (max-width: 460px) {
+  .topbar.learning-header .toolbar,
+  .topbar.learning-header .app-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar.learning-header .toolbar > button,
+  .topbar.learning-header .app-actions > button,
+  .topbar.learning-header .app-actions > .btn {
+    white-space: normal;
+  }
+}
 </style>
 </head>
 <body>
-  <header>
-    <div class="ai-brand">
-      <div><a href="index.html">Blockly in de Klas</a> · Maze & Turtle</div>
-    </div>
-
-    <div class="tabs" role="tablist" aria-label="Kies oefening">
+  <header class="topbar learning-header">
+    <div class="tabs exercise-progress" role="tablist" aria-label="Kies oefening">
       <button id="tab-maze1" class="tab active" role="tab" aria-selected="true">Maze (Blokken)</button>
       <button id="tab-maze2" class="tab" role="tab" aria-selected="false">Maze (Code)</button>
       <button id="tab-turtle1" class="tab" role="tab" aria-selected="false">Turtle (Blokken)</button>
       <button id="tab-turtle2" class="tab" role="tab" aria-selected="false">Turtle (Code)</button>
     </div>
 
-    <div class="app-actions">
+    <div class="opdracht" id="opdracht">
+      <strong id="opdracht-titel">Blockly in de Klas</strong>
+      <span id="opdracht-tekst">Maze & Turtle</span>
+    </div>
+
+    <div class="toolbar app-actions">
       
       <div class="language-toggle" role="group" aria-label="Taalkeuze">
         <button type="button" class="is-active" data-language-choice="nl" aria-pressed="true">NL</button>
         <button type="button" data-language-choice="en" aria-pressed="false">ENG</button>
       </div>
-<div class="progress-chip" id="progress-chip" aria-live="polite">
+      <button class="btn small" id="toggle-theme" title="Donkere/lichte modus" type="button" aria-pressed="false">Thema</button>
+      <button class="btn small" id="btn-pdf" title="Exporteer reeks naar PDF">PDF-reeks</button>
+      <button class="btn small" id="reset-progress" title="Wis opgeslagen voortgang">Voortgang wissen</button>
+      <div class="progress-chip" id="progress-chip" aria-live="polite">
         <span class="progress-dot" aria-hidden="true"></span>
         <span id="progress-summary">Voortgang: 0/40</span>
       </div>
-      <button class="btn small" id="reset-progress" title="Wis opgeslagen voortgang">Voortgang wissen</button>
-      <button class="btn small" id="btn-pdf" title="Exporteer naar PDF">⤓ Exporteren naar PDF</button>
     </div>
   </header>
 
@@ -1109,11 +1296,26 @@ body > header .tab.active {
     window.activeMode = 'maze1';
     window.lastRunCode = '';
 
-    // ---------- Thema (forceer licht) ----------
+    // ---------- Thema ----------
     (function initTheme(){
       const root = document.documentElement;
-      root.setAttribute('data-theme','light');
-      try { localStorage.setItem('aik_theme','light'); } catch(_) {}
+      const themeButton = $('toggle-theme');
+
+      function setTheme(theme){
+        const next = theme === 'dark' ? 'dark' : 'light';
+        root.setAttribute('data-theme', next);
+        root.classList.toggle('dark', next === 'dark');
+        if (themeButton) themeButton.setAttribute('aria-pressed', String(next === 'dark'));
+        try { localStorage.setItem('aik_theme', next); } catch(_) {}
+      }
+
+      let savedTheme = 'light';
+      try { savedTheme = localStorage.getItem('aik_theme') || 'light'; } catch(_) {}
+      setTheme(savedTheme === 'dark' ? 'dark' : 'light');
+
+      themeButton?.addEventListener('click', () => {
+        setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
     })();
 
     // ---------- Formularium / informatie ----------
@@ -4592,6 +4794,8 @@ document.addEventListener('DOMContentLoaded', () => {
   "Exporteren": "Export",
   "Exporteren naar PDF": "Export to PDF",
   "Reeks exporteren naar PDF": "Export series to PDF",
+  "PDF-reeks": "PDF series",
+  "Exporteer reeks naar PDF": "Export series to PDF",
   "Vooruitgang wissen": "Clear progress",
   "Voortgang wissen": "Clear progress",
   "Alleen huidige oefening": "Current exercise only",
@@ -4633,6 +4837,8 @@ document.addEventListener('DOMContentLoaded', () => {
   "Auteur: Robbe Wulgaert · AI in de Klas · robbewulgaert.be · © 2026 Robbe Wulgaert. Alle rechten voorbehouden.": "Author: Robbe Wulgaert · AI in de Klas · robbewulgaert.be · © 2026 Robbe Wulgaert. All rights reserved.",
   "Blockly in de Klas": "Blockly in the Classroom",
   "· Maze & Turtle": "· Maze & Turtle",
+  "Maze & Turtle": "Maze & Turtle",
+  "Kies oefening": "Choose exercise",
   "Maze (Blokken)": "Maze (Blocks)",
   "Maze (Code)": "Maze (Code)",
   "Turtle (Blokken)": "Turtle (Blocks)",
