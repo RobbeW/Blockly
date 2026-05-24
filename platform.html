@@ -107,6 +107,7 @@
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:50}
     .modal{width:min(800px,90vw);background:var(--card);border:2px solid var(--brand-purple);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.25);overflow:hidden}
     .modal-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(90deg,var(--brand-purple),#6a3cff);color:#fff;font-weight:800}
+    .success-mark{width:14px;height:14px;border-radius:50%;background:var(--brand-aqua);box-shadow:0 0 0 4px rgba(3,221,239,.22)}
     .modal-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
     .modal-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--border)}
     .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(3,221,239,.14);color:#0f5132;border:1px solid rgba(3,221,239,.42);padding:6px 10px;border-radius:999px;font-size:13px;font-weight:700}
@@ -116,18 +117,181 @@
     .learning-feedback strong{color:var(--brand-purple)}
 
     /* Formularium modal */
-    .form-drawer{ position:fixed; top:50%; left:50%; width:min(960px, calc(100vw - 28px)); max-height:min(760px, calc(100vh - 28px));
-      transform:translate(-50%, -50%); background:var(--card); border:1px solid var(--border); border-radius:22px; box-shadow:0 0 0 9999px rgba(0,0,0,.52), 0 24px 70px rgba(0,0,0,.26); overflow:auto; z-index:100001; }
-    .form-header{position:sticky; top:0; background:var(--card); border-bottom:1px solid var(--border);
-      padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px}
-    .form-title{font-weight:800; letter-spacing:.2px}
-    .form-body{padding:14px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; font-size:14px; line-height:1.5}
-    .form-card{border:1px solid var(--border); border-radius:12px; padding:10px}
-    .form-card.wide{grid-column:1 / -1}
-    .form-card h4{margin:0 0 6px 0; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
-    .kbd{display:inline-block; border:1px solid var(--border); border-bottom-width:2px; padding:2px 6px; border-radius:6px; font-family:ui-monospace, monospace; font-size:.9em}
-    .code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace; background:rgba(82,0,255,.06); border:1px solid var(--border); border-radius:8px; padding:6px 8px; overflow:auto; white-space:pre-wrap}
+    .form-drawer{
+      position:fixed;
+      inset:0;
+      z-index:100001;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:1rem;
+      background:rgba(11,16,32,.55);
+      border:0;
+      box-shadow:none;
+    }
+    .form-shell{
+      position:relative;
+      width:min(96vw,1180px);
+      max-height:85vh;
+      overflow-y:auto;
+      border:1px solid #d7dbe8;
+      border-radius:18px;
+      background:#fff;
+      color:var(--ink);
+      box-shadow:0 24px 70px rgba(35,39,46,.22);
+      padding:1.4rem;
+    }
+    .form-shell h2{
+      margin:0 2.5rem 1rem 0;
+      color:var(--brand-purple);
+      font-size:1.65rem;
+      line-height:1.2;
+      letter-spacing:0;
+    }
+    .form-close{
+      position:absolute;
+      top:10px;
+      right:12px;
+      border:0;
+      background:transparent;
+      color:#333;
+      font-size:1.7rem;
+      line-height:1;
+      cursor:pointer;
+      min-height:0;
+      padding:.15rem .4rem;
+      border-radius:999px;
+    }
+    .form-close:hover{
+      transform:none;
+      background:#f2f0fd;
+      color:var(--brand-purple);
+    }
+    .form-body{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:.85rem;
+      padding:0;
+      font-size:14px;
+      line-height:1.5;
+    }
+    .form-card{
+      border:1px solid #d7dbe8;
+      border-radius:14px;
+      padding:.95rem;
+      background:linear-gradient(180deg,#fff,#fbfbff);
+      box-shadow:0 8px 22px rgba(35,39,46,.06);
+    }
+    .form-card.wide{
+      grid-column:1 / -1;
+      background:linear-gradient(135deg,#f7fff9,#fff);
+      border-color:#bfead2;
+    }
+    .form-card h4{
+      margin:0 0 .62rem;
+      color:var(--brand-purple);
+      font-size:1rem;
+      text-transform:none;
+      letter-spacing:0;
+    }
+    .form-card ul{
+      margin:0;
+      padding-left:1.1rem;
+      color:#2e3340;
+      line-height:1.45;
+    }
+    .form-card li{
+      margin:0 0 .35rem;
+    }
+    .form-card li:last-child{
+      margin-bottom:0;
+    }
+    .form-card p,
+    .form-card .cap{
+      color:#4b5563;
+      line-height:1.5;
+    }
+    .form-card code{
+      background:#f2f0fd;
+      color:var(--brand-purple);
+      border-radius:5px;
+      padding:2px 6px;
+    }
+    .kbd{
+      display:inline-block;
+      border:1px solid #d7dbe8;
+      border-bottom-width:2px;
+      padding:2px 6px;
+      border-radius:6px;
+      background:#fff;
+      color:var(--brand-purple);
+      font-family:ui-monospace, monospace;
+      font-size:.9em;
+      font-weight:800;
+    }
+    .code{
+      margin:.75rem 0 0;
+      border:0;
+      border-radius:10px;
+      background:#161820;
+      color:#fff;
+      padding:.72rem .78rem;
+      overflow:auto;
+      white-space:pre-wrap;
+      font:0.86rem/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
+    }
+    .form-card .code code,
+    .code code{
+      background:transparent;
+      color:inherit;
+      padding:0;
+    }
+    .form-swatch-row{
+      display:flex;
+      gap:.55rem;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .form-swatch-row .btn{
+      min-height:42px;
+    }
+    .form-swatch-row input[type="text"]{
+      width:180px;
+      min-width:150px;
+    }
     .copy-btn{float:right; font-size:12px}
+    html[data-theme="dark"] .form-shell{
+      background:#23272e;
+      color:#f5f4fa;
+      border-color:rgba(255,255,255,.14);
+    }
+    html[data-theme="dark"] .form-card{
+      background:#2b3140;
+      border-color:rgba(255,255,255,.14);
+      box-shadow:0 8px 22px rgba(0,0,0,.16);
+    }
+    html[data-theme="dark"] .form-card.wide{
+      background:#263438;
+      border-color:rgba(61,255,208,.35);
+    }
+    html[data-theme="dark"] .form-card ul,
+    html[data-theme="dark"] .form-card p,
+    html[data-theme="dark"] .form-card .cap{
+      color:#d6dbe6;
+    }
+    html[data-theme="dark"] .form-card code,
+    html[data-theme="dark"] .kbd{
+      background:rgba(61,255,208,.12);
+      color:#9bf7e2;
+      border-color:rgba(61,255,208,.28);
+    }
+    html[data-theme="dark"] .form-close{
+      color:#f5f4fa;
+    }
+    html[data-theme="dark"] .form-close:hover{
+      background:rgba(61,255,208,.12);
+      color:#9bf7e2;
+    }
 
     /* Print */
     @media print{
@@ -290,8 +454,7 @@
     }
 
     .panel,
-    .modal,
-    .form-drawer{
+    .modal{
       border-color:var(--border);
       box-shadow:0 12px 34px rgba(15,23,42,.08);
     }
@@ -717,6 +880,24 @@ body > header.topbar.learning-header {
   scrollbar-color: rgba(82, 0, 255, 0.45) transparent;
 }
 
+.topbar.learning-header .learning-nav-group {
+  display: flex;
+  flex: 0 1 min(52vw, 760px);
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.topbar.learning-header .learning-nav-group .exercise-progress,
+.topbar.learning-header .learning-nav-group .tabs {
+  flex: 1 1 auto;
+  max-width: none;
+}
+
+.topbar.learning-header .learning-nav-group .progress-chip {
+  flex: 0 0 auto;
+}
+
 .topbar.learning-header .tabs {
   display: inline-flex;
   flex-wrap: nowrap;
@@ -756,6 +937,14 @@ body > header.topbar.learning-header {
   flex-wrap: wrap;
 }
 
+.topbar.learning-header .toolbar {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .topbar.learning-header .language-toggle {
   order: 0 !important;
 }
@@ -788,6 +977,31 @@ body > header.topbar.learning-header {
   box-shadow: var(--platform-shadow);
 }
 
+.topbar.learning-header .toolbar > .brand-btn {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(82, 0, 255, 0.18);
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: #ffffff;
+  color: var(--platform-brand-dark);
+  font: inherit;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--platform-shadow);
+}
+
+.topbar.learning-header .toolbar > #btn-pdf {
+  border: 1px solid rgba(82, 0, 255, 0.18);
+  background: #ffffff;
+  color: var(--platform-brand-dark);
+  box-shadow: var(--platform-shadow);
+}
+
 .topbar.learning-header .toolbar > button:hover,
 .topbar.learning-header .toolbar > button:focus-visible,
 .topbar.learning-header .app-actions > button:hover,
@@ -800,6 +1014,14 @@ body > header.topbar.learning-header {
   transform: translateY(-1px);
   box-shadow: 0 14px 30px rgba(82, 0, 255, 0.12);
   outline: none;
+}
+
+.topbar.learning-header .toolbar > #btn-pdf:hover,
+.topbar.learning-header .toolbar > #btn-pdf:focus-visible {
+  background: #ffffff;
+  border-color: rgba(82, 0, 255, 0.45);
+  color: var(--platform-brand-dark);
+  box-shadow: 0 14px 30px rgba(82, 0, 255, 0.12);
 }
 
 body.dark > header.topbar.learning-header,
@@ -831,6 +1053,7 @@ html.dark .topbar.learning-header .opdracht span {
 
   .topbar.learning-header .exercise-progress,
   .topbar.learning-header .tabs,
+  .topbar.learning-header .learning-nav-group,
   .topbar.learning-header .opdracht,
   .topbar.learning-header .toolbar,
   .topbar.learning-header .app-actions {
@@ -842,6 +1065,21 @@ html.dark .topbar.learning-header .opdracht span {
   .topbar.learning-header .toolbar,
   .topbar.learning-header .app-actions {
     justify-content: flex-start;
+  }
+
+  .topbar.learning-header .learning-nav-group {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+
+  .topbar.learning-header .learning-nav-group .exercise-progress,
+  .topbar.learning-header .learning-nav-group .tabs {
+    flex: 1 1 360px;
+    width: auto;
+  }
+
+  .topbar.learning-header .learning-nav-group .progress-chip {
+    width: auto;
   }
 }
 
@@ -857,6 +1095,12 @@ html.dark .topbar.learning-header .opdracht span {
   .topbar.learning-header .app-actions > button,
   .topbar.learning-header .app-actions > .btn,
   .topbar.learning-header .progress-chip {
+    width: 100%;
+  }
+
+  .topbar.learning-header .learning-nav-group {
+    display: grid;
+    grid-template-columns: 1fr;
     width: 100%;
   }
 }
@@ -877,11 +1121,17 @@ html.dark .topbar.learning-header .opdracht span {
 </head>
 <body>
   <header class="topbar learning-header">
-    <div class="tabs exercise-progress" role="tablist" aria-label="Kies oefening">
-      <button id="tab-maze1" class="tab active" role="tab" aria-selected="true">Maze (Blokken)</button>
-      <button id="tab-maze2" class="tab" role="tab" aria-selected="false">Maze (Code)</button>
-      <button id="tab-turtle1" class="tab" role="tab" aria-selected="false">Turtle (Blokken)</button>
-      <button id="tab-turtle2" class="tab" role="tab" aria-selected="false">Turtle (Code)</button>
+    <div class="learning-nav-group">
+      <div class="tabs exercise-progress" role="tablist" aria-label="Kies oefening">
+        <button id="tab-maze1" class="tab active" role="tab" aria-selected="true">Maze (Blokken)</button>
+        <button id="tab-maze2" class="tab" role="tab" aria-selected="false">Maze (Code)</button>
+        <button id="tab-turtle1" class="tab" role="tab" aria-selected="false">Turtle (Blokken)</button>
+        <button id="tab-turtle2" class="tab" role="tab" aria-selected="false">Turtle (Code)</button>
+      </div>
+      <div class="progress-chip" id="progress-chip" aria-live="polite">
+        <span class="progress-dot" aria-hidden="true"></span>
+        <span id="progress-summary">Voortgang: 0/40</span>
+      </div>
     </div>
 
     <div class="opdracht" id="opdracht">
@@ -889,19 +1139,15 @@ html.dark .topbar.learning-header .opdracht span {
       <span id="opdracht-tekst">Maze & Turtle</span>
     </div>
 
-    <div class="toolbar app-actions">
+    <div class="toolbar" aria-label="Platformacties">
       
       <div class="language-toggle" role="group" aria-label="Taalkeuze">
         <button type="button" class="is-active" data-language-choice="nl" aria-pressed="true">NL</button>
         <button type="button" data-language-choice="en" aria-pressed="false">ENG</button>
       </div>
-      <button class="btn small" id="toggle-theme" title="Donkere/lichte modus" type="button" aria-pressed="false">Thema</button>
-      <button class="btn small" id="btn-pdf" title="Exporteer reeks naar PDF">PDF-reeks</button>
-      <button class="btn small" id="reset-progress" title="Wis opgeslagen voortgang">Voortgang wissen</button>
-      <div class="progress-chip" id="progress-chip" aria-live="polite">
-        <span class="progress-dot" aria-hidden="true"></span>
-        <span id="progress-summary">Voortgang: 0/40</span>
-      </div>
+      <button class="brand-btn" id="toggle-theme" title="Donkere/lichte modus" type="button" aria-pressed="false">Thema</button>
+      <button class="brand-btn" id="btn-pdf" title="Exporteer reeks naar PDF">PDF-reeks</button>
+      <button class="brand-btn" id="reset-progress" title="Wis opgeslagen voortgang">Voortgang wissen</button>
     </div>
   </header>
 
@@ -1000,14 +1246,11 @@ html.dark .topbar.learning-header .opdracht span {
   </main>
 
   <!-- Formularium Modal -->
-  <aside id="formularium" class="form-drawer hidden" aria-label="Blockly formularium" role="dialog" aria-modal="true" aria-labelledby="formularium-title">
-    <div class="form-header">
-      <div class="form-title" id="formularium-title">Blockly Formularium</div>
-      <div style="display:flex; gap:6px;">
-        <button class="btn small" id="btn-form-hide-now" title="Sluit formularium">X</button>
-      </div>
-    </div>
-    <div class="form-body">
+  <aside id="formularium" class="form-drawer hidden" aria-label="Blockly formularium" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="formularium-title">
+    <div class="form-shell" role="document">
+      <button class="form-close" id="btn-form-hide-now" title="Sluit formularium" aria-label="Sluit formularium">x</button>
+      <h2 id="formularium-title">Blockly Formularium</h2>
+      <div class="form-body">
       <div class="form-card wide">
         <h4>Doel</h4>
         <div>
@@ -1091,9 +1334,9 @@ html.dark .topbar.learning-header .opdracht span {
 
       <div class="form-card wide">
         <h4>Kleurkiezer</h4>
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div class="form-swatch-row">
           <input id="color-picker" type="color" value="#5200FF" class="btn" title="Kies kleur">
-          <input id="color-text" type="text" class="btn" style="width:180px" value="#5200FF" spellcheck="false" title="HEX of CSS kleur">
+          <input id="color-text" type="text" class="btn" value="#5200FF" spellcheck="false" title="HEX of CSS kleur">
           <button id="color-apply" class="btn">Zet penkleur</button>
         </div>
         <div class="cap">Werkt in Turtle-modus. In code kan je dezelfde kleur gebruiken met <code>setPenColour('#5200FF')</code>.</div>
@@ -1116,6 +1359,7 @@ html.dark .topbar.learning-header .opdracht span {
           <li>Gebruik in eigen klas of onderwijscontext is toegelaten mits duidelijke naamsvermelding.</li>
         </ul>
       </div>
+    </div>
     </div>
   </aside>
 
@@ -1191,7 +1435,7 @@ html.dark .topbar.learning-header .opdracht span {
   <!-- Success Modal -->
   <div id="success-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="success-title">
     <div class="modal">
-      <div class="modal-header">ðŸŽ‰ <span id="success-title">Succes!</span></div>
+      <div class="modal-header"><span class="success-mark" aria-hidden="true"></span><span id="success-title">Succes!</span></div>
       <div class="modal-body">
         <span class="pill">Goed gedaan — doel bereikt</span>
         <div id="success-message">Je hebt het level voltooid.</div>
@@ -1330,6 +1574,7 @@ html.dark .topbar.learning-header .opdracht span {
     }
     function setFormVisible(vis){
       formEl.classList.toggle('hidden', !vis);
+      formEl.setAttribute('aria-hidden', String(!vis));
       localStorage.setItem('aik_form_vis', vis ? 'true' : 'false');
       const fab = document.getElementById('fab-help');
       if (fab){
@@ -1349,6 +1594,12 @@ html.dark .topbar.learning-header .opdracht span {
         fab.title = open ? 'Verberg formularium' : 'Toon formularium';
       }
       btnFormHideNow?.addEventListener('click', ()=> setFormVisible(false));
+      formEl?.addEventListener('click', (event)=>{
+        if (event.target === formEl) setFormVisible(false);
+      });
+      document.addEventListener('keydown', (event)=>{
+        if (event.key === 'Escape' && formEl && !formEl.classList.contains('hidden')) setFormVisible(false);
+      });
     });
 
     // Kleurkiezer (Turtle)
