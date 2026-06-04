@@ -53,6 +53,11 @@
     .app-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     .progress-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:999px;padding:7px 11px;background:rgba(82,0,255,.05);font-size:12px;font-weight:800;color:var(--ink)}
     .progress-dot{width:8px;height:8px;border-radius:50%;background:var(--brand-aqua);box-shadow:0 0 0 4px rgba(3,221,239,.14)}
+    .tour-start-button{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(82,0,255,.18);border-radius:999px;background:#fff;color:var(--brand-purple);font:inherit;font-size:13px;font-weight:900;line-height:1;white-space:nowrap;cursor:pointer;box-shadow:0 10px 26px rgba(26,34,76,.06);transition:transform 160ms ease,box-shadow 160ms ease,border-color 160ms ease,background 160ms ease,color 160ms ease}
+    .tour-start-button:hover,.tour-start-button:focus-visible{border-color:rgba(82,0,255,.45);background:#fff;color:#3700B3;box-shadow:0 14px 30px rgba(82,0,255,.14);transform:translateY(-1px);outline:none}
+    .tour-start-button:focus-visible{box-shadow:0 0 0 3px rgba(3,221,239,.35),0 14px 30px rgba(82,0,255,.14)}
+    .tour-start-nudge{animation:tour-start-pulse 1.8s ease-in-out infinite}
+    @keyframes tour-start-pulse{0%,100%{box-shadow:0 10px 26px rgba(26,34,76,.06);transform:translateY(0)}50%{box-shadow:0 0 0 6px rgba(82,0,255,.11),0 16px 30px rgba(82,0,255,.18);transform:translateY(-1px)}}
 
     .wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;height:calc(100dvh - var(--header-height,64px));padding:12px;min-height:0}
     @media (max-width:1100px){.wrap{grid-template-columns:1fr;height:auto;min-height:calc(100dvh - var(--header-height,64px))}.panel{min-height:min(680px,calc(100dvh - var(--header-height,64px) - 24px))}}
@@ -88,6 +93,16 @@
 
     .notice{padding:10px 12px;font-size:12px;color:var(--muted);border-top:1px dashed var(--border)}
     .hidden{display:none !important}
+
+    .tour-overlay{position:fixed;inset:0;z-index:3500;pointer-events:none}
+    .tour-highlight{position:fixed;border:3px solid var(--brand-purple);border-radius:10px;background:rgba(82,0,255,.08);box-shadow:0 0 0 9999px rgba(18,15,28,.2),0 14px 40px rgba(82,0,255,.22);transition:left 260ms ease,top 260ms ease,width 260ms ease,height 260ms ease}
+    .tour-callout{position:fixed;pointer-events:auto;border:1px solid rgba(82,0,255,.18);border-radius:8px;background:var(--card);color:var(--ink);padding:14px;box-shadow:0 18px 48px rgba(32,22,64,.18);transition:left 260ms ease,top 260ms ease}
+    .tour-callout h3{margin:0 0 6px;color:var(--brand-purple);font-size:18px;line-height:1.2}
+    .tour-callout p{margin:0 0 12px;line-height:1.45}
+    .tour-status{display:block;margin-bottom:12px;color:var(--muted);font-size:12px;font-weight:900}
+    .tour-controls{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+    .tour-controls .btn{min-height:38px;padding:9px 12px;border-radius:999px}
+    @media (prefers-reduced-motion: reduce){.tour-start-nudge,.tour-highlight,.tour-callout{animation:none;transition:none}}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,1,1);white-space:nowrap;border:0}
 
     /* CLI editor */
@@ -857,11 +872,12 @@ body > header .tab.active {
 
 /* Shared learning-platform header rhythm. */
 body > header.topbar.learning-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(8rem, 1fr) auto;
+  grid-template-areas:
+    "nav assignment actions";
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 14px;
+  gap: 10px 14px;
   padding: 12px 18px;
   background: rgba(255, 255, 255, 0.94);
   border-bottom: 1px solid rgba(82, 0, 255, 0.12);
@@ -881,20 +897,24 @@ body > header.topbar.learning-header {
 }
 
 .topbar.learning-header .learning-nav-group {
+  grid-area: nav;
   display: flex;
-  flex: 0 1 min(52vw, 760px);
   align-items: center;
   gap: 0.6rem;
   min-width: 0;
+  max-width: 100%;
+  flex-wrap: nowrap;
 }
 
 .topbar.learning-header .learning-nav-group .exercise-progress,
 .topbar.learning-header .learning-nav-group .tabs {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  min-width: 0;
   max-width: none;
 }
 
-.topbar.learning-header .learning-nav-group .progress-chip {
+.topbar.learning-header .learning-nav-group .progress-chip,
+.topbar.learning-header .learning-nav-group .tour-start-button {
   flex: 0 0 auto;
 }
 
@@ -903,10 +923,14 @@ body > header.topbar.learning-header {
   flex-wrap: nowrap;
 }
 
+.topbar.learning-header .tabs .tab {
+  flex: 0 0 auto;
+}
+
 .topbar.learning-header .opdracht {
-  flex: 1 1 260px;
-  min-width: 200px;
-  max-width: 44rem;
+  grid-area: assignment;
+  min-width: 0;
+  max-width: 28rem;
   line-height: 1.3;
 }
 
@@ -929,12 +953,13 @@ body > header.topbar.learning-header {
 
 .topbar.learning-header .toolbar,
 .topbar.learning-header .app-actions {
+  grid-area: actions;
   display: flex;
-  flex: 0 1 auto;
   align-items: center;
   justify-content: flex-end;
   gap: 0.6rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .topbar.learning-header .toolbar {
@@ -968,7 +993,8 @@ body > header.topbar.learning-header {
   box-shadow: var(--platform-shadow);
 }
 
-.topbar.learning-header .progress-chip {
+.topbar.learning-header .progress-chip,
+.topbar.learning-header .tour-start-button {
   min-height: 42px;
   padding: 9px 14px;
   background: #ffffff;
@@ -1044,11 +1070,69 @@ html.dark .topbar.learning-header .opdracht span {
   color: #cbd2df;
 }
 
+@media (max-width: 1320px) {
+  body > header.topbar.learning-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "nav actions";
+    gap: 9px 10px;
+    padding: 10px 14px;
+  }
+
+  .topbar.learning-header .opdracht {
+    display: none;
+  }
+
+  .topbar.learning-header .learning-nav-group {
+    gap: 0.45rem;
+  }
+
+  .topbar.learning-header .tab {
+    min-height: 40px;
+    padding: 10px 13px;
+  }
+
+  .topbar.learning-header .progress-chip,
+  .topbar.learning-header .tour-start-button,
+  .topbar.learning-header .toolbar > button,
+  .topbar.learning-header .app-actions > button,
+  .topbar.learning-header .app-actions > .btn,
+  .topbar.learning-header .toolbar > .brand-btn {
+    min-height: 40px;
+    padding: 9px 12px;
+  }
+
+  .topbar.learning-header .toolbar,
+  .topbar.learning-header .app-actions {
+    gap: 0.45rem;
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 1040px) {
+  body > header.topbar.learning-header {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "nav"
+      "actions";
+    align-items: stretch;
+  }
+
+  .topbar.learning-header .learning-nav-group,
+  .topbar.learning-header .toolbar,
+  .topbar.learning-header .app-actions {
+    width: 100%;
+  }
+
+  .topbar.learning-header .toolbar,
+  .topbar.learning-header .app-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
 @media (max-width: 900px) {
   body > header.topbar.learning-header {
     align-items: stretch;
-    flex-direction: column;
-    flex-wrap: nowrap;
   }
 
   .topbar.learning-header .exercise-progress,
@@ -1078,7 +1162,8 @@ html.dark .topbar.learning-header .opdracht span {
     width: auto;
   }
 
-  .topbar.learning-header .learning-nav-group .progress-chip {
+  .topbar.learning-header .learning-nav-group .progress-chip,
+  .topbar.learning-header .learning-nav-group .tour-start-button {
     width: auto;
   }
 }
@@ -1094,7 +1179,8 @@ html.dark .topbar.learning-header .opdracht span {
   .topbar.learning-header .toolbar > button,
   .topbar.learning-header .app-actions > button,
   .topbar.learning-header .app-actions > .btn,
-  .topbar.learning-header .progress-chip {
+  .topbar.learning-header .progress-chip,
+  .topbar.learning-header .tour-start-button {
     width: 100%;
   }
 
@@ -1128,10 +1214,7 @@ html.dark .topbar.learning-header .opdracht span {
         <button id="tab-turtle1" class="tab" role="tab" aria-selected="false">Turtle (Blokken)</button>
         <button id="tab-turtle2" class="tab" role="tab" aria-selected="false">Turtle (Code)</button>
       </div>
-      <div class="progress-chip" id="progress-chip" aria-live="polite">
-        <span class="progress-dot" aria-hidden="true"></span>
-        <span id="progress-summary">Voortgang: 0/40</span>
-      </div>
+      <button class="tour-start-button" id="tour-start" type="button">Start rondleiding</button>
     </div>
 
     <div class="opdracht" id="opdracht">
@@ -2049,12 +2132,56 @@ const overlay = $('success-overlay'),
       successFeedback = $('success-feedback');
 const copySolution = $('copy-solution'); 
 const progressSummary = $('progress-summary');
+const tourStartBtn = $('tour-start');
 const resetProgressBtn = $('reset-progress');
 const resetModal = $('reset-modal');
 const resetCurrentBtn = $('reset-current');
 const resetAllBtn = $('reset-all');
 const resetCancelBtn = $('reset-cancel');
 const resetCurrentContext = $('reset-current-context');
+const TOUR_COMPLETED_KEY = 'aik_blockly_tour_completed_v1';
+let activeTourCleanup = null;
+
+const BLOCKLY_TOUR = {
+  title: 'Wegwijs in Blockly',
+  steps: [
+    {
+      selector: '.tabs.exercise-progress',
+      title: 'Kies je oefenomgeving',
+      text: 'Hier wissel je tussen Maze met blokken, Maze in code, Turtle met blokken en Turtle in code.'
+    },
+    {
+      selector: '#opdracht',
+      title: 'Opdracht',
+      text: 'Bovenaan lees je telkens welke oefening actief is en waar je op moet letten.'
+    },
+    {
+      selector: '#blocklyArea',
+      title: 'Werkruimte',
+      text: 'In deze ruimte bouw je je algoritme door blokken te slepen, te verbinden en uit te proberen.'
+    },
+    {
+      target: 'blockly-toolbox',
+      title: 'Blokkenbak',
+      text: 'Links vind je de blokken die passen bij de huidige oefening. Gebruik ze als bouwstenen voor je oplossing.'
+    },
+    {
+      selector: '#controls-maze1',
+      title: 'Testen',
+      text: 'Met Uitvoeren speel je je oplossing stap voor stap af. De levelkeuze en snelheid staan hiernaast.'
+    },
+    {
+      selector: '#mazeCanvas',
+      title: 'Resultaat',
+      text: 'Hier zie je wat je algoritme doet. Fouten worden zichtbaar doordat het poppetje vastloopt of verkeerd draait.'
+    },
+    {
+      selector: '#fab-help',
+      title: 'Formularium',
+      text: 'Met het vraagteken open je het formularium wanneer je blokken, kleuren of Turtle-commando’s wil nakijken.'
+    }
+  ]
+};
 
 const randomControls        = $('random-controls');
 const randomDifficultyInput = $('random-difficulty');
@@ -2354,6 +2481,305 @@ if (randomDifficultyInput && randomDifficultyLabel) {
         renderProgressSummary();
       }
     }
+
+    function readTourCompleted(){
+      try {
+        return localStorage.getItem(TOUR_COMPLETED_KEY) === 'true';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function writeTourCompleted(){
+      try {
+        localStorage.setItem(TOUR_COMPLETED_KEY, 'true');
+      } catch (_) {}
+    }
+
+    function updateTourStartButton(){
+      if (!tourStartBtn) return;
+      const completed = readTourCompleted();
+      tourStartBtn.textContent = completed ? 'Rondleiding opnieuw starten' : 'Start rondleiding';
+      tourStartBtn.classList.toggle('tour-start-nudge', !completed);
+      tourStartBtn.setAttribute(
+        'aria-label',
+        completed ? 'Rondleiding opnieuw starten' : 'Start rondleiding'
+      );
+    }
+
+    function clearActiveTour(){
+      if (typeof activeTourCleanup === 'function') {
+        const cleanup = activeTourCleanup;
+        activeTourCleanup = null;
+        cleanup();
+        return;
+      }
+      document.querySelector('.tour-overlay')?.remove();
+      document.body.classList.remove('tour-active');
+    }
+
+    function hideTourBlockingUi(){
+      if (typeof setFormVisible === 'function') setFormVisible(false);
+      document.getElementById('success-overlay')?.classList.add('hidden');
+      document.getElementById('error-overlay')?.classList.add('hidden');
+      document.getElementById('reset-modal')?.classList.add('hidden');
+      document.getElementById('pdf-modal')?.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    }
+
+    function prepareBlocklyTourDemoEnvironment(){
+      const safely = (fn) => {
+        try {
+          fn();
+        } catch (error) {
+          console.warn('Tour demo setup overgeslagen:', error);
+        }
+      };
+
+      safely(hideTourBlockingUi);
+      safely(() => {
+        if (typeof stopPlayback === 'function') stopPlayback();
+      });
+      safely(() => {
+        if (activeMode !== 'maze1' && typeof setMode === 'function') {
+          setMode('maze1');
+        }
+      });
+      safely(() => {
+        if (levelSel1) levelSel1.value = '1';
+        if (levelSel2) levelSel2.value = '1';
+        randomControls?.classList.add('hidden');
+      });
+      safely(() => {
+        if (typeof loadLevel === 'function') loadLevel(1);
+      });
+      safely(resetVisibleWorkSurface);
+
+      if (previewNote) {
+        previewNote.textContent = 'Maze: je algoritme speelt stap voor stap af. Pas de snelheid aan (tot 1000 ms).';
+      }
+      if (editorNote) {
+        editorNote.textContent = 'Demo klaar: volg de rondleiding of pas de blokken meteen aan.';
+      }
+
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      requestAnimationFrame(() => {
+        safely(() => {
+          if (typeof fitBlockly === 'function') fitBlockly();
+        });
+        safely(() => {
+          if (typeof resizeMazeCanvas === 'function') resizeMazeCanvas();
+        });
+      });
+    }
+
+    function makeTourButton(label, extraClass = ''){
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `btn ${extraClass}`.trim();
+      button.textContent = label;
+      return button;
+    }
+
+    function startBlocklyTour(){
+      const steps = Array.isArray(BLOCKLY_TOUR.steps) ? BLOCKLY_TOUR.steps : [];
+      if (!steps.length) return;
+
+      clearActiveTour();
+      prepareBlocklyTourDemoEnvironment();
+
+      let stepIndex = 0;
+      const tourOverlay = document.createElement('div');
+      tourOverlay.className = 'tour-overlay';
+      tourOverlay.setAttribute('aria-live', 'polite');
+
+      const highlight = document.createElement('div');
+      highlight.className = 'tour-highlight';
+
+      const callout = document.createElement('section');
+      callout.className = 'tour-callout';
+      callout.setAttribute('role', 'dialog');
+      callout.setAttribute('aria-label', BLOCKLY_TOUR.title || 'Rondleiding');
+
+      const title = document.createElement('h3');
+      const text = document.createElement('p');
+      const status = document.createElement('span');
+      status.className = 'tour-status';
+
+      const controls = document.createElement('div');
+      controls.className = 'tour-controls';
+      const prevButton = makeTourButton('Vorige');
+      const nextButton = makeTourButton('Volgende', 'primary');
+      const skipButton = makeTourButton('Overslaan');
+      controls.append(prevButton, nextButton, skipButton);
+      callout.append(title, text, status, controls);
+      tourOverlay.append(highlight, callout);
+
+      function usableTarget(target){
+        if (!target || target === document.body) return false;
+        const rect = target.getBoundingClientRect();
+        const style = getComputedStyle(target);
+        return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+      }
+
+      function createVirtualTarget(rectGetter){
+        return {
+          getBoundingClientRect: rectGetter
+        };
+      }
+
+      function findBlocklyToolboxTarget(){
+        const selectors = [
+          '.blocklyToolboxDiv',
+          '.blocklyToolboxContents',
+          '.blocklyTreeRoot',
+          '.blocklyToolboxCategory'
+        ];
+        for (const selector of selectors) {
+          const target = document.querySelector(selector);
+          if (usableTarget(target)) return target;
+        }
+
+        const area = document.querySelector('#blocklyArea');
+        if (!usableTarget(area)) return null;
+
+        return createVirtualTarget(() => {
+          const rect = area.getBoundingClientRect();
+          const width = Math.min(Math.max(120, rect.width * 0.24), 220);
+          return {
+            x: rect.left,
+            y: rect.top,
+            left: rect.left,
+            top: rect.top,
+            right: rect.left + width,
+            bottom: rect.bottom,
+            width,
+            height: rect.height
+          };
+        });
+      }
+
+      function getStepTarget(step){
+        if (step?.target === 'blockly-toolbox') {
+          return findBlocklyToolboxTarget() || document.querySelector('#blocklyArea') || document.body;
+        }
+        const target = step?.selector ? document.querySelector(step.selector) : null;
+        if (usableTarget(target)) return target;
+        return document.querySelector('#opdracht') || document.querySelector('.wrap') || document.body;
+      }
+
+      function positionTour(){
+        const step = steps[stepIndex];
+        const target = getStepTarget(step);
+        const firstRect = target.getBoundingClientRect();
+        const offscreen =
+          firstRect.top < 0 ||
+          firstRect.left < 0 ||
+          firstRect.bottom > window.innerHeight ||
+          firstRect.right > window.innerWidth;
+
+        if (target !== document.body && offscreen && typeof target.scrollIntoView === 'function') {
+          target.scrollIntoView({ block: 'center', inline: 'center', behavior: 'auto' });
+        }
+
+        const rect = target.getBoundingClientRect();
+        const margin = 8;
+        const left = Math.max(8, rect.left - margin);
+        const top = Math.max(8, rect.top - margin);
+        const width = Math.min(window.innerWidth - left - 8, rect.width + margin * 2);
+        const height = Math.min(window.innerHeight - top - 8, rect.height + margin * 2);
+
+        highlight.style.left = `${left}px`;
+        highlight.style.top = `${top}px`;
+        highlight.style.width = `${Math.max(56, width)}px`;
+        highlight.style.height = `${Math.max(40, height)}px`;
+
+        const calloutWidth = Math.min(360, window.innerWidth - 24);
+        callout.style.width = `${calloutWidth}px`;
+        const measuredHeight = Math.min(callout.offsetHeight || 220, window.innerHeight - 24);
+        const roomRight = window.innerWidth - (left + width + 14);
+        const calloutLeft = roomRight >= calloutWidth
+          ? left + width + 14
+          : Math.max(12, Math.min(left, window.innerWidth - calloutWidth - 12));
+
+        let calloutTop = top + height + 12;
+        if (calloutTop + measuredHeight > window.innerHeight - 12) {
+          calloutTop = top - measuredHeight - 12;
+        }
+        if (calloutTop < 12) {
+          calloutTop = Math.max(12, Math.min(top, window.innerHeight - measuredHeight - 12));
+        }
+
+        callout.style.left = `${calloutLeft}px`;
+        callout.style.top = `${calloutTop}px`;
+      }
+
+      function renderStep(){
+        const step = steps[stepIndex];
+        title.textContent = step.title || `Stap ${stepIndex + 1}`;
+        text.textContent = step.text || '';
+        status.textContent = `Stap ${stepIndex + 1} van ${steps.length}`;
+        prevButton.disabled = stepIndex === 0;
+        nextButton.textContent = stepIndex === steps.length - 1 ? 'Klaar' : 'Volgende';
+        positionTour();
+        requestAnimationFrame(positionTour);
+      }
+
+      function finishTour(markComplete){
+        clearActiveTour();
+        if (markComplete) {
+          writeTourCompleted();
+          updateTourStartButton();
+        }
+        tourStartBtn?.focus();
+      }
+
+      function onKeyDown(event){
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          finishTour(false);
+        } else if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          nextButton.click();
+        } else if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          prevButton.click();
+        }
+      }
+
+      document.body.appendChild(tourOverlay);
+      document.body.classList.add('tour-active');
+      activeTourCleanup = () => {
+        window.removeEventListener('resize', positionTour);
+        window.removeEventListener('scroll', positionTour, true);
+        document.removeEventListener('keydown', onKeyDown);
+        tourOverlay.remove();
+        document.body.classList.remove('tour-active');
+      };
+      window.addEventListener('resize', positionTour);
+      window.addEventListener('scroll', positionTour, true);
+      document.addEventListener('keydown', onKeyDown);
+
+      prevButton.addEventListener('click', () => {
+        stepIndex = Math.max(0, stepIndex - 1);
+        renderStep();
+      });
+      nextButton.addEventListener('click', () => {
+        if (stepIndex >= steps.length - 1) {
+          finishTour(true);
+          return;
+        }
+        stepIndex += 1;
+        renderStep();
+      });
+      skipButton.addEventListener('click', () => finishTour(false));
+
+      renderStep();
+      nextButton.focus();
+    }
+
+    tourStartBtn?.addEventListener('click', startBlocklyTour);
+    updateTourStartButton();
 
     function resetCurrentExerciseProgress(){
       replaceProgressStoreRecord(makeExerciseKey());
@@ -3580,6 +4006,11 @@ window.notDone = function(){
     }
 
     function resizeTurtleCanvas(){
+      if (!bgCanvas || !drawCanvas || !curCanvas) return;
+      ctxBG = ctxBG || bgCanvas.getContext('2d');
+      ctxDraw = ctxDraw || drawCanvas.getContext('2d');
+      ctxCur = ctxCur || curCanvas.getContext('2d');
+      if (!ctxBG || !ctxDraw || !ctxCur) return;
       const dpr = Math.max(1, window.devicePixelRatio || 1);
       const rect = measureTurtleBox();
       [bgCanvas,drawCanvas,curCanvas].forEach(cv=>{
@@ -5094,6 +5525,26 @@ document.addEventListener('DOMContentLoaded', () => {
   "Maze (Code)": "Maze (Code)",
   "Turtle (Blokken)": "Turtle (Blocks)",
   "Turtle (Code)": "Turtle (Code)",
+  "Start rondleiding": "Start tour",
+  "Rondleiding opnieuw starten": "Restart tour",
+  "Wegwijs in Blockly": "Getting around Blockly",
+  "Kies je oefenomgeving": "Choose your practice environment",
+  "Opdracht": "Assignment",
+  "Werkruimte": "Workspace",
+  "Blokkenbak": "Block toolbox",
+  "Resultaat": "Result",
+  "Vorige": "Previous",
+  "Volgende": "Next",
+  "Overslaan": "Skip",
+  "Klaar": "Done",
+  "Hier wissel je tussen Maze met blokken, Maze in code, Turtle met blokken en Turtle in code.": "Here you switch between Maze with blocks, Maze in code, Turtle with blocks and Turtle in code.",
+  "Bovenaan lees je telkens welke oefening actief is en waar je op moet letten.": "At the top you can always see which exercise is active and what to pay attention to.",
+  "In deze ruimte bouw je je algoritme door blokken te slepen, te verbinden en uit te proberen.": "In this workspace you build your algorithm by dragging, connecting and testing blocks.",
+  "Links vind je de blokken die passen bij de huidige oefening. Gebruik ze als bouwstenen voor je oplossing.": "On the left you find the blocks for the current exercise. Use them as building blocks for your solution.",
+  "Met Uitvoeren speel je je oplossing stap voor stap af. De levelkeuze en snelheid staan hiernaast.": "Use Run to play your solution step by step. The level choice and speed are next to it.",
+  "Hier zie je wat je algoritme doet. Fouten worden zichtbaar doordat het poppetje vastloopt of verkeerd draait.": "Here you see what your algorithm does. Mistakes become visible when the character gets stuck or turns the wrong way.",
+  "Met het vraagteken open je het formularium wanneer je blokken, kleuren of Turtle-commando’s wil nakijken.": "Use the question mark to open the reference sheet when you want to check blocks, colours or Turtle commands.",
+  "Demo klaar: volg de rondleiding of pas de blokken meteen aan.": "Demo ready: follow the tour or start changing the blocks right away.",
   "Wis opgeslagen voortgang": "Clear saved progress",
   "⤓ Exporteren naar PDF": "⤓ Export to PDF",
   "— 0/∞": "— 0/∞",
@@ -5200,6 +5651,10 @@ document.addEventListener('DOMContentLoaded', () => {
   {
     "pattern": "^Pogingen: (.+) \\| Tijd: (.+)$",
     "replacement": "Attempts: $1 | Time: $2"
+  },
+  {
+    "pattern": "^Stap (.+) van (.+)$",
+    "replacement": "Step $1 of $2"
   },
   {
     "pattern": "^Level (.+)$",
