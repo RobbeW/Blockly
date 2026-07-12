@@ -559,14 +559,43 @@
       box-shadow:none;
     }
 
-    .tab.active{
-      background:var(--brand-purple);
-      color:#fff;
-      opacity:1;
-      box-shadow:0 0 0 3px #ece6fa;
-    }
+.tab.active{
+  background:var(--brand-purple);
+  color:#fff;
+  opacity:1;
+  box-shadow:0 0 0 3px #ece6fa;
+}
 
-    .progress-chip{
+/* Exercise choices follow the shared Smart Plants workflow-control model. */
+.tabs .tab {
+  border: 1px solid rgba(82, 0, 255, 0.32);
+  background: #ffffff;
+  color: var(--brand-purple);
+  transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-medium) var(--ease-standard);
+}
+.tabs .tab.active {
+  border-color: var(--brand-purple);
+  background: var(--brand-purple);
+  color: #ffffff;
+}
+.tabs .tab:hover,
+.tabs .tab:focus-visible {
+  border-color: var(--brand-purple);
+  background: var(--brand-softer, #f7f3ff);
+  color: var(--brand-purple-dark, #3700b3);
+  transform: translateY(-2px);
+}
+.tabs .tab.active:hover,
+.tabs .tab.active:focus-visible {
+  background: var(--brand-purple);
+  color: #ffffff;
+}
+.tabs .tab:focus-visible {
+  outline: 3px solid rgba(61, 255, 208, 0.6);
+  outline-offset: 2px;
+}
+
+.progress-chip{
       min-height:42px;
       border:1px solid #ececf3;
       background:#fff;
