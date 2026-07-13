@@ -140,6 +140,33 @@
       font-size: 0.94rem;
     }
 
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+
+    .menu-button {
+      display: none;
+      min-height: 46px;
+      border: 1px solid rgba(82, 0, 255, 0.22);
+      border-radius: 999px;
+      padding: 13px 16px;
+      background: #fff;
+      color: var(--brand-dark);
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .menu-button:hover,
+    .menu-button:focus-visible {
+      background: var(--soft);
+      outline: none;
+    }
+
     .nav-links a {
       padding: 10px 12px;
       border-radius: 999px;
@@ -669,7 +696,22 @@
       .delphi-dodona-pair { grid-template-columns: 1fr; }
       .tree-branches::before,
       .tree-branch::before { display: none; }
-      .nav-links { display: none; }
+      .nav {
+        flex-wrap: wrap;
+        row-gap: 0;
+      }
+      .nav-links {
+        display: none;
+        order: 3;
+        width: 100%;
+        padding: 8px 0 2px;
+      }
+      .nav-links.is-open {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .nav-links a { text-align: center; }
+      .menu-button { display: inline-flex; }
       .cta-band { align-items: flex-start; flex-direction: column; }
     }
 
@@ -679,6 +721,11 @@
       .hero { padding-top: 48px; }
       .hero-card { padding: 16px; }
       .mock-body { grid-template-columns: 1fr; }
+      .brand-subtitle { display: none; }
+      .nav-actions { gap: 8px; }
+      .nav-actions .btn-primary { padding-inline: 14px; }
+      .nav-links.is-open { grid-template-columns: 1fr; }
+      .nav-links a { text-align: left; }
       .grid,
       .feature-grid,
       .path-grid { grid-template-columns: 1fr; }
@@ -748,16 +795,21 @@
           <span class="brand-subtitle">AI in de Klas · Robbe Wulgaert</span>
         </span>
       </a>
-      <div class="nav-links" aria-label="Paginaonderdelen">
+      <div class="nav-links" id="navLinks" aria-label="Paginaonderdelen">
         <a href="#werking">Opdracht</a>
         <a href="#groeipad">Leerlijn</a>
         <a href="#leerkrachten">Leerkrachten</a>
       </div>
-      <div class="language-toggle" role="group" aria-label="Taalkeuze">
+      <div class="nav-actions">
+        <div class="language-toggle" role="group" aria-label="Taalkeuze">
           <button type="button" class="is-active" data-language-choice="nl" aria-pressed="true">NL</button>
           <button type="button" data-language-choice="en" aria-pressed="false">ENG</button>
         </div>
-      <a class="btn btn-primary" href="platform.html">Start leerplatform</a>
+        <a class="btn btn-primary" href="platform.html">Start leerplatform</a>
+        <button class="menu-button" id="menuButton" type="button" aria-expanded="false" aria-controls="navLinks">
+          Menu
+        </button>
+      </div>
     </nav>
   </header>
 
@@ -1012,6 +1064,22 @@
       </div>
     </div>
   </footer>
+  <script>
+    const menuButton = document.getElementById("menuButton");
+    const navLinks = document.querySelector(".nav-links");
+
+    menuButton?.addEventListener("click", () => {
+      const isOpen = navLinks.classList.toggle("is-open");
+      menuButton.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    navLinks?.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLAnchorElement) {
+        navLinks.classList.remove("is-open");
+        menuButton.setAttribute("aria-expanded", "false");
+      }
+    });
+  </script>
 <script id="language-toggle-script">
 (() => {
   const LANGUAGE_KEY = "aiindeklas:index-language";
