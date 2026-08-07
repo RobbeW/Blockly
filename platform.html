@@ -17,6 +17,11 @@
   <link rel="shortcut icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="common/common.css" />
   <meta name="color-scheme" content="light">
+  <script>
+    if (new URLSearchParams(location.search).get('teacher') === '1') {
+      document.documentElement.classList.add('teacher-embed');
+    }
+  </script>
 
   <style>
     :root{
@@ -1234,6 +1239,49 @@ html.dark .topbar.learning-header .opdracht span {
   }
 }
 
+/* Compact chrome when the platform is embedded in teacher.html. */
+html.teacher-embed .topbar.learning-header .opdracht,
+html.teacher-embed .topbar.learning-header .language-toggle {
+  display: none !important;
+}
+
+html.teacher-embed body > header.topbar.learning-header {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  grid-template-areas: "nav actions" !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+}
+
+html.teacher-embed .topbar.learning-header .learning-nav-group {
+  grid-area: nav !important;
+}
+
+html.teacher-embed .topbar.learning-header .toolbar {
+  grid-area: actions !important;
+  width: auto !important;
+}
+
+html.teacher-embed .topbar.learning-header .tab,
+html.teacher-embed .topbar.learning-header .tour-start-button,
+html.teacher-embed .topbar.learning-header .toolbar > button {
+  min-height: 36px !important;
+  padding: 7px 10px !important;
+  font-size: 12px !important;
+}
+
+@media (max-width: 1040px) {
+  html.teacher-embed body > header.topbar.learning-header {
+    grid-template-columns: 1fr !important;
+    grid-template-areas: "nav" "actions" !important;
+  }
+
+  html.teacher-embed .topbar.learning-header .toolbar {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -2189,11 +2237,11 @@ const BLOCKLY_TOUR = {
       title: 'Kies je oefenomgeving',
       text: 'Hier wissel je tussen Maze met blokken, Maze in code, Turtle met blokken en Turtle in code.'
     },
-    {
+    ...(document.documentElement.classList.contains('teacher-embed') ? [] : [{
       selector: '#opdracht',
       title: 'Opdracht',
       text: 'Bovenaan lees je telkens welke oefening actief is en waar je op moet letten.'
-    },
+    }]),
     {
       selector: '#blocklyArea',
       title: 'Werkruimte',

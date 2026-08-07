@@ -1,0 +1,2148 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5200ff">
+  <meta name="description" content="Docentenbord voor Blockly in de Klas: syllabus, pen en oefenplatform in één klasgebonden werkomgeving.">
+  <title>Docentenbord · Blockly in de Klas</title>
+  <link rel="icon" href="favicon.png">
+  <style>
+    :root {
+      color-scheme: light;
+      --brand: #5200ff;
+      --brand-dark: #3700b3;
+      --ink: #160033;
+      --muted: #625b70;
+      --soft: #f7f3ff;
+      --mint: #3dffd0;
+      --soft-mint: #e8fff8;
+      --border: #ddd6ea;
+      --surface: #ffffff;
+      --workspace: #ece8f3;
+      --shadow: 0 16px 42px rgba(22, 0, 51, .16);
+      --motion-fast: 150ms;
+      --motion-medium: 260ms;
+      --ease-standard: cubic-bezier(.2, 0, 0, 1);
+      --book-width: 46%;
+      font-family: Roboto, Arial, Helvetica, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: var(--ink);
+      background: var(--workspace);
+    }
+
+    button, select, input { font: inherit; }
+
+    button, select {
+      min-height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--ink);
+      background: var(--surface);
+    }
+
+    button {
+      padding: 7px 11px;
+      font-weight: 750;
+      cursor: pointer;
+      transition:
+        transform var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard),
+        background var(--motion-fast) var(--ease-standard),
+        border-color var(--motion-fast) var(--ease-standard),
+        color var(--motion-fast) var(--ease-standard);
+    }
+
+    button:hover:not([disabled]) {
+      border-color: rgba(82, 0, 255, .46);
+      box-shadow: 0 9px 22px rgba(82, 0, 255, .12);
+      transform: translateY(-1px);
+    }
+
+    button:active:not([disabled]) {
+      box-shadow: 0 3px 10px rgba(82, 0, 255, .1);
+      transform: translateY(0);
+    }
+
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(61, 255, 208, .42);
+    }
+
+    button[disabled] { cursor: not-allowed; opacity: .45; }
+
+    .app {
+      height: 100dvh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .teacher-header {
+      position: relative;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: minmax(180px, auto) minmax(440px, 1fr) minmax(480px, 1.15fr) minmax(220px, auto);
+      grid-template-areas:
+        "brand class lesson view"
+        "brand class lesson status";
+      align-items: center;
+      gap: 8px 16px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, .97);
+      box-shadow: 0 4px 18px rgba(22, 0, 51, .08);
+    }
+
+    .brand-lockup {
+      grid-area: brand;
+      align-self: center;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: white;
+      background: var(--brand);
+      box-shadow: inset 0 -4px 0 rgba(22, 0, 51, .18);
+      font-weight: 900;
+      letter-spacing: -.05em;
+    }
+
+    .brand-copy { min-width: 0; }
+
+    .eyebrow {
+      display: block;
+      margin-bottom: 1px;
+      color: var(--brand-dark);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      overflow: hidden;
+      font-size: clamp(16px, 1.25vw, 21px);
+      line-height: 1.05;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .control-cluster {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .control-cluster button { flex: 0 0 auto; white-space: nowrap; }
+
+    .class-cluster,
+    .lesson-cluster {
+      display: grid;
+      width: 100%;
+      max-width: none;
+      justify-self: stretch;
+      padding: 4px 6px;
+      border: 1px solid rgba(82, 0, 255, .1);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(247, 243, 255, .86), rgba(255, 255, 255, .96));
+    }
+
+    .class-cluster {
+      grid-area: class;
+      grid-template-columns: auto minmax(150px, 1fr) auto auto auto;
+    }
+
+    .lesson-cluster {
+      grid-area: lesson;
+      grid-template-columns: auto minmax(150px, 1fr) minmax(82px, .45fr) auto;
+    }
+
+    .class-cluster select,
+    .lesson-cluster select {
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+    }
+
+    .view-cluster { grid-area: view; justify-content: flex-end; }
+
+    .control-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    select {
+      padding: 6px 30px 6px 10px;
+      max-width: 230px;
+      font-weight: 700;
+    }
+
+    .class-select { min-width: 190px; }
+    .mode-select { min-width: 190px; }
+    .level-select { min-width: 92px; }
+
+    .primary-button {
+      border-color: var(--brand);
+      color: white;
+      background: var(--brand);
+      box-shadow: 0 10px 22px rgba(82, 0, 255, .2);
+    }
+
+    .primary-button:hover { background: var(--brand-dark); }
+
+    .compact-button { min-width: 36px; padding-inline: 9px; }
+
+    .status-cluster {
+      grid-area: status;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #1f9d71;
+      box-shadow: 0 0 0 4px rgba(31, 157, 113, .12);
+    }
+
+    .status-dot.is-saving { background: #ff9f1c; }
+    .status-dot.is-error { background: #d7263d; }
+
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(430px, var(--book-width)) 8px minmax(570px, 1fr);
+      overflow: hidden;
+    }
+
+    .workspace[data-layout="book"] { grid-template-columns: minmax(0, 1fr); }
+    .workspace[data-layout="platform"] { grid-template-columns: minmax(0, 1fr); }
+    .workspace[data-layout="book"] .platform-shell,
+    .workspace[data-layout="book"] .splitter,
+    .workspace[data-layout="platform"] .book-shell,
+    .workspace[data-layout="platform"] .splitter { display: none; }
+
+    .book-shell,
+    .platform-shell {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      background: var(--surface);
+    }
+
+    .book-shell {
+      container-type: inline-size;
+      container-name: book-pane;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    .platform-shell { grid-template-rows: auto minmax(0, 1fr); }
+
+    .book-toolbar,
+    .platform-toolbar {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 9px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .page-heading {
+      min-width: 120px;
+      flex: 1 1 auto;
+      padding-inline: 5px;
+      overflow: hidden;
+    }
+
+    .page-heading strong,
+    .platform-heading strong {
+      display: block;
+      overflow: hidden;
+      font-size: 13px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .page-heading span,
+    .platform-heading span {
+      display: block;
+      margin-top: 1px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.1;
+    }
+
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding-left: 7px;
+      border-left: 1px solid var(--border);
+    }
+
+    .tool-button {
+      flex: 0 0 auto;
+      min-height: 32px;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .tool-button[aria-pressed="true"] {
+      border-color: var(--brand);
+      color: white;
+      background: var(--brand);
+    }
+
+    .colour-input {
+      width: 32px;
+      height: 32px;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .width-select { min-height: 32px; max-width: 76px; padding-block: 4px; font-size: 11px; }
+
+    .book-body {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 104px minmax(0, 1fr);
+      overflow: hidden;
+      background: var(--workspace);
+    }
+
+    .book-body.thumbs-hidden { grid-template-columns: minmax(0, 1fr); }
+    .book-body.thumbs-hidden .thumbnail-rail { display: none; }
+
+    .thumbnail-rail {
+      min-height: 0;
+      padding: 8px 7px 20px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      background: #f8f6fb;
+      scrollbar-width: thin;
+    }
+
+    .thumbnail-button {
+      width: 100%;
+      min-height: 0;
+      display: block;
+      margin: 0 0 8px;
+      padding: 4px;
+      border: 2px solid transparent;
+      border-radius: 9px;
+      background: transparent;
+    }
+
+    .thumbnail-button:hover { border-color: var(--border); }
+
+    .thumbnail-button[aria-current="page"] {
+      border-color: var(--brand);
+      background: var(--soft);
+    }
+
+    .thumbnail-button canvas {
+      width: 100%;
+      display: block;
+      aspect-ratio: 210 / 297;
+      border: 1px solid var(--border);
+      background: white;
+    }
+
+    .thumbnail-button span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .page-stage {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 18px;
+      overflow: auto;
+      overscroll-behavior: contain;
+      background:
+        linear-gradient(rgba(82, 0, 255, .025), rgba(82, 0, 255, .025)),
+        var(--workspace);
+    }
+
+    .paper {
+      position: relative;
+      width: 500px;
+      flex: 0 0 auto;
+      margin-inline: auto;
+      aspect-ratio: 210 / 297;
+      overflow: hidden;
+      border: 1px solid #cbc4d9;
+      background: white;
+      box-shadow: var(--shadow);
+      transform-origin: top center;
+    }
+
+    .pdf-page-canvas,
+    .ink-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .pdf-page-canvas {
+      z-index: 1;
+      display: block;
+      user-select: none;
+    }
+
+    .ink-canvas {
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .ink-canvas.is-drawing {
+      pointer-events: auto;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .paper-loading {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background: white;
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .paper-loading[hidden] { display: none; }
+
+    .splitter {
+      position: relative;
+      z-index: 5;
+      cursor: col-resize;
+      background: var(--border);
+      touch-action: none;
+    }
+
+    .splitter::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 2px;
+      width: 4px;
+      height: 52px;
+      border-radius: 9px;
+      background: var(--brand);
+      transform: translateY(-50%);
+    }
+
+    .platform-toolbar {
+      justify-content: space-between;
+      padding-inline: 12px;
+    }
+
+    .platform-heading { min-width: 0; }
+
+    .platform-link {
+      color: var(--brand-dark);
+      font-size: 11px;
+      font-weight: 850;
+      text-decoration: none;
+    }
+
+    .platform-link:hover { text-decoration: underline; }
+
+    .platform-frame {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border: 0;
+      background: white;
+    }
+
+    .screen-reader-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 100;
+      left: 50%;
+      bottom: 22px;
+      max-width: min(520px, calc(100vw - 32px));
+      padding: 11px 15px;
+      border: 1px solid rgba(82, 0, 255, .18);
+      border-radius: 12px;
+      color: var(--ink);
+      background: white;
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      font-weight: 750;
+      transform: translate(-50%, 18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .16s ease, transform .16s ease;
+    }
+
+    .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+
+    .protocol-warning {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(22, 0, 51, .72);
+      backdrop-filter: blur(8px);
+    }
+
+    .protocol-warning[hidden] { display: none; }
+
+    .protocol-warning-card {
+      width: min(620px, 100%);
+      padding: 28px;
+      border: 1px solid rgba(82, 0, 255, .18);
+      border-radius: 22px;
+      background: white;
+      box-shadow: 0 30px 90px rgba(22, 0, 51, .34);
+    }
+
+    .protocol-warning-card h2 { margin: 4px 0 10px; color: var(--brand-dark); font-size: 24px; }
+    .protocol-warning-card p { margin: 0 0 14px; color: var(--muted); line-height: 1.55; }
+    .protocol-warning-card ol { margin: 0 0 20px; padding-left: 22px; line-height: 1.7; }
+
+    .protocol-warning-kicker {
+      color: var(--brand);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .protocol-warning-action {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 999px;
+      color: white;
+      background: var(--brand);
+      font-weight: 850;
+      text-decoration: none;
+    }
+
+    .protocol-warning-action:hover,
+    .protocol-warning-action:focus-visible { background: var(--brand-dark); }
+
+    dialog {
+      width: min(420px, calc(100vw - 28px));
+      padding: 0;
+      border: 0;
+      border-radius: 16px;
+      color: var(--ink);
+      background: white;
+      box-shadow: 0 26px 80px rgba(22, 0, 51, .28);
+    }
+
+    dialog::backdrop { background: rgba(22, 0, 51, .45); backdrop-filter: blur(3px); }
+
+    .dialog-body { padding: 22px; }
+    .dialog-body h2 { margin: 0 0 6px; color: var(--brand); font-size: 22px; }
+    .dialog-body p { margin: 0 0 18px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .dialog-body label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 850; }
+    .dialog-body input[type="text"] {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--ink);
+    }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+    @media (max-width: 1500px) {
+      .teacher-header {
+        grid-template-columns: minmax(205px, auto) minmax(0, 1fr) auto;
+        grid-template-areas:
+          "brand class status"
+          "lesson lesson view";
+      }
+      .status-cluster { justify-content: flex-end; }
+    }
+
+    @media (max-width: 1240px) {
+      .workspace { grid-template-columns: minmax(390px, 45%) 8px minmax(520px, 1fr); }
+      .tool-button .wide-label { display: none; }
+    }
+
+    @media (max-width: 1080px) {
+      .teacher-header {
+        grid-template-columns: minmax(205px, auto) minmax(0, 1fr) auto;
+        grid-template-areas:
+          "brand view status"
+          "class class class"
+          "lesson lesson lesson";
+      }
+      .class-cluster,
+      .lesson-cluster {
+        display: flex;
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .class-cluster select,
+      .lesson-cluster select { width: auto; }
+      .view-cluster { justify-self: start; }
+    }
+
+    @media (max-width: 1080px) {
+      body { overflow: auto; }
+      .app {
+        height: 100dvh;
+        min-height: 0;
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+      .workspace {
+        height: 100%;
+        min-height: 660px;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(330px, 54fr) minmax(330px, 46fr);
+      }
+      .workspace[data-layout="split"] .splitter { display: none; }
+      .workspace[data-layout="book"],
+      .workspace[data-layout="platform"] { grid-template-rows: minmax(0, 1fr); }
+      .book-shell, .platform-shell { min-height: 330px; }
+    }
+
+    @media (max-width: 640px) {
+      .teacher-header {
+        grid-template-columns: 1fr;
+        grid-template-areas: "brand" "class" "lesson" "view" "status";
+        gap: 7px;
+      }
+      .status-cluster { justify-content: flex-start; }
+      .control-cluster { flex-wrap: wrap; }
+      .class-cluster,
+      .lesson-cluster { justify-content: flex-start; }
+      .view-cluster { justify-content: flex-start; }
+      .class-select { min-width: 145px; }
+      .book-body { grid-template-columns: 82px minmax(0, 1fr); }
+      .page-stage { padding: 10px; }
+    }
+
+    @container book-pane (max-width: 820px) {
+      .book-toolbar { flex-wrap: wrap; }
+      .page-heading { min-width: 150px; flex: 1 1 180px; }
+      .tool-group[aria-label="Zoom"] { order: 1; }
+      .tool-group[aria-label="Schrijfwerktuigen"] {
+        order: 2;
+        flex: 1 1 100%;
+        flex-wrap: wrap;
+        padding-left: 0;
+        border-left: 0;
+      }
+    }
+
+    @container book-pane (max-width: 560px) {
+      .tool-button .wide-label { display: none; }
+      .book-toolbar { padding-inline: 6px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+
+    @media print {
+      .teacher-header, .book-toolbar, .thumbnail-rail, .platform-shell, .splitter { display: none !important; }
+      body, .app, .workspace, .book-shell, .book-body, .page-stage { display: block; height: auto; overflow: visible; background: white; }
+      .paper { width: 210mm !important; height: 297mm; border: 0; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="teacher-header" aria-label="Docentenbediening">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true">B</div>
+        <div class="brand-copy">
+          <span class="eyebrow">Blockly in de Klas</span>
+          <h1>Docentenbord</h1>
+        </div>
+      </div>
+
+      <div class="control-cluster class-cluster">
+        <span class="control-label">Klas</span>
+        <label class="screen-reader-only" for="class-select">Actieve klas</label>
+        <select id="class-select" class="class-select" aria-label="Actieve klas"></select>
+        <button id="new-class" class="primary-button" type="button">Nieuwe klas</button>
+        <button id="backup-button" type="button" title="Download alle klassen en aantekeningen">Back-up</button>
+        <button id="import-button" type="button" title="Importeer een eerder gedownloade back-up">Importeer</button>
+        <input id="import-input" class="screen-reader-only" type="file" accept="application/json,.json">
+      </div>
+
+      <div class="status-cluster" title="Deze eerste versie bewaart klassen alleen in deze browser op dit toestel.">
+        <span id="status-dot" class="status-dot" aria-hidden="true"></span>
+        <span id="save-status" role="status">Opgeslagen op dit toestel</span>
+      </div>
+
+      <div class="control-cluster lesson-cluster">
+        <span class="control-label">Oefening</span>
+        <label class="screen-reader-only" for="mode-select">Wereld en editor</label>
+        <select id="mode-select" class="mode-select">
+          <option value="maze1">Maze · blokken</option>
+          <option value="maze2">Maze · code</option>
+          <option value="turtle_blocks">Schildpad · blokken</option>
+          <option value="turtle_cli">Schildpad · code</option>
+        </select>
+        <label class="screen-reader-only" for="level-select">Level</label>
+        <select id="level-select" class="level-select"></select>
+        <button id="go-to-level" class="primary-button" type="button">Open lespagina</button>
+      </div>
+
+      <div class="control-cluster view-cluster">
+        <span class="control-label">Beeld</span>
+        <label class="screen-reader-only" for="layout-select">Indeling</label>
+        <select id="layout-select">
+          <option value="split">Boek + platform</option>
+          <option value="book">Alleen boek</option>
+          <option value="platform">Alleen platform</option>
+        </select>
+      </div>
+    </header>
+
+    <main id="workspace" class="workspace" data-layout="split">
+      <section class="book-shell" aria-label="Digitaal bordboek">
+        <div class="book-toolbar">
+          <button id="toggle-thumbnails" class="tool-button" type="button" aria-pressed="true">Pagina’s</button>
+          <button id="previous-page" class="tool-button" type="button" aria-label="Vorige pagina">←</button>
+          <button id="next-page" class="tool-button" type="button" aria-label="Volgende pagina">→</button>
+          <div class="page-heading">
+            <strong id="page-title">Voorblad</strong>
+            <span id="page-position">Pagina 1 van 58</span>
+          </div>
+
+          <div class="tool-group" role="group" aria-label="Schrijfwerktuigen">
+            <button class="tool-button ink-tool" type="button" data-tool="pointer" aria-pressed="true">Hand</button>
+            <button class="tool-button ink-tool" type="button" data-tool="pen" aria-pressed="false">Pen</button>
+            <button class="tool-button ink-tool" type="button" data-tool="highlighter" aria-label="Markeerstift" aria-pressed="false"><span class="wide-label">Markeer</span><span aria-hidden="true">▰</span></button>
+            <button class="tool-button ink-tool" type="button" data-tool="eraser" aria-label="Gum" aria-pressed="false"><span class="wide-label">Gum</span><span aria-hidden="true">⌫</span></button>
+            <label class="screen-reader-only" for="ink-colour">Penkleur</label>
+            <input id="ink-colour" class="colour-input" type="color" value="#5200ff" title="Penkleur">
+            <label class="screen-reader-only" for="ink-width">Pendikte</label>
+            <select id="ink-width" class="width-select" title="Pendikte">
+              <option value="3" selected>Dun</option>
+              <option value="6">Normaal</option>
+              <option value="10">Dik</option>
+            </select>
+            <button id="undo-ink" class="tool-button" type="button" disabled>Ongedaan</button>
+            <button id="clear-ink" class="tool-button" type="button" disabled>Wis blad</button>
+          </div>
+
+          <div class="tool-group" role="group" aria-label="Zoom">
+            <button id="zoom-out" class="tool-button" type="button" aria-label="Uitzoomen">−</button>
+            <button id="zoom-fit" class="tool-button" type="button"><span id="zoom-label">100%</span></button>
+            <button id="zoom-in" class="tool-button" type="button" aria-label="Inzoomen">+</button>
+          </div>
+        </div>
+
+        <div id="book-body" class="book-body">
+          <aside id="thumbnail-rail" class="thumbnail-rail" aria-label="Syllabuspagina’s"></aside>
+          <div id="page-stage" class="page-stage">
+            <div id="paper" class="paper">
+              <div id="paper-loading" class="paper-loading" aria-hidden="true">Syllabuspagina laden…</div>
+              <canvas id="pdf-canvas" class="pdf-page-canvas" aria-label="Syllabuspagina 1: Voorblad"></canvas>
+              <canvas id="ink-canvas" class="ink-canvas" aria-label="Schrijflaag boven de syllabus"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div id="splitter" class="splitter" role="separator" aria-orientation="vertical" aria-label="Breedte van boek en platform aanpassen" tabindex="0"></div>
+
+      <section class="platform-shell" aria-label="Blockly-platform">
+        <div class="platform-toolbar">
+          <div class="platform-heading">
+            <strong id="platform-title">Maze · blokken · Level 1</strong>
+            <span>Editor en simulator · voortgang hoort bij de actieve klas</span>
+          </div>
+          <a class="platform-link" href="platform.html" target="_blank" rel="noopener">Open volledig platform</a>
+        </div>
+        <iframe id="platform-frame" class="platform-frame" title="Blockly editor en simulator" src="about:blank" allow="clipboard-read; clipboard-write"></iframe>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="class-dialog">
+    <form id="class-form" class="dialog-body" method="dialog">
+      <h2>Nieuwe klas</h2>
+      <p>Elke klas krijgt een eigen platformvoortgang, lespagina en schrijflagen. De gegevens blijven in deze browser.</p>
+      <label for="class-name">Naam van de klas</label>
+      <input id="class-name" type="text" maxlength="60" autocomplete="off" placeholder="Bijvoorbeeld 1A" required>
+      <div class="dialog-actions">
+        <button id="cancel-class" value="cancel" type="button">Annuleer</button>
+        <button class="primary-button" value="create" type="submit">Maak klas</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div id="protocol-warning" class="protocol-warning" role="alertdialog" aria-modal="true" aria-labelledby="protocol-warning-title" hidden>
+    <div class="protocol-warning-card">
+      <span class="protocol-warning-kicker">Lokaal bordboek</span>
+      <h2 id="protocol-warning-title">Open het bordboek via een webadres</h2>
+      <p id="protocol-warning-message">
+        Edge blokkeert PDF.js en de koppeling met het leerplatform wanneer <strong>teacher.html</strong>
+        rechtstreeks als bestand wordt geopend.
+      </p>
+      <ol id="protocol-warning-steps">
+        <li>Sluit dit tabblad.</li>
+        <li>Dubbelklik in de projectmap op <strong>start_teacher.bat</strong>.</li>
+        <li>Laat het geminimaliseerde servervenster open zolang je het bordboek gebruikt.</li>
+      </ol>
+      <a class="protocol-warning-action" href="https://robbew.github.io/Blockly/teacher.html">Open online bordboek</a>
+    </div>
+  </div>
+
+  <script>
+    if (window.location.protocol === 'file:') {
+      document.getElementById('protocol-warning').hidden = false;
+      document.querySelector('.app').setAttribute('aria-hidden', 'true');
+    }
+  </script>
+
+  <script type="module">
+    if (window.location.protocol !== 'file:') {
+      import('./vendor/pdfjs/pdf.min.mjs').then((pdfjsLib) => {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdfjs/pdf.worker.min.mjs';
+
+        (() => {
+          'use strict';
+
+      const EXPECTED_PAGE_COUNT = 58;
+      const PAGE_WIDTH = 1059;
+      const PAGE_HEIGHT = 1497;
+      const PROGRESS_KEY = 'aik_blockly_progress_v1';
+      const ACTIVE_CLASS_KEY = 'aik_teacher_active_class_v1';
+      const PROGRESS_OWNER_KEY = 'aik_teacher_progress_owner_v1';
+      const DB_NAME = 'aik_teacher_boardbook_v1';
+      const DB_VERSION = 1;
+      const CONTENT_REVISION = 'syllabus-2026-08-07-58p-afaea9e948f0';
+      const REVISION_54 = 'syllabus-2026-08-07-54p-6ed78144a0e7';
+      const REVISION_55 = 'syllabus-2026-08-05-55p';
+      const PDF_URL = 'syllabus/syllabus_blockly_in_de_klas.pdf?v=afaea9e948f0';
+      const MIN_PDF_RENDER_SCALE = 2;
+      const MAX_PDF_RENDER_SCALE = 3;
+      const MAX_PDF_RENDER_PIXELS = 16000000;
+      const MAX_INK_RENDER_PIXELS = 12000000;
+      const MIN_ZOOM = .75;
+      const MAX_ZOOM = 4;
+      const ZOOM_STEP = .25;
+
+      const MODE_META = {
+        maze1: { label: 'Maze · blokken', levels: 11, world: 'maze' },
+        maze2: { label: 'Maze · code', levels: 11, world: 'maze' },
+        turtle_blocks: { label: 'Schildpad · blokken', levels: 9, world: 'turtle' },
+        turtle_cli: { label: 'Schildpad · code', levels: 9, world: 'turtle' }
+      };
+
+      const LEVEL_PAGES = {
+        maze: { 1: 9, 2: 12, 3: 16, 4: 19, 5: 21, 6: 23, 7: 25, 8: 28, 9: 30, 10: 33, 11: 33 },
+        turtle: { 1: 36, 2: 41, 3: 44, 4: 44, 5: 45, 6: 49, 7: 49, 8: 49, 9: 49 }
+      };
+
+      const PAGE_SECTIONS = [
+        { from: 1, to: 1, title: 'Voorblad' },
+        { from: 2, to: 2, title: 'Inhoudsopgave' },
+        { from: 3, to: 5, title: 'Inleiding' },
+        { from: 6, to: 7, title: 'Rondleiding' },
+        { from: 8, to: 8, title: 'Maze-oefeningen' },
+        { from: 9, to: 11, title: 'Maze · Level 1' },
+        { from: 12, to: 15, title: 'Maze · Level 2' },
+        { from: 16, to: 18, title: 'Maze · Level 3' },
+        { from: 19, to: 20, title: 'Maze · Level 4' },
+        { from: 21, to: 22, title: 'Maze · Level 5' },
+        { from: 23, to: 24, title: 'Maze · Level 6' },
+        { from: 25, to: 27, title: 'Maze · Level 7' },
+        { from: 28, to: 29, title: 'Maze · Level 8' },
+        { from: 30, to: 32, title: 'Maze · Level 9' },
+        { from: 33, to: 34, title: 'Maze · Level 10' },
+        { from: 35, to: 35, title: 'Schildpad-oefeningen' },
+        { from: 36, to: 40, title: 'Schildpad · Level 1' },
+        { from: 41, to: 43, title: 'Schildpad · Level 2' },
+        { from: 44, to: 44, title: 'Schildpad · Level 3 en 4' },
+        { from: 45, to: 48, title: 'Schildpad · Level 5' },
+        { from: 49, to: 49, title: 'Schildpad · Level 6 en verder' },
+        { from: 50, to: 50, title: 'Leerdoelen en begrippenlijsten' },
+        { from: 51, to: 53, title: 'Leerdoelen en begrippen' },
+        { from: 54, to: 56, title: 'Leerplandoelen' },
+        { from: 57, to: 58, title: 'Feedback, contact en licentie' }
+      ];
+
+      const $ = (id) => document.getElementById(id);
+      const workspaceEl = $('workspace');
+      const classSelect = $('class-select');
+      const modeSelect = $('mode-select');
+      const levelSelect = $('level-select');
+      const layoutSelect = $('layout-select');
+      const platformFrame = $('platform-frame');
+      const pageStage = $('page-stage');
+      const paper = $('paper');
+      const pdfCanvas = $('pdf-canvas');
+      const pdfContext = pdfCanvas.getContext('2d', { alpha: false });
+      const paperLoading = $('paper-loading');
+      const inkCanvas = $('ink-canvas');
+      const inkContext = inkCanvas.getContext('2d');
+      const thumbnailRail = $('thumbnail-rail');
+      const statusDot = $('status-dot');
+      const saveStatus = $('save-status');
+      const toast = $('toast');
+
+      let db;
+      let pdfDocument = null;
+      let pdfLoadingTask = null;
+      let pdfRenderTask = null;
+      let pdfRenderTimer = null;
+      let pdfRenderSequence = 0;
+      let thumbnailObserver = null;
+      let pageCount = EXPECTED_PAGE_COUNT;
+      let classes = [];
+      let activeClass = null;
+      let currentPage = 1;
+      let currentStrokes = [];
+      let loadedAnnotationPage = null;
+      let currentTool = 'pointer';
+      let activeStroke = null;
+      let activeStrokeRect = null;
+      let activeRenderedPoint = 0;
+      let currentPointerId = null;
+      let inkRenderFrame = null;
+      let pendingInkResize = false;
+      let pageStageResizeObserver = null;
+      let paperResizeObserver = null;
+      let pageLoadToken = 0;
+      let zoom = 1;
+      let saveTimer = null;
+      let annotationTimer = null;
+      let toastTimer = null;
+      let syncingPlatform = false;
+      let platformReady = false;
+      let changingClass = false;
+
+      function pageTitle(page) {
+        return PAGE_SECTIONS.find((section) => page >= section.from && page <= section.to)?.title || `Syllabuspagina ${page}`;
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function pdfRenderScale(cssWidth, cssHeight) {
+        const deviceScale = Math.max(1, window.devicePixelRatio || 1);
+        const desiredScale = clamp(deviceScale * 1.5, MIN_PDF_RENDER_SCALE, MAX_PDF_RENDER_SCALE);
+        const pixelLimitScale = Math.sqrt(MAX_PDF_RENDER_PIXELS / Math.max(1, cssWidth * cssHeight));
+        return clamp(Math.min(desiredScale, pixelLimitScale), 1, MAX_PDF_RENDER_SCALE);
+      }
+
+      function makeId(prefix = 'class') {
+        if (window.crypto?.randomUUID) return `${prefix}-${crypto.randomUUID()}`;
+        return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function setStatus(message, tone = 'saved') {
+        saveStatus.textContent = message;
+        statusDot.classList.toggle('is-saving', tone === 'saving');
+        statusDot.classList.toggle('is-error', tone === 'error');
+      }
+
+      function showToast(message) {
+        window.clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.classList.add('is-visible');
+        toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 2800);
+      }
+
+      function setPaperLoading(isLoading, message = 'Syllabuspagina laden…') {
+        paperLoading.textContent = message;
+        paperLoading.hidden = !isLoading;
+      }
+
+      async function loadPdfDocument() {
+        setPaperLoading(true, 'Syllabus laden…');
+        pdfLoadingTask = pdfjsLib.getDocument({ url: PDF_URL });
+        pdfDocument = await pdfLoadingTask.promise;
+        pageCount = pdfDocument.numPages;
+        if (pageCount !== EXPECTED_PAGE_COUNT) {
+          console.warn(`De syllabus bevat ${pageCount} pagina’s; verwacht waren er ${EXPECTED_PAGE_COUNT}.`);
+        }
+      }
+
+      async function renderPdfPage(pageNumber = currentPage) {
+        if (!pdfDocument || !pageStage.offsetParent || pageNumber !== currentPage) return;
+        const sequence = ++pdfRenderSequence;
+        if (pdfRenderTask) {
+          try { pdfRenderTask.cancel(); } catch (_) {}
+          pdfRenderTask = null;
+        }
+
+        setPaperLoading(true);
+        try {
+          const page = await pdfDocument.getPage(pageNumber);
+          if (sequence !== pdfRenderSequence || pageNumber !== currentPage) return;
+
+          const rect = paper.getBoundingClientRect();
+          if (!rect.width) return;
+          const baseViewport = page.getViewport({ scale: 1 });
+          const pixelRatio = pdfRenderScale(rect.width, rect.height);
+          const targetWidth = Math.max(1, Math.round(rect.width * pixelRatio));
+          const viewport = page.getViewport({ scale: targetWidth / baseViewport.width });
+
+          pdfCanvas.width = Math.max(1, Math.round(viewport.width));
+          pdfCanvas.height = Math.max(1, Math.round(viewport.height));
+          pdfCanvas.setAttribute('aria-label', `Syllabuspagina ${pageNumber}: ${pageTitle(pageNumber)}`);
+
+          const renderTask = page.render({
+            canvasContext: pdfContext,
+            viewport,
+            background: 'rgb(255, 255, 255)'
+          });
+          pdfRenderTask = renderTask;
+          await renderTask.promise;
+          if (sequence === pdfRenderSequence && pageNumber === currentPage) setPaperLoading(false);
+        } catch (error) {
+          if (error?.name === 'RenderingCancelledException') return;
+          console.error(error);
+          if (sequence === pdfRenderSequence) {
+            setPaperLoading(true, `Pagina ${pageNumber} kon niet laden`);
+            setStatus(`Pagina ${pageNumber} kon niet laden`, 'error');
+          }
+        } finally {
+          if (sequence === pdfRenderSequence) pdfRenderTask = null;
+        }
+      }
+
+      function schedulePdfRender(delay = 80) {
+        window.clearTimeout(pdfRenderTimer);
+        pdfRenderTimer = window.setTimeout(() => renderPdfPage(currentPage), delay);
+      }
+
+      function openDatabase() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onupgradeneeded = () => {
+            const database = request.result;
+            if (!database.objectStoreNames.contains('classes')) {
+              database.createObjectStore('classes', { keyPath: 'id' });
+            }
+            if (!database.objectStoreNames.contains('annotations')) {
+              const store = database.createObjectStore('annotations', { keyPath: 'key' });
+              store.createIndex('classId', 'classId', { unique: false });
+            }
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function requestResult(request) {
+        return new Promise((resolve, reject) => {
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function storeGet(storeName, key) {
+        return requestResult(db.transaction(storeName, 'readonly').objectStore(storeName).get(key));
+      }
+
+      function storeGetAll(storeName) {
+        return requestResult(db.transaction(storeName, 'readonly').objectStore(storeName).getAll());
+      }
+
+      function storePut(storeName, value) {
+        return requestResult(db.transaction(storeName, 'readwrite').objectStore(storeName).put(value));
+      }
+
+      function transactionResult(transaction) {
+        return new Promise((resolve, reject) => {
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error);
+          transaction.onabort = () => reject(transaction.error || new Error('Opslagtransactie afgebroken'));
+        });
+      }
+
+      function migrateRevision55To54(page) {
+        const oldPage = clamp(Number(page) || 1, 1, 55);
+        if (oldPage <= 2) return oldPage;
+        if (oldPage === 3) return 2;
+        if (oldPage <= 7) return oldPage - 1;
+        if (oldPage <= 18) return oldPage;
+        if (oldPage === 19) return 18;
+        if (oldPage <= 34) return oldPage - 1;
+        if (oldPage <= 42) return oldPage;
+        return oldPage - 1;
+      }
+
+      function migrateRevision54To58(page) {
+        const oldPage = clamp(Number(page) || 1, 1, 54);
+        if (oldPage <= 41) return oldPage;
+        if (oldPage <= 50) return oldPage + 1;
+        return oldPage + 3;
+      }
+
+      function migratePageNumber(page, sourceRevision) {
+        if (sourceRevision === REVISION_54) return migrateRevision54To58(page);
+        if (sourceRevision === REVISION_55) return migrateRevision54To58(migrateRevision55To54(page));
+        // Unknown revisions keep their numbered page instead of receiving a guessed shift.
+        return clamp(Number(page) || 1, 1, pageCount);
+      }
+
+      async function migrateClassToCurrentSyllabus(record) {
+        if (record.contentRevision === CONTENT_REVISION) return record;
+        const notes = await requestResult(
+          db.transaction('annotations', 'readonly').objectStore('annotations').index('classId').getAll(record.id)
+        );
+        notes.sort((a, b) => Number(a.page) - Number(b.page));
+        const migratedNotes = new Map();
+        const migratedAt = new Date().toISOString();
+        for (const note of notes) {
+          const newPage = migratePageNumber(note.page, record.contentRevision);
+          const newKey = annotationKey(record.id, newPage);
+          const target = migratedNotes.get(newPage);
+          if (target) {
+            target.strokes.push(...(note.strokes || []));
+          } else {
+            migratedNotes.set(newPage, {
+              ...note,
+              key: newKey,
+              page: newPage,
+              contentRevision: CONTENT_REVISION,
+              strokes: [...(note.strokes || [])],
+              updatedAt: migratedAt
+            });
+          }
+        }
+        if (notes.length) {
+          const transaction = db.transaction('annotations', 'readwrite');
+          const store = transaction.objectStore('annotations');
+          notes.forEach((note) => store.delete(note.key || annotationKey(record.id, note.page)));
+          migratedNotes.forEach((note) => store.put(note));
+          await transactionResult(transaction);
+        }
+        const migratedRecord = {
+          ...record,
+          page: migratePageNumber(record.page, record.contentRevision),
+          contentRevision: CONTENT_REVISION,
+          updatedAt: new Date().toISOString()
+        };
+        await storePut('classes', migratedRecord);
+        return migratedRecord;
+      }
+
+      function parseProgress(raw) {
+        if (!raw) return '{}';
+        try {
+          JSON.parse(raw);
+          return raw;
+        } catch (_) {
+          return '{}';
+        }
+      }
+
+      function defaultClassRecord() {
+        const existingName = localStorage.getItem('student_klas') || 'Klas 1';
+        return {
+          id: makeId(),
+          name: existingName,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          page: 9,
+          mode: 'maze1',
+          level: 1,
+          layout: 'split',
+          zoom: 1,
+          split: 46,
+          contentRevision: CONTENT_REVISION,
+          platformProgress: parseProgress(localStorage.getItem(PROGRESS_KEY))
+        };
+      }
+
+      async function initializeClasses() {
+        classes = await storeGetAll('classes');
+        if (!classes.length) {
+          const firstClass = defaultClassRecord();
+          await storePut('classes', firstClass);
+          classes = [firstClass];
+          localStorage.setItem(ACTIVE_CLASS_KEY, firstClass.id);
+          localStorage.setItem(PROGRESS_OWNER_KEY, firstClass.id);
+        } else {
+          classes = await Promise.all(classes.map(migrateClassToCurrentSyllabus));
+        }
+        classes.sort((a, b) => String(a.name).localeCompare(String(b.name), 'nl'));
+        refreshClassSelect();
+        const requestedId = localStorage.getItem(ACTIVE_CLASS_KEY);
+        const target = classes.find((item) => item.id === requestedId) || classes[0];
+        await activateClass(target.id, { initial: true });
+      }
+
+      function refreshClassSelect() {
+        const selected = activeClass?.id || localStorage.getItem(ACTIVE_CLASS_KEY) || '';
+        classSelect.replaceChildren(...classes.map((item) => {
+          const option = document.createElement('option');
+          option.value = item.id;
+          option.textContent = item.name;
+          option.selected = item.id === selected;
+          return option;
+        }));
+      }
+
+      function livePlatformProgress() {
+        try {
+          platformFrame.contentWindow?.saveWorkForKey?.(platformFrame.contentWindow.lastExerciseKey);
+        } catch (_) {}
+        return parseProgress(localStorage.getItem(PROGRESS_KEY));
+      }
+
+      async function persistCurrentClass({ includeProgress = true } = {}) {
+        if (!activeClass) return;
+        setStatus('Opslaan…', 'saving');
+        activeClass.page = currentPage;
+        activeClass.mode = modeSelect.value;
+        activeClass.level = Number(levelSelect.value) || 1;
+        activeClass.layout = layoutSelect.value;
+        activeClass.zoom = zoom;
+        activeClass.split = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--book-width')) || 46;
+        activeClass.contentRevision = CONTENT_REVISION;
+        activeClass.updatedAt = new Date().toISOString();
+        if (includeProgress) activeClass.platformProgress = livePlatformProgress();
+        try {
+          await storePut('classes', { ...activeClass });
+          const index = classes.findIndex((item) => item.id === activeClass.id);
+          if (index >= 0) classes[index] = { ...activeClass };
+          setStatus('Opgeslagen op dit toestel');
+        } catch (error) {
+          console.error(error);
+          setStatus('Opslaan mislukt', 'error');
+        }
+      }
+
+      function scheduleClassSave() {
+        window.clearTimeout(saveTimer);
+        setStatus('Wijzigingen opslaan…', 'saving');
+        saveTimer = window.setTimeout(() => persistCurrentClass(), 650);
+      }
+
+      function annotationKey(classId, page) {
+        return `${classId}:page-${page}`;
+      }
+
+      async function persistAnnotations() {
+        if (!activeClass || loadedAnnotationPage !== currentPage) return;
+        window.clearTimeout(annotationTimer);
+        try {
+          await storePut('annotations', {
+            key: annotationKey(activeClass.id, currentPage),
+            classId: activeClass.id,
+            page: currentPage,
+            contentRevision: CONTENT_REVISION,
+            strokes: currentStrokes,
+            updatedAt: new Date().toISOString()
+          });
+          setStatus('Opgeslagen op dit toestel');
+        } catch (error) {
+          console.error(error);
+          setStatus('Schrijflaag niet opgeslagen', 'error');
+        }
+      }
+
+      function scheduleAnnotationSave() {
+        window.clearTimeout(annotationTimer);
+        setStatus('Schrijflaag opslaan…', 'saving');
+        annotationTimer = window.setTimeout(persistAnnotations, 280);
+      }
+
+      async function activateClass(id, options = {}) {
+        if (changingClass || (!options.initial && activeClass?.id === id)) return;
+        changingClass = true;
+        classSelect.disabled = true;
+        try {
+          if (activeClass) {
+            await persistAnnotations();
+            await persistCurrentClass();
+          }
+          const target = classes.find((item) => item.id === id) || await storeGet('classes', id);
+          if (!target) throw new Error('Klas niet gevonden');
+
+          const owner = localStorage.getItem(PROGRESS_OWNER_KEY);
+          if (!(options.initial && owner === target.id)) {
+            if (target.platformProgress && target.platformProgress !== '{}') {
+              localStorage.setItem(PROGRESS_KEY, parseProgress(target.platformProgress));
+            } else {
+              localStorage.removeItem(PROGRESS_KEY);
+            }
+          } else {
+            target.platformProgress = parseProgress(localStorage.getItem(PROGRESS_KEY));
+          }
+
+          activeClass = { ...target };
+          localStorage.setItem(ACTIVE_CLASS_KEY, activeClass.id);
+          localStorage.setItem(PROGRESS_OWNER_KEY, activeClass.id);
+          localStorage.setItem('student_klas', activeClass.name);
+
+          currentPage = clamp(Number(activeClass.page) || 9, 1, pageCount);
+          modeSelect.value = MODE_META[activeClass.mode] ? activeClass.mode : 'maze1';
+          populateLevels(Number(activeClass.level) || 1);
+          layoutSelect.value = ['split', 'book', 'platform'].includes(activeClass.layout) ? activeClass.layout : 'split';
+          zoom = clamp(Number(activeClass.zoom) || 1, MIN_ZOOM, MAX_ZOOM);
+          const split = clamp(Number(activeClass.split) || 46, 30, 68);
+          document.documentElement.style.setProperty('--book-width', `${split}%`);
+          applyLayout(false);
+          updateZoomLabel();
+          refreshClassSelect();
+          await showPage(currentPage, { skipPersist: true, focus: false });
+          reloadPlatform();
+          showToast(`${activeClass.name} geopend`);
+        } catch (error) {
+          console.error(error);
+          setStatus('Klas openen mislukt', 'error');
+        } finally {
+          classSelect.disabled = false;
+          changingClass = false;
+        }
+      }
+
+      async function createClass(name) {
+        const trimmed = String(name || '').trim();
+        if (!trimmed) return;
+        if (activeClass) {
+          await persistAnnotations();
+          await persistCurrentClass();
+        }
+        const record = {
+          id: makeId(),
+          name: trimmed,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          page: 9,
+          mode: 'maze1',
+          level: 1,
+          layout: layoutSelect.value || 'split',
+          zoom: 1,
+          split: 46,
+          contentRevision: CONTENT_REVISION,
+          platformProgress: '{}'
+        };
+        await storePut('classes', record);
+        classes.push(record);
+        classes.sort((a, b) => String(a.name).localeCompare(String(b.name), 'nl'));
+        refreshClassSelect();
+        await activateClass(record.id);
+      }
+
+      function populateLevels(preferredLevel) {
+        const meta = MODE_META[modeSelect.value] || MODE_META.maze1;
+        const level = clamp(Number(preferredLevel) || 1, 1, meta.levels);
+        levelSelect.replaceChildren(...Array.from({ length: meta.levels }, (_, index) => {
+          const value = index + 1;
+          const option = document.createElement('option');
+          option.value = String(value);
+          option.textContent = `Level ${value}`;
+          option.selected = value === level;
+          return option;
+        }));
+        updateLessonLabels();
+      }
+
+      function mappedPage() {
+        const meta = MODE_META[modeSelect.value] || MODE_META.maze1;
+        return LEVEL_PAGES[meta.world][Number(levelSelect.value) || 1] || 1;
+      }
+
+      function updateLessonLabels() {
+        const meta = MODE_META[modeSelect.value] || MODE_META.maze1;
+        const level = Number(levelSelect.value) || 1;
+        $('platform-title').textContent = `${meta.label} · Level ${level}`;
+      }
+
+      function syncLessonToPlatform({ navigatePage = true } = {}) {
+        updateLessonLabels();
+        if (navigatePage) {
+          const targetPage = mappedPage();
+          showPage(targetPage);
+          if (modeSelect.value.startsWith('maze') && Number(levelSelect.value) === 11) {
+            showToast('Random level 11 heeft nog geen eigen syllabuspagina. Pagina 34 blijft open.');
+          }
+        }
+        applyPlatformContext();
+        scheduleClassSave();
+      }
+
+      function reloadPlatform() {
+        platformReady = false;
+        const level = Number(levelSelect.value) || 1;
+        platformFrame.src = `platform.html?level=${level}&teacher=1`;
+      }
+
+      function installEmbeddedPlatformStyle(doc) {
+        if (doc.getElementById('teacher-embedded-style')) return;
+        const style = doc.createElement('style');
+        style.id = 'teacher-embedded-style';
+        style.textContent = `
+          .topbar.learning-header .opdracht,
+          .topbar.learning-header .language-toggle { display: none !important; }
+          body > header.topbar.learning-header {
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            grid-template-areas: "nav actions" !important;
+            gap: 8px !important;
+            padding: 8px 10px !important;
+          }
+          .topbar.learning-header .learning-nav-group { grid-area: nav !important; }
+          .topbar.learning-header .toolbar {
+            grid-area: actions !important;
+            width: auto !important;
+          }
+          .topbar.learning-header .tab,
+          .topbar.learning-header .tour-start-button,
+          .topbar.learning-header .toolbar > button {
+            min-height: 36px !important;
+            padding: 7px 10px !important;
+            font-size: 12px !important;
+          }
+          .wrap { padding: 8px !important; gap: 8px !important; }
+          .panel { border-radius: 12px !important; }
+          @media (max-width: 1040px) {
+            body > header.topbar.learning-header {
+              grid-template-columns: 1fr !important;
+              grid-template-areas: "nav" "actions" !important;
+            }
+            .topbar.learning-header .toolbar {
+              width: 100% !important;
+              justify-content: flex-start !important;
+              flex-wrap: wrap !important;
+            }
+          }
+          @media (max-width: 900px) {
+            .wrap { grid-template-columns: 1fr !important; grid-template-rows: minmax(300px, 1fr) minmax(300px, 1fr) !important; overflow: auto !important; }
+          }
+        `;
+        doc.head.appendChild(style);
+      }
+
+      function platformLevel(win, mode) {
+        const id = mode === 'maze1' ? 'level-select-1' : mode === 'maze2' ? 'level-select-2' : 'turtle-level';
+        return Number(win.document.getElementById(id)?.value) || 1;
+      }
+
+      function handlePlatformNavigation() {
+        if (syncingPlatform || !platformReady) return;
+        window.setTimeout(() => {
+          try {
+            const win = platformFrame.contentWindow;
+            const mode = MODE_META[win.activeMode] ? win.activeMode : modeSelect.value;
+            const level = platformLevel(win, mode);
+            modeSelect.value = mode;
+            populateLevels(level);
+            updateLessonLabels();
+            showPage(mappedPage());
+            scheduleClassSave();
+          } catch (error) {
+            console.warn('Platformnavigatie kon niet worden gekoppeld.', error);
+          }
+        }, 70);
+      }
+
+      function wirePlatformNavigation(doc) {
+        if (doc.documentElement.dataset.teacherNavigationWired === 'true') return;
+        doc.documentElement.dataset.teacherNavigationWired = 'true';
+        ['tab-maze1', 'tab-maze2', 'tab-turtle1', 'tab-turtle2', 'level-select-1', 'level-select-2', 'turtle-level']
+          .forEach((id) => doc.getElementById(id)?.addEventListener('click', handlePlatformNavigation, true));
+        ['level-select-1', 'level-select-2', 'turtle-level']
+          .forEach((id) => doc.getElementById(id)?.addEventListener('change', handlePlatformNavigation, true));
+      }
+
+      function waitForPlatformReady(attempt = 0) {
+        if (platformReady) return;
+        try {
+          const win = platformFrame.contentWindow;
+          const doc = win.document;
+          const turtleReady = doc.getElementById('turtle-level')?.options.length === 9;
+          const mazeReady = doc.getElementById('level-select-1')?.options.length >= 10;
+          if (typeof win.setMode === 'function' && turtleReady && mazeReady) {
+            platformReady = true;
+            installEmbeddedPlatformStyle(doc);
+            wirePlatformNavigation(doc);
+            applyPlatformContext();
+            return;
+          }
+        } catch (error) {
+          console.warn('Het platform is nog niet klaar.', error);
+        }
+        if (attempt < 30) window.setTimeout(() => waitForPlatformReady(attempt + 1), 150);
+        else setStatus('Platform kon niet worden gekoppeld', 'error');
+      }
+
+      function applyPlatformContext() {
+        updateLessonLabels();
+        if (!platformReady) return;
+        try {
+          syncingPlatform = true;
+          const win = platformFrame.contentWindow;
+          const mode = modeSelect.value;
+          const level = String(Number(levelSelect.value) || 1);
+          win.setMode(mode);
+          const selectId = mode === 'maze1' ? 'level-select-1' : mode === 'maze2' ? 'level-select-2' : 'turtle-level';
+          const select = win.document.getElementById(selectId);
+          if (select && select.value !== level) {
+            select.value = level;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          window.setTimeout(() => { syncingPlatform = false; }, 180);
+        } catch (error) {
+          syncingPlatform = false;
+          console.warn('Level kon niet naar het platform worden gestuurd.', error);
+        }
+      }
+
+      async function showPage(page, options = {}) {
+        const nextPage = clamp(Number(page) || 1, 1, pageCount);
+        if (!options.skipPersist && activeClass && nextPage !== currentPage) await persistAnnotations();
+        currentPage = nextPage;
+        const token = ++pageLoadToken;
+        setPaperLoading(true);
+        pdfCanvas.setAttribute('aria-label', `Syllabuspagina ${currentPage}: ${pageTitle(currentPage)}`);
+        $('page-title').textContent = pageTitle(currentPage);
+        $('page-position').textContent = `Pagina ${currentPage} van ${pageCount}`;
+        $('previous-page').disabled = currentPage === 1;
+        $('next-page').disabled = currentPage === pageCount;
+        updateThumbnailSelection();
+
+        currentStrokes = [];
+        loadedAnnotationPage = null;
+        updateInkButtons();
+        if (activeClass) {
+          const record = await storeGet('annotations', annotationKey(activeClass.id, currentPage));
+          if (token !== pageLoadToken) return;
+          currentStrokes = Array.isArray(record?.strokes) ? record.strokes : [];
+        }
+        loadedAnnotationPage = currentPage;
+        renderStrokes();
+        updateInkButtons();
+        fitPaper();
+        if (options.focus) paper.focus?.();
+        scheduleClassSave();
+      }
+
+      async function renderThumbnail(canvas, pageNumber) {
+        if (!pdfDocument || canvas.dataset.renderState) return;
+        canvas.dataset.renderState = 'loading';
+        try {
+          const page = await pdfDocument.getPage(pageNumber);
+          const baseViewport = page.getViewport({ scale: 1 });
+          const cssWidth = Math.max(72, canvas.clientWidth || 82);
+          const pixelRatio = Math.min(1.5, Math.max(1, window.devicePixelRatio || 1));
+          const viewport = page.getViewport({ scale: (cssWidth * pixelRatio) / baseViewport.width });
+          canvas.width = Math.max(1, Math.round(viewport.width));
+          canvas.height = Math.max(1, Math.round(viewport.height));
+          const context = canvas.getContext('2d', { alpha: false });
+          await page.render({
+            canvasContext: context,
+            viewport,
+            background: 'rgb(255, 255, 255)'
+          }).promise;
+          canvas.dataset.renderState = 'ready';
+        } catch (error) {
+          delete canvas.dataset.renderState;
+          console.warn(`Miniatuur voor pagina ${pageNumber} kon niet worden geladen.`, error);
+        }
+      }
+
+      function buildThumbnails() {
+        thumbnailRail.replaceChildren();
+        thumbnailObserver?.disconnect();
+        thumbnailObserver = 'IntersectionObserver' in window
+          ? new IntersectionObserver((entries, observer) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                observer.unobserve(entry.target);
+                renderThumbnail(entry.target, Number(entry.target.dataset.page));
+              });
+            }, { root: thumbnailRail, rootMargin: '180px 0px' })
+          : null;
+
+        const fragment = document.createDocumentFragment();
+        const canvases = [];
+        for (let page = 1; page <= pageCount; page += 1) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'thumbnail-button';
+          button.dataset.page = String(page);
+          button.title = `${pageTitle(page)} · pagina ${page}`;
+          button.setAttribute('aria-label', `Open pagina ${page}: ${pageTitle(page)}`);
+          const canvas = document.createElement('canvas');
+          canvas.dataset.page = String(page);
+          canvas.setAttribute('aria-hidden', 'true');
+          const label = document.createElement('span');
+          label.textContent = `p. ${page}`;
+          button.append(canvas, label);
+          button.addEventListener('click', () => showPage(page));
+          fragment.appendChild(button);
+          canvases.push(canvas);
+        }
+        thumbnailRail.appendChild(fragment);
+        canvases.forEach((canvas) => {
+          if (thumbnailObserver) thumbnailObserver.observe(canvas);
+          else renderThumbnail(canvas, Number(canvas.dataset.page));
+        });
+        updateThumbnailSelection();
+      }
+
+      function updateThumbnailSelection() {
+        thumbnailRail.querySelectorAll('.thumbnail-button').forEach((button) => {
+          const selected = Number(button.dataset.page) === currentPage;
+          if (selected) button.setAttribute('aria-current', 'page');
+          else button.removeAttribute('aria-current');
+        });
+        const active = thumbnailRail.querySelector(`[data-page="${currentPage}"]`);
+        active?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+
+      function fitPaper() {
+        if (!pageStage.offsetParent) return;
+        const availableWidth = Math.max(220, pageStage.clientWidth - 36);
+        const availableHeight = Math.max(300, pageStage.clientHeight - 36);
+        const fitWidth = Math.min(availableWidth, availableHeight * (PAGE_WIDTH / PAGE_HEIGHT));
+        paper.style.width = `${Math.round(fitWidth * zoom)}px`;
+        resizeInkCanvas();
+        schedulePdfRender();
+      }
+
+      function updateZoomLabel() {
+        $('zoom-label').textContent = `${Math.round(zoom * 100)}%`;
+        $('zoom-out').disabled = zoom <= MIN_ZOOM;
+        $('zoom-in').disabled = zoom >= MAX_ZOOM;
+      }
+
+      function setZoom(nextZoom) {
+        zoom = clamp(Math.round(nextZoom * 100) / 100, MIN_ZOOM, MAX_ZOOM);
+        updateZoomLabel();
+        fitPaper();
+        scheduleClassSave();
+      }
+
+      function resizeInkCanvas() {
+        if (activeStroke) {
+          pendingInkResize = true;
+          return;
+        }
+        const rect = inkCanvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const deviceScale = Math.max(1, window.devicePixelRatio || 1);
+        const pixelLimitScale = Math.sqrt(MAX_INK_RENDER_PIXELS / Math.max(1, rect.width * rect.height));
+        const backingScale = Math.max(.5, Math.min(deviceScale, pixelLimitScale));
+        const width = Math.max(1, Math.round(rect.width * backingScale));
+        const height = Math.max(1, Math.round(rect.height * backingScale));
+        const sizeChanged = inkCanvas.width !== width || inkCanvas.height !== height;
+        if (sizeChanged) {
+          inkCanvas.width = width;
+          inkCanvas.height = height;
+        }
+        inkContext.setTransform(width / rect.width, 0, 0, height / rect.height, 0, 0);
+        if (sizeChanged) renderStrokes();
+      }
+
+      function pointOnCanvas(event, rect = activeStrokeRect || inkCanvas.getBoundingClientRect()) {
+        return {
+          x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
+          y: clamp((event.clientY - rect.top) / rect.height, 0, 1),
+          p: event.pressure > 0 ? event.pressure : .5
+        };
+      }
+
+      function strokeWidth(stroke, rect) {
+        const scale = rect.width / PAGE_WIDTH;
+        const multiplier = stroke.tool === 'highlighter' ? 6 : stroke.tool === 'eraser' ? 5 : 1;
+        return Math.max(1.2, (Number(stroke.width) || 3) * multiplier * scale);
+      }
+
+      function prepareStroke(stroke, rect) {
+        inkContext.lineCap = 'round';
+        inkContext.lineJoin = 'round';
+        inkContext.strokeStyle = stroke.color || '#5200ff';
+        inkContext.fillStyle = stroke.color || '#5200ff';
+        inkContext.globalAlpha = stroke.tool === 'highlighter' ? .12 : 1;
+        inkContext.globalCompositeOperation = stroke.tool === 'eraser' ? 'destination-out' : 'source-over';
+        inkContext.lineWidth = strokeWidth(stroke, rect);
+      }
+
+      function drawStroke(stroke, startIndex = 0) {
+        const rect = inkCanvas.getBoundingClientRect();
+        if (!rect.width || !stroke?.points?.length) return;
+        const firstIndex = Math.max(0, Math.min(startIndex, stroke.points.length - 1));
+        const points = stroke.points.slice(Math.max(0, firstIndex - 1));
+        inkContext.save();
+        prepareStroke(stroke, rect);
+
+        if (points.length === 1) {
+          inkContext.beginPath();
+          inkContext.arc(points[0].x * rect.width, points[0].y * rect.height, inkContext.lineWidth / 2, 0, Math.PI * 2);
+          inkContext.fill();
+        } else {
+          inkContext.beginPath();
+          inkContext.moveTo(points[0].x * rect.width, points[0].y * rect.height);
+          if (points.length === 2 || firstIndex > 0) {
+            for (let index = 1; index < points.length; index += 1) {
+              inkContext.lineTo(points[index].x * rect.width, points[index].y * rect.height);
+            }
+          } else {
+            for (let index = 1; index < points.length - 1; index += 1) {
+              const point = points[index];
+              const next = points[index + 1];
+              inkContext.quadraticCurveTo(
+                point.x * rect.width,
+                point.y * rect.height,
+                ((point.x + next.x) / 2) * rect.width,
+                ((point.y + next.y) / 2) * rect.height
+              );
+            }
+            const last = points[points.length - 1];
+            inkContext.lineTo(last.x * rect.width, last.y * rect.height);
+          }
+          inkContext.stroke();
+        }
+        inkContext.restore();
+      }
+
+      function clearInkCanvas() {
+        inkContext.save();
+        inkContext.setTransform(1, 0, 0, 1, 0, 0);
+        inkContext.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
+        inkContext.restore();
+      }
+
+      function renderStrokes() {
+        const rect = inkCanvas.getBoundingClientRect();
+        if (!rect.width) return;
+        clearInkCanvas();
+        currentStrokes.forEach(drawStroke);
+      }
+
+      function appendStrokePoint(event, finalPoint = false) {
+        if (!activeStroke || !activeStrokeRect) return;
+        const raw = pointOnCanvas(event, activeStrokeRect);
+        const last = activeStroke.points[activeStroke.points.length - 1];
+        const dx = (raw.x - last.x) * activeStrokeRect.width;
+        const dy = (raw.y - last.y) * activeStrokeRect.height;
+        const distance = Math.hypot(dx, dy);
+        if (!finalPoint && distance < .3) return;
+        if (finalPoint && distance < .05) return;
+        const smoothing = finalPoint ? 1 : clamp(.42 + distance / 18, .42, .82);
+        activeStroke.points.push({
+          x: last.x + (raw.x - last.x) * smoothing,
+          y: last.y + (raw.y - last.y) * smoothing,
+          p: last.p + (raw.p - last.p) * .35
+        });
+      }
+
+      function drawActiveStrokeDelta() {
+        inkRenderFrame = null;
+        if (!activeStroke || activeStroke.points.length - 1 <= activeRenderedPoint) return;
+        drawStroke(activeStroke, activeRenderedPoint + 1);
+        activeRenderedPoint = activeStroke.points.length - 1;
+      }
+
+      function queueActiveStrokeRender() {
+        if (inkRenderFrame === null) inkRenderFrame = window.requestAnimationFrame(drawActiveStrokeDelta);
+      }
+
+      function setInkTool(tool) {
+        currentTool = tool;
+        document.querySelectorAll('.ink-tool').forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.tool === tool));
+        });
+        inkCanvas.classList.toggle('is-drawing', tool !== 'pointer');
+        showToast(tool === 'pointer' ? 'Hand actief: je kunt de pagina verschuiven.' : `${tool === 'highlighter' ? 'Markeerstift' : tool === 'eraser' ? 'Gum' : 'Pen'} actief.`);
+      }
+
+      function updateInkButtons() {
+        $('undo-ink').disabled = currentStrokes.length === 0;
+        $('clear-ink').disabled = currentStrokes.length === 0;
+      }
+
+      function beginStroke(event) {
+        if (currentTool === 'pointer' || event.pointerType === 'touch' || event.button > 0) return;
+        event.preventDefault();
+        currentPointerId = event.pointerId;
+        inkCanvas.setPointerCapture(event.pointerId);
+        const rect = inkCanvas.getBoundingClientRect();
+        activeStrokeRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+        activeStroke = {
+          tool: currentTool,
+          color: currentTool === 'eraser' ? '#000000' : $('ink-colour').value,
+          width: Number($('ink-width').value) || 3,
+          points: [pointOnCanvas(event, activeStrokeRect)]
+        };
+        currentStrokes.push(activeStroke);
+        drawStroke(activeStroke);
+        activeRenderedPoint = 0;
+        updateInkButtons();
+      }
+
+      function extendStroke(event) {
+        if (!activeStroke || event.pointerId !== currentPointerId) return;
+        event.preventDefault();
+        const events = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
+        (events.length ? events : [event]).forEach((item) => appendStrokePoint(item));
+        queueActiveStrokeRender();
+      }
+
+      function endStroke(event) {
+        if (!activeStroke || event.pointerId !== currentPointerId) return;
+        event.preventDefault();
+        if (event.type === 'pointerup') appendStrokePoint(event, true);
+        if (inkRenderFrame !== null) {
+          window.cancelAnimationFrame(inkRenderFrame);
+          inkRenderFrame = null;
+        }
+        drawActiveStrokeDelta();
+        renderStrokes();
+        activeStroke = null;
+        activeStrokeRect = null;
+        activeRenderedPoint = 0;
+        currentPointerId = null;
+        try { inkCanvas.releasePointerCapture(event.pointerId); } catch (_) {}
+        if (pendingInkResize) {
+          pendingInkResize = false;
+          resizeInkCanvas();
+        }
+        scheduleAnnotationSave();
+      }
+
+      function applyLayout(save = true) {
+        workspaceEl.dataset.layout = layoutSelect.value;
+        fitPaper();
+        window.requestAnimationFrame(() => {
+          fitPaper();
+          try { platformFrame.contentWindow?.dispatchEvent(new Event('resize')); } catch (_) {}
+        });
+        if (save) scheduleClassSave();
+      }
+
+      async function downloadBackup() {
+        await persistAnnotations();
+        await persistCurrentClass();
+        const allClasses = await storeGetAll('classes');
+        const annotations = await storeGetAll('annotations');
+        const payload = {
+          format: 'aik-teacher-boardbook',
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          classes: allClasses,
+          annotations
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `blockly-docentenbord-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast(`Back-up met ${allClasses.length} ${allClasses.length === 1 ? 'klas' : 'klassen'} gedownload.`);
+      }
+
+      async function importBackup(file) {
+        try {
+          const payload = JSON.parse(await file.text());
+          if (payload?.format !== 'aik-teacher-boardbook' || !Array.isArray(payload.classes)) {
+            throw new Error('Dit is geen geldige docentenbord-back-up.');
+          }
+          await persistAnnotations();
+          await persistCurrentClass();
+          const idMap = new Map();
+          const existingNames = new Set(classes.map((item) => item.name));
+          const imported = [];
+          for (const source of payload.classes) {
+            const id = makeId('import');
+            const sourceRevision = source.contentRevision;
+            idMap.set(source.id, { id, sourceRevision });
+            let name = String(source.name || 'Geïmporteerde klas').trim();
+            if (existingNames.has(name)) name += ' (import)';
+            existingNames.add(name);
+            const record = {
+              ...source,
+              id,
+              name,
+              page: migratePageNumber(source.page, sourceRevision),
+              contentRevision: CONTENT_REVISION,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              platformProgress: parseProgress(source.platformProgress)
+            };
+            await storePut('classes', record);
+            classes.push(record);
+            imported.push(record);
+          }
+          for (const note of Array.isArray(payload.annotations) ? payload.annotations : []) {
+            const target = idMap.get(note.classId);
+            const classId = target?.id;
+            const page = migratePageNumber(note.page, target?.sourceRevision);
+            if (!classId || !Array.isArray(note.strokes)) continue;
+            const key = annotationKey(classId, page);
+            const existing = await storeGet('annotations', key);
+            await storePut('annotations', {
+              ...note,
+              key,
+              classId,
+              page,
+              contentRevision: CONTENT_REVISION,
+              strokes: [...(existing?.strokes || []), ...note.strokes],
+              updatedAt: new Date().toISOString()
+            });
+          }
+          classes.sort((a, b) => String(a.name).localeCompare(String(b.name), 'nl'));
+          refreshClassSelect();
+          if (imported[0]) await activateClass(imported[0].id);
+          showToast(`${imported.length} ${imported.length === 1 ? 'klas' : 'klassen'} geïmporteerd.`);
+        } catch (error) {
+          console.error(error);
+          setStatus('Importeren mislukt', 'error');
+          showToast(error.message || 'De back-up kon niet worden geïmporteerd.');
+        } finally {
+          $('import-input').value = '';
+        }
+      }
+
+      function bindEvents() {
+        $('previous-page').addEventListener('click', () => showPage(currentPage - 1));
+        $('next-page').addEventListener('click', () => showPage(currentPage + 1));
+        $('toggle-thumbnails').addEventListener('click', () => {
+          const hidden = $('book-body').classList.toggle('thumbs-hidden');
+          $('toggle-thumbnails').setAttribute('aria-pressed', String(!hidden));
+          fitPaper();
+          window.requestAnimationFrame(fitPaper);
+        });
+
+        document.querySelectorAll('.ink-tool').forEach((button) => {
+          button.addEventListener('click', () => setInkTool(button.dataset.tool));
+        });
+        $('undo-ink').addEventListener('click', () => {
+          currentStrokes.pop();
+          renderStrokes();
+          updateInkButtons();
+          scheduleAnnotationSave();
+        });
+        $('clear-ink').addEventListener('click', () => {
+          if (!currentStrokes.length) return;
+          if (!window.confirm(`Alle aantekeningen op pagina ${currentPage} wissen voor ${activeClass?.name || 'deze klas'}?`)) return;
+          currentStrokes = [];
+          renderStrokes();
+          updateInkButtons();
+          scheduleAnnotationSave();
+        });
+        inkCanvas.addEventListener('pointerdown', beginStroke);
+        inkCanvas.addEventListener('pointermove', extendStroke);
+        inkCanvas.addEventListener('pointerup', endStroke);
+        inkCanvas.addEventListener('pointercancel', endStroke);
+        inkCanvas.addEventListener('lostpointercapture', endStroke);
+
+        $('zoom-out').addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
+        $('zoom-in').addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
+        $('zoom-fit').addEventListener('click', () => setZoom(1));
+
+        modeSelect.addEventListener('change', () => {
+          populateLevels(1);
+          syncLessonToPlatform();
+        });
+        levelSelect.addEventListener('change', () => syncLessonToPlatform());
+        $('go-to-level').addEventListener('click', () => syncLessonToPlatform());
+        layoutSelect.addEventListener('change', () => applyLayout());
+        classSelect.addEventListener('change', () => activateClass(classSelect.value));
+
+        const classDialog = $('class-dialog');
+        $('new-class').addEventListener('click', () => {
+          $('class-name').value = '';
+          classDialog.showModal();
+          window.setTimeout(() => $('class-name').focus(), 0);
+        });
+        $('cancel-class').addEventListener('click', () => classDialog.close('cancel'));
+        $('class-form').addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const name = $('class-name').value;
+          if (!name.trim()) return;
+          classDialog.close('create');
+          await createClass(name);
+        });
+
+        $('backup-button').addEventListener('click', downloadBackup);
+        $('import-button').addEventListener('click', () => $('import-input').click());
+        $('import-input').addEventListener('change', () => {
+          const file = $('import-input').files?.[0];
+          if (file) importBackup(file);
+        });
+
+        platformFrame.addEventListener('load', () => {
+          try {
+            installEmbeddedPlatformStyle(platformFrame.contentWindow.document);
+            platformFrame.contentWindow.syncLayoutVars?.();
+          } catch (_) {}
+          waitForPlatformReady();
+        });
+
+        const splitter = $('splitter');
+        splitter.addEventListener('pointerdown', (event) => {
+          if (workspaceEl.dataset.layout !== 'split' || getComputedStyle(splitter).display === 'none') return;
+          splitter.setPointerCapture(event.pointerId);
+          const move = (moveEvent) => {
+            const rect = workspaceEl.getBoundingClientRect();
+            const percentage = clamp(((moveEvent.clientX - rect.left) / rect.width) * 100, 30, 68);
+            document.documentElement.style.setProperty('--book-width', `${percentage}%`);
+            fitPaper();
+          };
+          const end = () => {
+            splitter.removeEventListener('pointermove', move);
+            splitter.removeEventListener('pointerup', end);
+            splitter.removeEventListener('pointercancel', end);
+            scheduleClassSave();
+          };
+          splitter.addEventListener('pointermove', move);
+          splitter.addEventListener('pointerup', end);
+          splitter.addEventListener('pointercancel', end);
+        });
+        splitter.addEventListener('keydown', (event) => {
+          if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+          event.preventDefault();
+          const current = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--book-width')) || 46;
+          const next = clamp(current + (event.key === 'ArrowLeft' ? -2 : 2), 30, 68);
+          document.documentElement.style.setProperty('--book-width', `${next}%`);
+          fitPaper();
+          scheduleClassSave();
+        });
+
+        window.addEventListener('resize', fitPaper);
+        window.visualViewport?.addEventListener('resize', fitPaper);
+        if ('ResizeObserver' in window) {
+          pageStageResizeObserver = new ResizeObserver(fitPaper);
+          pageStageResizeObserver.observe(pageStage);
+          paperResizeObserver = new ResizeObserver(resizeInkCanvas);
+          paperResizeObserver.observe(inkCanvas);
+        }
+        document.addEventListener('keydown', (event) => {
+          const editing = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || '');
+          if (editing) return;
+          if (event.key === 'PageUp' || (event.altKey && event.key === 'ArrowLeft')) {
+            event.preventDefault();
+            showPage(currentPage - 1);
+          }
+          if (event.key === 'PageDown' || (event.altKey && event.key === 'ArrowRight')) {
+            event.preventDefault();
+            showPage(currentPage + 1);
+          }
+          if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && currentStrokes.length) {
+            event.preventDefault();
+            currentStrokes.pop();
+            renderStrokes();
+            updateInkButtons();
+            scheduleAnnotationSave();
+          }
+        });
+
+        window.setInterval(() => {
+          if (activeClass && !changingClass) persistCurrentClass();
+        }, 10000);
+      }
+
+      async function initialize() {
+        bindEvents();
+        updateZoomLabel();
+        try {
+          await loadPdfDocument();
+          buildThumbnails();
+        } catch (error) {
+          console.error(error);
+          setPaperLoading(true, 'Syllabus kon niet worden geladen');
+          setStatus('Syllabus kon niet worden geladen', 'error');
+          showToast('Controleer of het bordboek via de website wordt geopend.');
+          return;
+        }
+
+        try {
+          db = await openDatabase();
+          await initializeClasses();
+          setInkTool('pointer');
+          if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
+        } catch (error) {
+          console.error(error);
+          setStatus('Lokale opslag niet beschikbaar', 'error');
+          showToast('Open dit docentenbord via de website om klassen te kunnen bewaren.');
+        }
+      }
+
+      initialize();
+        })();
+      }).catch((error) => {
+        console.error(error);
+        const warning = document.getElementById('protocol-warning');
+        document.getElementById('protocol-warning-title').textContent = 'PDF-renderer kon niet worden geladen';
+        document.getElementById('protocol-warning-message').textContent = 'Controleer of de map vendor/pdfjs samen met teacher.html is gepubliceerd.';
+        document.getElementById('protocol-warning-steps').hidden = true;
+        document.querySelector('.app').setAttribute('aria-hidden', 'true');
+        warning.hidden = false;
+      });
+    }
+  </script>
+</body>
+</html>
