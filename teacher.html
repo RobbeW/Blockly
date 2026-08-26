@@ -1,3 +1,10 @@
+<!--
+  Blockly in de Klas - bordboek
+  © 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be. Alle rechten voorbehouden.
+  Gebruik in eigen klas of eigen onderwijscontext is toegelaten mits duidelijke en expliciete naamsvermelding:
+  Robbe Wulgaert, AI in de Klas, robbewulgaert.be
+  Gebaseerd op oefeningen uit het open-source Blockly project door Google.
+-->
 <!doctype html>
 <html lang="nl">
 <head>
@@ -5,6 +12,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#5200ff">
   <meta name="description" content="Bordboek voor Blockly in de Klas: syllabus, pen en oefenplatform in één klasgebonden werkomgeving.">
+  <meta name="author" content="Robbe Wulgaert, AI in de Klas, robbewulgaert.be">
+  <meta name="copyright" content="Copyright (c) 2026 Robbe Wulgaert">
+  <link rel="icon" type="image/png" href="favicon.png">
   <title>Bordboek · Blockly in de Klas</title>
   <style>
     :root {
@@ -409,6 +419,8 @@
       pointer-events: auto;
       cursor: crosshair;
       touch-action: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .paper-loading {
@@ -731,7 +743,7 @@
             <button class="tool-button ink-tool" type="button" data-tool="highlighter" aria-label="Markeerstift" aria-pressed="false"><span class="wide-label">Markeer</span><span aria-hidden="true">▰</span></button>
             <button class="tool-button ink-tool" type="button" data-tool="eraser" aria-label="Gum" aria-pressed="false"><span class="wide-label">Gum</span><span aria-hidden="true">⌫</span></button>
             <label class="screen-reader-only" for="ink-colour">Penkleur</label>
-            <input id="ink-colour" class="colour-input" type="color" value="#5200ff" title="Penkleur">
+            <input id="ink-colour" class="colour-input" type="color" value="#000000" title="Penkleur">
             <label class="screen-reader-only" for="ink-width">Pendikte</label>
             <select id="ink-width" class="width-select" title="Pendikte">
               <option value="3" selected>Dun</option>
@@ -840,6 +852,10 @@
       const MIN_ZOOM = .75;
       const MAX_ZOOM = 4;
       const ZOOM_STEP = .25;
+      const DEFAULT_INK_COLOURS = Object.freeze({
+        pen: '#000000',
+        highlighter: '#fff200'
+      });
 
       const MODE_META = {
         maze1: { label: 'Maze · blokken', levels: 11, world: 'maze' },
@@ -1773,7 +1789,7 @@
         inkContext.lineJoin = 'round';
         inkContext.strokeStyle = stroke.color || '#5200ff';
         inkContext.fillStyle = stroke.color || '#5200ff';
-        inkContext.globalAlpha = stroke.tool === 'highlighter' ? .12 : 1;
+        inkContext.globalAlpha = stroke.tool === 'highlighter' ? .28 : 1;
         inkContext.globalCompositeOperation = stroke.tool === 'eraser' ? 'destination-out' : 'source-over';
         inkContext.lineWidth = strokeWidth(stroke, rect);
       }
@@ -1845,6 +1861,11 @@
 
       function setInkTool(tool) {
         currentTool = tool;
+        const inkColour = $('ink-colour');
+        if (DEFAULT_INK_COLOURS[tool]) inkColour.value = DEFAULT_INK_COLOURS[tool];
+        const colourLabel = tool === 'highlighter' ? 'Markeerkleur' : 'Penkleur';
+        inkColour.title = colourLabel;
+        document.querySelector('label[for="ink-colour"]')?.replaceChildren(colourLabel);
         document.querySelectorAll('.ink-tool').forEach((button) => {
           button.setAttribute('aria-pressed', String(button.dataset.tool === tool));
         });
@@ -2008,6 +2029,9 @@
         inkCanvas.addEventListener('pointerup', endStroke);
         inkCanvas.addEventListener('pointercancel', endStroke);
         inkCanvas.addEventListener('lostpointercapture', endStroke);
+        pageStage.addEventListener('contextmenu', (event) => {
+          if (currentTool !== 'pointer') event.preventDefault();
+        });
 
         $('zoom-out').addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
         $('zoom-in').addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
