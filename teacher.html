@@ -1,9 +1,3 @@
-<!--
-  Blockly in de Klas - landing page
-  Copyright (c) 2026 Robbe Wulgaert
-  Citeer/vermeld als: Robbe Wulgaert, AI in de Klas, robbewulgaert.be
--->
-
 <!doctype html>
 <html lang="nl">
 <head>
@@ -11,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#5200ff">
   <meta name="description" content="Bordboek voor Blockly in de Klas: syllabus, pen en oefenplatform in één klasgebonden werkomgeving.">
-  <link rel="icon" type="image/png" href="./favicon.png" />
-  <link rel="shortcut icon" type="image/png" href="./favicon.png" />
   <title>Bordboek · Blockly in de Klas</title>
   <style>
     :root {
@@ -454,20 +446,11 @@
     }
 
     .platform-toolbar {
-      justify-content: space-between;
+      justify-content: flex-start;
       padding-inline: 12px;
     }
 
     .platform-heading { min-width: 0; }
-
-    .platform-link {
-      color: var(--brand-dark);
-      font-size: 11px;
-      font-weight: 850;
-      text-decoration: none;
-    }
-
-    .platform-link:hover { text-decoration: underline; }
 
     .platform-frame {
       min-width: 0;
@@ -784,9 +767,7 @@
         <div class="platform-toolbar">
           <div class="platform-heading">
             <strong id="platform-title">Maze · blokken · Level 1</strong>
-            <span>Editor en simulator · voortgang hoort bij de actieve klas</span>
           </div>
-          <a class="platform-link" href="platform.html" target="_blank" rel="noopener">Open volledig platform</a>
         </div>
         <iframe id="platform-frame" class="platform-frame" title="Blockly editor en simulator" src="about:blank" allow="clipboard-read; clipboard-write"></iframe>
       </section>
@@ -1413,61 +1394,132 @@
       }
 
       function installEmbeddedPlatformStyle(doc) {
-        if (doc.getElementById('teacher-embedded-style')) return;
-        const style = doc.createElement('style');
-        style.id = 'teacher-embedded-style';
-        style.textContent = `
-          .topbar.learning-header .opdracht,
-          .topbar.learning-header .language-toggle,
-          .topbar.learning-header .tour-start-button { display: none !important; }
-          body > header.topbar.learning-header {
-            grid-template-columns: minmax(0, 1fr) auto !important;
-            grid-template-areas: "nav actions" !important;
-            gap: 8px !important;
-            padding: 8px 10px !important;
-            z-index: 100 !important;
-          }
-          .topbar.learning-header .learning-nav-group { grid-area: nav !important; }
-          .topbar.learning-header .toolbar {
-            grid-area: actions !important;
-            width: auto !important;
-          }
-          .topbar.learning-header .tab,
-          .topbar.learning-header .toolbar > button {
-            min-height: 36px !important;
-            padding: 7px 10px !important;
-            font-size: 12px !important;
-          }
-          .wrap { padding: 8px !important; gap: 8px !important; }
-          .panel {
-            position: relative !important;
-            z-index: 0 !important;
-            isolation: isolate !important;
-            overflow: hidden !important;
-            border-radius: 12px !important;
-          }
-          #blocklyArea {
-            isolation: isolate !important;
-            contain: paint !important;
-            overflow: hidden !important;
-          }
-          #blocklyDiv { overflow: hidden !important; }
-          @media (max-width: 1040px) {
-            body > header.topbar.learning-header {
-              grid-template-columns: 1fr !important;
-              grid-template-areas: "nav" "actions" !important;
+        if (!doc.getElementById('teacher-embedded-style')) {
+          const style = doc.createElement('style');
+          style.id = 'teacher-embedded-style';
+          style.textContent = `
+            body > header.topbar.learning-header,
+            #editorNote,
+            #previewNote { display: none !important; }
+            .wrap {
+              height: 100dvh !important;
+              min-height: 0 !important;
+              padding: 8px !important;
+              gap: 8px !important;
             }
-            .topbar.learning-header .toolbar {
-              width: 100% !important;
-              justify-content: flex-start !important;
-              flex-wrap: wrap !important;
+            .panel {
+              position: relative !important;
+              z-index: 0 !important;
+              isolation: isolate !important;
+              min-height: 0 !important;
+              overflow: hidden !important;
+              border-radius: 12px !important;
             }
+            #blocklyArea {
+              isolation: isolate !important;
+              contain: paint !important;
+              overflow: hidden !important;
+            }
+            #blocklyDiv { overflow: hidden !important; }
+            .teacher-panel-switch {
+              width: 44px;
+              height: 44px;
+              display: none;
+              flex: 0 0 44px;
+              place-items: center;
+              margin: -6px -7px -6px auto;
+              padding: 0;
+              border: 1px solid rgba(82, 0, 255, .24);
+              border-radius: 12px;
+              color: #fff;
+              background: #5200ff;
+              box-shadow: 0 8px 18px rgba(82, 0, 255, .2);
+              cursor: pointer;
+            }
+            .teacher-panel-switch:hover { background: #3700b3; }
+            .teacher-panel-switch:focus-visible {
+              outline: 3px solid rgba(61, 255, 208, .72);
+              outline-offset: 2px;
+            }
+            .teacher-panel-switch svg {
+              width: 24px;
+              height: 24px;
+              fill: none;
+              stroke: currentColor;
+              stroke-width: 2;
+              stroke-linecap: round;
+              stroke-linejoin: round;
+            }
+            @media (max-width: 1100px) {
+              .wrap {
+                grid-template-columns: minmax(0, 1fr) !important;
+                grid-template-rows: minmax(0, 1fr) !important;
+                overflow: hidden !important;
+              }
+              .wrap[data-teacher-panel="editor"] > .panel[aria-label="Preview"],
+              .wrap[data-teacher-panel="preview"] > .panel[aria-label="Editor"] {
+                display: none !important;
+              }
+              .teacher-panel-switch { display: grid; }
+            }
+          `;
+          doc.head.appendChild(style);
+        }
+
+        if (doc.documentElement.dataset.teacherPanelSwitchWired === 'true') return;
+        const wrap = doc.querySelector('.wrap');
+        const editorPanel = doc.querySelector('.wrap > .panel[aria-label="Editor"]');
+        const previewPanel = doc.querySelector('.wrap > .panel[aria-label="Preview"]');
+        const editorHeading = editorPanel?.querySelector('h3');
+        const previewHeading = previewPanel?.querySelector('h3');
+        if (!wrap || !editorPanel || !previewPanel || !editorHeading || !previewHeading) return;
+
+        doc.documentElement.dataset.teacherPanelSwitchWired = 'true';
+        editorPanel.id = editorPanel.id || 'teacher-editor-panel';
+        previewPanel.id = previewPanel.id || 'teacher-preview-panel';
+        const compactPanels = doc.defaultView.matchMedia('(max-width: 1100px)');
+        const switchButtons = {};
+
+        function resizeEmbeddedPlatform() {
+          const win = doc.defaultView;
+          win.requestAnimationFrame(() => {
+            win.fitBlockly?.();
+            win.resizeMazeCanvas?.();
+            win.resizeTurtleCanvas?.();
+            win.dispatchEvent(new Event('resize'));
+          });
+        }
+
+        function showTeacherPanel(panel, focusButton = false) {
+          const nextPanel = panel === 'preview' ? 'preview' : 'editor';
+          wrap.dataset.teacherPanel = nextPanel;
+          if (focusButton && compactPanels.matches) {
+            doc.defaultView.requestAnimationFrame(() => switchButtons[nextPanel]?.focus({ preventScroll: true }));
           }
-          @media (max-width: 900px) {
-            .wrap { grid-template-columns: 1fr !important; grid-template-rows: minmax(300px, 1fr) minmax(300px, 1fr) !important; overflow: auto !important; }
-          }
-        `;
-        doc.head.appendChild(style);
+          resizeEmbeddedPlatform();
+        }
+
+        function createSwitchButton(currentPanel, targetPanel, targetElement, label) {
+          const button = doc.createElement('button');
+          button.type = 'button';
+          button.className = 'teacher-panel-switch';
+          button.setAttribute('aria-controls', targetElement.id);
+          button.setAttribute('aria-label', label);
+          button.title = label;
+          button.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M7 7h11m0 0-3-3m3 3-3 3M17 17H6m0 0 3 3m-3-3 3-3"></path>
+            </svg>
+          `;
+          button.addEventListener('click', () => showTeacherPanel(targetPanel, true));
+          switchButtons[currentPanel] = button;
+          return button;
+        }
+
+        editorHeading.appendChild(createSwitchButton('editor', 'preview', previewPanel, 'Toon oefeningen'));
+        previewHeading.appendChild(createSwitchButton('preview', 'editor', editorPanel, 'Toon editor'));
+        compactPanels.addEventListener?.('change', resizeEmbeddedPlatform);
+        showTeacherPanel('editor');
       }
 
       function platformLevel(win, mode) {
