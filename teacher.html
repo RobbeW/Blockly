@@ -1424,19 +1424,10 @@
               gap: 8px !important;
             }
             .panel {
-              position: relative !important;
-              z-index: 0 !important;
-              isolation: isolate !important;
               min-height: 0 !important;
               overflow: hidden !important;
               border-radius: 12px !important;
             }
-            #blocklyArea {
-              isolation: isolate !important;
-              contain: paint !important;
-              overflow: hidden !important;
-            }
-            #blocklyDiv { overflow: hidden !important; }
             .teacher-panel-switch {
               width: 44px;
               height: 44px;
@@ -1501,7 +1492,8 @@
         function resizeEmbeddedPlatform() {
           const win = doc.defaultView;
           win.requestAnimationFrame(() => {
-            win.fitBlockly?.();
+            if (typeof win.requestBlocklyFit === 'function') win.requestBlocklyFit();
+            else win.fitBlockly?.();
             win.resizeMazeCanvas?.();
             win.resizeTurtleCanvas?.();
             win.dispatchEvent(new Event('resize'));
