@@ -502,6 +502,8 @@
       outline-offset: 1px;
     }
 
+    .tool-button .compact-label { display: none; }
+
     .paper-loading {
       position: absolute;
       inset: 0;
@@ -675,6 +677,7 @@
     @media (max-width: 1240px) {
       .workspace { grid-template-columns: minmax(390px, 45%) 8px minmax(520px, 1fr); }
       .tool-button .wide-label { display: none; }
+      .tool-button .compact-label { display: inline; }
     }
 
     @media (max-width: 1080px) {
@@ -746,6 +749,7 @@
 
     @container book-pane (max-width: 560px) {
       .tool-button .wide-label { display: none; }
+      .tool-button .compact-label { display: inline; }
       .book-toolbar { padding-inline: 6px; }
     }
 
@@ -816,12 +820,12 @@
             <span id="page-position">Pagina 1 van 58</span>
           </div>
 
-          <div class="tool-group" role="group" aria-label="Schrijfwerktuigen">
+          <div id="ink-toolbar" class="tool-group" role="group" aria-label="Schrijfwerktuigen">
             <button class="tool-button ink-tool" type="button" data-tool="pointer" aria-pressed="true">Hand</button>
             <button class="tool-button ink-tool" type="button" data-tool="pen" aria-pressed="false">Pen</button>
-            <button class="tool-button ink-tool" type="button" data-tool="highlighter" aria-label="Markeerstift" aria-pressed="false"><span class="wide-label">Markeer</span><span aria-hidden="true">▰</span></button>
-            <button class="tool-button ink-tool" type="button" data-tool="eraser" aria-label="Gum" aria-pressed="false"><span class="wide-label">Gum</span><span aria-hidden="true">⌫</span></button>
-            <button class="tool-button ink-tool" type="button" data-tool="text" aria-label="Tekstvak toevoegen" aria-pressed="false"><span class="wide-label">Tekst</span><span aria-hidden="true">T</span></button>
+            <button class="tool-button ink-tool" type="button" data-tool="highlighter" aria-label="Markeerstift" aria-pressed="false"><span class="wide-label">Markeer</span><span class="compact-label" aria-hidden="true">▰</span></button>
+            <button class="tool-button ink-tool" type="button" data-tool="eraser" aria-label="Gum" aria-pressed="false"><span class="wide-label">Gum</span><span class="compact-label" aria-hidden="true">⌫</span></button>
+            <button class="tool-button ink-tool" type="button" data-tool="text" aria-label="Tekstvak toevoegen" aria-pressed="false">Tekst</button>
             <label class="screen-reader-only" for="ink-colour">Penkleur</label>
             <input id="ink-colour" class="colour-input" type="color" value="#000000" title="Penkleur">
             <label class="screen-reader-only" for="ink-width">Pendikte</label>
@@ -938,6 +942,7 @@
       const DEFAULT_TEXT_WIDTH = .30;
       const DEFAULT_TEXT_HEIGHT = .09;
       const DEFAULT_TEXT_FONT_SIZE = .018;
+      const PALM_TOOL_GUARD_MS = 700;
       const MIN_ZOOM = .75;
       const MAX_ZOOM = 4;
       const ZOOM_STEP = .25;
@@ -1021,9 +1026,13 @@
       let loadedAnnotationPage = null;
       let currentTool = 'pointer';
       let activeStroke = null;
+      let activeStrokePointerType = null;
       let activeStrokeRect = null;
       let activeRenderedPoint = 0;
       let currentPointerId = null;
+      let inkPointerFallbackInstalled = false;
+      let lastPenActivityAt = -Infinity;
+      let suppressInkToolbarUntil = -Infinity;
       let inkRenderFrame = null;
       let pendingInkResize = false;
       let pageStageResizeObserver = null;
@@ -1415,6 +1424,7 @@
 
       async function persistAnnotations({ reportError = true } = {}) {
         if (!activeClass || loadedAnnotationPage !== currentPage) return true;
+        finishActiveStroke();
         cancelTextGesture();
         commitActiveTextEdit();
         try {
@@ -2338,7 +2348,94 @@
         if (inkRenderFrame === null) inkRenderFrame = window.requestAnimationFrame(drawActiveStrokeDelta);
       }
 
+      function drawingToolActive() {
+        return ['pen', 'highlighter', 'eraser'].includes(currentTool);
+      }
+
+      function notePenActivity(event) {
+        if (event?.pointerType === 'pen') lastPenActivityAt = performance.now();
+      }
+
+      function suppressPalmPointer(event) {
+        if (event.pointerType !== 'touch' || !drawingToolActive()) return false;
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+      }
+
+      function guardInkToolbarPointer(event) {
+        if (event.pointerType !== 'touch') return;
+        const penIsActive = activeStrokePointerType === 'pen';
+        if (!penIsActive && performance.now() - lastPenActivityAt > PALM_TOOL_GUARD_MS) return;
+        suppressInkToolbarUntil = performance.now() + PALM_TOOL_GUARD_MS;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+
+      function guardInkToolbarClick(event) {
+        if (performance.now() >= suppressInkToolbarUntil) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+
+      function installInkPointerFallback() {
+        if (inkPointerFallbackInstalled) return;
+        inkPointerFallbackInstalled = true;
+        document.addEventListener('pointermove', fallbackInkPointerMove, { passive: false });
+        document.addEventListener('pointerup', fallbackInkPointerUp, { passive: false });
+        document.addEventListener('pointercancel', fallbackInkPointerCancel, { passive: false });
+      }
+
+      function removeInkPointerFallback() {
+        if (!inkPointerFallbackInstalled) return;
+        inkPointerFallbackInstalled = false;
+        document.removeEventListener('pointermove', fallbackInkPointerMove);
+        document.removeEventListener('pointerup', fallbackInkPointerUp);
+        document.removeEventListener('pointercancel', fallbackInkPointerCancel);
+      }
+
+      function fallbackInkPointerMove(event) {
+        if (event.target !== inkCanvas) extendStroke(event);
+      }
+
+      function fallbackInkPointerUp(event) {
+        if (event.target !== inkCanvas) endStroke(event);
+      }
+
+      function fallbackInkPointerCancel(event) {
+        if (event.target !== inkCanvas) cancelStroke(event);
+      }
+
+      function finishActiveStroke(finalEvent = null) {
+        if (!activeStroke) return false;
+        const pointerId = currentPointerId;
+        if (finalEvent) appendStrokePoint(finalEvent, true);
+        if (inkRenderFrame !== null) {
+          window.cancelAnimationFrame(inkRenderFrame);
+          inkRenderFrame = null;
+        }
+        drawActiveStrokeDelta();
+        activeStroke = null;
+        activeStrokePointerType = null;
+        activeStrokeRect = null;
+        activeRenderedPoint = 0;
+        currentPointerId = null;
+        removeInkPointerFallback();
+        try {
+          if (pointerId !== null && inkCanvas.hasPointerCapture?.(pointerId)) {
+            inkCanvas.releasePointerCapture(pointerId);
+          }
+        } catch (_) {}
+        if (pendingInkResize) {
+          pendingInkResize = false;
+          resizeInkCanvas();
+        }
+        markSessionDirty();
+        return true;
+      }
+
       function setInkTool(tool) {
+        finishActiveStroke();
         cancelTextGesture();
         commitActiveTextEdit({ blur: true });
         currentTool = tool;
@@ -2360,16 +2457,23 @@
         $('undo-ink').disabled = annotationHistory.length === 0;
         $('redo-ink').disabled = annotationRedo.length === 0;
         $('clear-ink').disabled = currentStrokes.length === 0 && currentTextBoxes.length === 0;
+        inkCanvas.dataset.inkStrokeCount = String(currentStrokes.length);
       }
 
       function beginStroke(event) {
-        if (currentTool === 'pointer' || currentTool === 'text' || event.pointerType === 'touch' || event.button > 0) return;
+        if (currentTool === 'pointer' || currentTool === 'text') return;
+        if (suppressPalmPointer(event) || event.button > 0) return;
+        if (activeStroke) {
+          if (event.pointerId === currentPointerId) return;
+          finishActiveStroke();
+        }
         event.preventDefault();
+        notePenActivity(event);
         const before = annotationSnapshot();
         currentPointerId = event.pointerId;
-        inkCanvas.setPointerCapture(event.pointerId);
         const rect = inkCanvas.getBoundingClientRect();
         activeStrokeRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+        activeStrokePointerType = event.pointerType || 'mouse';
         activeStroke = {
           tool: currentTool,
           color: currentTool === 'eraser' ? '#000000' : $('ink-colour').value,
@@ -2378,41 +2482,47 @@
         };
         currentStrokes.push(activeStroke);
         pushAnnotationHistory(before);
+        installInkPointerFallback();
+        try { inkCanvas.setPointerCapture?.(event.pointerId); } catch (_) {}
         drawStroke(activeStroke);
         activeRenderedPoint = 0;
         updateInkButtons();
       }
 
       function extendStroke(event) {
+        if (suppressPalmPointer(event)) return;
         if (!activeStroke || event.pointerId !== currentPointerId) return;
         event.preventDefault();
+        notePenActivity(event);
         const events = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
         (events.length ? events : [event]).forEach((item) => appendStrokePoint(item));
         queueActiveStrokeRender();
       }
 
       function endStroke(event) {
+        if (suppressPalmPointer(event)) return;
         if (!activeStroke || event.pointerId !== currentPointerId) return;
         event.preventDefault();
-        if (event.type === 'pointerup') appendStrokePoint(event, true);
-        if (inkRenderFrame !== null) {
-          window.cancelAnimationFrame(inkRenderFrame);
-          inkRenderFrame = null;
-        }
-        drawActiveStrokeDelta();
-        activeStroke = null;
-        activeStrokeRect = null;
-        activeRenderedPoint = 0;
-        currentPointerId = null;
-        try { inkCanvas.releasePointerCapture(event.pointerId); } catch (_) {}
-        if (pendingInkResize) {
-          pendingInkResize = false;
-          resizeInkCanvas();
-        }
-        markSessionDirty();
+        notePenActivity(event);
+        finishActiveStroke(event);
+      }
+
+      function cancelStroke(event) {
+        if (suppressPalmPointer(event)) return;
+        if (!activeStroke || event.pointerId !== currentPointerId) return;
+        event.preventDefault();
+        notePenActivity(event);
+        finishActiveStroke();
+      }
+
+      function handleLostInkPointerCapture(event) {
+        if (!activeStroke || event.pointerId !== currentPointerId) return;
+        notePenActivity(event);
+        installInkPointerFallback();
       }
 
       function undoAnnotations() {
+        finishActiveStroke();
         commitActiveTextEdit({ blur: true });
         cancelTextGesture();
         const snapshot = annotationHistory.pop();
@@ -2422,6 +2532,7 @@
       }
 
       function redoAnnotations() {
+        finishActiveStroke();
         commitActiveTextEdit({ blur: true });
         cancelTextGesture();
         const snapshot = annotationRedo.pop();
@@ -2431,6 +2542,7 @@
       }
 
       function clearAnnotations() {
+        finishActiveStroke();
         cancelTextGesture();
         commitActiveTextEdit({ blur: true });
         if (!currentStrokes.length && !currentTextBoxes.length) return;
@@ -2530,6 +2642,9 @@
           window.requestAnimationFrame(fitPaper);
         });
 
+        const inkToolbar = $('ink-toolbar');
+        inkToolbar.addEventListener('pointerdown', guardInkToolbarPointer, true);
+        inkToolbar.addEventListener('click', guardInkToolbarClick, true);
         document.querySelectorAll('.ink-tool').forEach((button) => {
           button.addEventListener('click', () => setInkTool(button.dataset.tool));
         });
@@ -2539,8 +2654,8 @@
         inkCanvas.addEventListener('pointerdown', beginStroke);
         inkCanvas.addEventListener('pointermove', extendStroke);
         inkCanvas.addEventListener('pointerup', endStroke);
-        inkCanvas.addEventListener('pointercancel', endStroke);
-        inkCanvas.addEventListener('lostpointercapture', endStroke);
+        inkCanvas.addEventListener('pointercancel', cancelStroke);
+        inkCanvas.addEventListener('lostpointercapture', handleLostInkPointerCapture);
         textLayer.addEventListener('pointerdown', (event) => {
           if (currentTool === 'text' && event.target === textLayer) {
             event.preventDefault();
@@ -2549,6 +2664,10 @@
         });
         pageStage.addEventListener('contextmenu', (event) => {
           if (currentTool !== 'pointer') event.preventDefault();
+        });
+        window.addEventListener('blur', () => finishActiveStroke());
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') finishActiveStroke();
         });
 
         $('zoom-out').addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
