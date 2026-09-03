@@ -163,7 +163,7 @@
 
     .class-cluster {
       grid-area: class;
-      grid-template-columns: auto minmax(150px, 1fr) auto auto auto;
+      grid-template-columns: auto minmax(150px, 1fr) auto auto auto auto;
     }
 
     .lesson-cluster {
@@ -780,6 +780,7 @@
         <select id="class-select" class="class-select" aria-label="Actieve klas"></select>
         <button id="new-class" type="button">Nieuwe klas</button>
         <button id="save-button" class="primary-button" type="button" title="Bewaar de huidige klas, pagina en aantekeningen op dit toestel">Opslaan</button>
+        <button id="export-button" type="button" title="Exporteer de actieve klas als back-up">Exporteer</button>
         <button id="import-button" type="button" title="Importeer een eerder gedownloade back-up">Importeer</button>
         <input id="import-input" class="screen-reader-only" type="file" accept="application/json,.json">
       </div>
@@ -945,7 +946,12 @@
       const PALM_TOOL_GUARD_MS = 700;
       const MIN_ZOOM = .75;
       const MAX_ZOOM = 4;
-      const ZOOM_STEP = .25;
+      const ZOOM_STEP_PERCENT = 5;
+      const ZOOM_STEPS = Object.freeze(
+        Array.from({ length: ((MAX_ZOOM * 100 - MIN_ZOOM * 100) / ZOOM_STEP_PERCENT) + 1 }, (_, index) =>
+          (MIN_ZOOM * 100 + index * ZOOM_STEP_PERCENT) / 100
+        )
+      );
       const DEFAULT_INK_COLOURS = Object.freeze({
         pen: '#000000',
         highlighter: '#fff200'
@@ -1008,6 +1014,8 @@
       const textLayer = $('text-layer');
       const thumbnailRail = $('thumbnail-rail');
       const saveButton = $('save-button');
+      const exportButton = $('export-button');
+      const importButton = $('import-button');
       const toast = $('toast');
 
       let db;
@@ -1395,6 +1403,12 @@
         saveButton.title = 'Bewaar de huidige klas, pagina en aantekeningen op dit toestel';
       }
 
+      function updateBackupButtons() {
+        const canUse = Boolean(db && activeClass && !changingClass && !saveButton.disabled);
+        exportButton.disabled = !canUse;
+        importButton.disabled = !canUse;
+      }
+
       async function persistCurrentClass({ includeProgress = true, reportError = true } = {}) {
         if (!activeClass) return true;
         activeClass.page = currentPage;
@@ -1449,17 +1463,26 @@
         if (!activeClass || saveButton.disabled) return false;
         saveButton.disabled = true;
         saveButton.textContent = 'Opslaan…';
-        const annotationsSaved = await persistAnnotations({ reportError: false });
-        const classSaved = await persistCurrentClass({ reportError: false });
-        const saved = annotationsSaved && classSaved;
-        if (saved) {
-          markSessionClean();
-          if (announce) showToast(`${activeClass.name} is opgeslagen op dit toestel.`);
-        } else if (announce) {
-          showToast('Opslaan is niet gelukt. Probeer het opnieuw.');
+        updateBackupButtons();
+        let saved = false;
+        try {
+          const annotationsSaved = await persistAnnotations({ reportError: false });
+          const classSaved = await persistCurrentClass({ reportError: false });
+          saved = annotationsSaved && classSaved;
+          if (saved) {
+            markSessionClean();
+            if (announce) showToast(`${activeClass.name} is opgeslagen op dit toestel.`);
+          } else if (announce) {
+            showToast('Opslaan is niet gelukt. Probeer het opnieuw.');
+          }
+        } catch (error) {
+          console.error(error);
+          if (announce) showToast('Opslaan is niet gelukt. Probeer het opnieuw.');
+        } finally {
+          saveButton.disabled = false;
+          saveButton.textContent = 'Opslaan';
+          updateBackupButtons();
         }
-        saveButton.disabled = false;
-        saveButton.textContent = 'Opslaan';
         return saved;
       }
 
@@ -1467,6 +1490,7 @@
         if (changingClass || (!options.initial && activeClass?.id === id)) return;
         changingClass = true;
         classSelect.disabled = true;
+        updateBackupButtons();
         try {
           if (activeClass) {
             await persistAnnotations();
@@ -1510,6 +1534,7 @@
         } finally {
           classSelect.disabled = false;
           changingClass = false;
+          updateBackupButtons();
         }
       }
 
@@ -1929,6 +1954,23 @@
         updateZoomLabel();
         fitPaper();
         markSessionDirty();
+      }
+
+      function stepZoom(direction) {
+        const currentIndex = ZOOM_STEPS.findIndex((value) => Math.abs(value - zoom) < 0.000001);
+        let nextIndex = currentIndex >= 0 ? currentIndex + direction : -1;
+        if (currentIndex < 0 && direction > 0) {
+          nextIndex = ZOOM_STEPS.findIndex((value) => value > zoom);
+        } else if (currentIndex < 0 && direction < 0) {
+          for (let index = ZOOM_STEPS.length - 1; index >= 0; index -= 1) {
+            if (ZOOM_STEPS[index] < zoom) {
+              nextIndex = index;
+              break;
+            }
+          }
+        }
+        if (nextIndex < 0 || nextIndex >= ZOOM_STEPS.length) return;
+        setZoom(ZOOM_STEPS[nextIndex]);
       }
 
       function resizeInkCanvas() {
@@ -2569,7 +2611,64 @@
         if (save) markSessionDirty();
       }
 
+      function exportFilename(name, exportedAt) {
+        const safeName = String(name || 'klas')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 48) || 'klas';
+        return `blockly-in-de-klas-${safeName}-${exportedAt.slice(0, 10)}.json`;
+      }
+
+      async function exportActiveClass() {
+        if (!db || !activeClass || changingClass || saveButton.disabled) return false;
+        exportButton.disabled = true;
+        importButton.disabled = true;
+        try {
+          const annotationsSaved = await persistAnnotations({ reportError: false });
+          const classSaved = await persistCurrentClass({ reportError: false });
+          if (!annotationsSaved || !classSaved) throw new Error('De actieve klas kon niet volledig worden opgeslagen.');
+
+          const classRecord = await storeGet('classes', activeClass.id);
+          if (!classRecord) throw new Error('De actieve klas kon niet worden gevonden.');
+          const annotations = await requestResult(
+            db.transaction('annotations', 'readonly').objectStore('annotations').index('classId').getAll(activeClass.id)
+          );
+          const exportedAt = new Date().toISOString();
+          const payload = {
+            format: 'aik-teacher-boardbook',
+            version: 1,
+            exportedAt,
+            classes: [cloneValue(classRecord)],
+            annotations: cloneValue(annotations)
+          };
+          const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = exportFilename(classRecord.name, exportedAt);
+          link.hidden = true;
+          document.body.append(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(url), 0);
+          showToast(`${classRecord.name} geëxporteerd.`);
+          return true;
+        } catch (error) {
+          console.error(error);
+          showToast(error.message || 'De klas kon niet worden geëxporteerd.');
+          return false;
+        } finally {
+          updateBackupButtons();
+        }
+      }
+
       async function importBackup(file) {
+        if (!db || !activeClass || changingClass || saveButton.disabled) return;
+        importButton.disabled = true;
+        exportButton.disabled = true;
         try {
           const payload = JSON.parse(await file.text());
           if (payload?.format !== 'aik-teacher-boardbook' || !Array.isArray(payload.classes)) {
@@ -2629,6 +2728,7 @@
           showToast(error.message || 'De back-up kon niet worden geïmporteerd.');
         } finally {
           $('import-input').value = '';
+          updateBackupButtons();
         }
       }
 
@@ -2670,8 +2770,8 @@
           if (document.visibilityState === 'hidden') finishActiveStroke();
         });
 
-        $('zoom-out').addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
-        $('zoom-in').addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
+        $('zoom-out').addEventListener('click', () => stepZoom(-1));
+        $('zoom-in').addEventListener('click', () => stepZoom(1));
         $('zoom-fit').addEventListener('click', () => setZoom(1));
 
         modeSelect.addEventListener('change', () => {
@@ -2699,7 +2799,8 @@
         });
 
         saveButton.addEventListener('click', () => saveCurrentSession());
-        $('import-button').addEventListener('click', () => $('import-input').click());
+        exportButton.addEventListener('click', () => exportActiveClass());
+        importButton.addEventListener('click', () => $('import-input').click());
         $('import-input').addEventListener('change', () => {
           const file = $('import-input').files?.[0];
           if (file) importBackup(file);
@@ -2785,6 +2886,7 @@
 
       async function initialize() {
         bindEvents();
+        updateBackupButtons();
         updateZoomLabel();
         try {
           await loadPdfDocument();
