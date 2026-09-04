@@ -818,7 +818,6 @@
         </select>
         <label class="screen-reader-only" for="level-select">Level</label>
         <select id="level-select" class="level-select"></select>
-        <button id="go-to-level" class="primary-button" type="button">Open lespagina</button>
       </div>
 
       <div class="control-cluster view-cluster">
@@ -2808,7 +2807,6 @@
           syncLessonToPlatform();
         });
         levelSelect.addEventListener('change', () => syncLessonToPlatform());
-        $('go-to-level').addEventListener('click', () => syncLessonToPlatform());
         layoutSelect.addEventListener('change', () => applyLayout());
         classSelect.addEventListener('change', () => activateClass(classSelect.value));
 
