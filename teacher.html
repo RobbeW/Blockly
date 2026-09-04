@@ -309,6 +309,15 @@
       background: var(--brand);
     }
 
+    .thumbnail-toggle {
+      width: 26px;
+      min-width: 26px;
+      height: 32px;
+      padding: 0;
+      font-size: 18px;
+      line-height: 1;
+    }
+
     .colour-input {
       width: 32px;
       height: 32px;
@@ -319,7 +328,13 @@
       cursor: pointer;
     }
 
-    .width-select { min-height: 32px; max-width: 76px; padding-block: 4px; font-size: 11px; }
+    .width-select {
+      height: 32px;
+      min-height: 32px;
+      max-width: 76px;
+      padding: 0 24px 0 8px;
+      font-size: 11px;
+    }
 
     .book-body {
       min-height: 0;
@@ -820,13 +835,13 @@
     <main id="workspace" class="workspace" data-layout="split">
       <section class="book-shell" aria-label="Digitaal bordboek">
         <div class="book-toolbar">
-          <button id="toggle-thumbnails" class="tool-button" type="button" aria-pressed="true">Pagina’s</button>
-          <button id="previous-page" class="tool-button" type="button" aria-label="Vorige pagina">←</button>
-          <button id="next-page" class="tool-button" type="button" aria-label="Volgende pagina">→</button>
+          <button id="toggle-thumbnails" class="tool-button thumbnail-toggle" type="button" aria-expanded="true" aria-controls="thumbnail-rail" aria-label="Paginaoverzicht verbergen" title="Paginaoverzicht verbergen">‹</button>
           <div class="page-heading">
             <strong id="page-title">Voorblad</strong>
             <span id="page-position">Pagina 1 van 58</span>
           </div>
+          <button id="previous-page" class="tool-button" type="button" aria-label="Vorige pagina">←</button>
+          <button id="next-page" class="tool-button" type="button" aria-label="Volgende pagina">→</button>
 
           <div id="ink-toolbar" class="tool-group" role="group" aria-label="Schrijfwerktuigen">
             <button class="tool-button ink-tool" type="button" data-tool="pointer" aria-pressed="true">Hand</button>
@@ -2747,7 +2762,11 @@
         $('next-page').addEventListener('click', () => showPage(currentPage + 1));
         $('toggle-thumbnails').addEventListener('click', () => {
           const hidden = $('book-body').classList.toggle('thumbs-hidden');
-          $('toggle-thumbnails').setAttribute('aria-pressed', String(!hidden));
+          const toggle = $('toggle-thumbnails');
+          toggle.textContent = hidden ? '›' : '‹';
+          toggle.setAttribute('aria-expanded', String(!hidden));
+          toggle.setAttribute('aria-label', hidden ? 'Paginaoverzicht tonen' : 'Paginaoverzicht verbergen');
+          toggle.title = hidden ? 'Paginaoverzicht tonen' : 'Paginaoverzicht verbergen';
           fitPaper();
           window.requestAnimationFrame(fitPaper);
         });
