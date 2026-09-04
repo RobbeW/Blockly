@@ -149,6 +149,13 @@
 
     .control-cluster button { flex: 0 0 auto; white-space: nowrap; }
 
+    .teacher-header button,
+    .teacher-header select {
+      height: 36px;
+      min-height: 36px;
+      padding-block: 0;
+    }
+
     .class-cluster,
     .lesson-cluster {
       display: grid;
@@ -946,12 +953,15 @@
       const PALM_TOOL_GUARD_MS = 700;
       const MIN_ZOOM = .75;
       const MAX_ZOOM = 4;
-      const ZOOM_STEP_PERCENT = 5;
-      const ZOOM_STEPS = Object.freeze(
-        Array.from({ length: ((MAX_ZOOM * 100 - MIN_ZOOM * 100) / ZOOM_STEP_PERCENT) + 1 }, (_, index) =>
-          (MIN_ZOOM * 100 + index * ZOOM_STEP_PERCENT) / 100
+      const ZOOM_STEP_PERCENT = 10;
+      const FIRST_REGULAR_ZOOM_PERCENT = 80;
+      const ZOOM_STEPS = Object.freeze([
+        MIN_ZOOM,
+        ...Array.from(
+          { length: ((MAX_ZOOM * 100 - FIRST_REGULAR_ZOOM_PERCENT) / ZOOM_STEP_PERCENT) + 1 },
+          (_, index) => (FIRST_REGULAR_ZOOM_PERCENT + index * ZOOM_STEP_PERCENT) / 100
         )
-      );
+      ]);
       const DEFAULT_INK_COLOURS = Object.freeze({
         pen: '#000000',
         highlighter: '#fff200'
