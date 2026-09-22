@@ -14,7 +14,7 @@
   <meta name="description" content="Bordboek voor Blockly in de Klas: syllabus, pen en oefenplatform in één klasgebonden werkomgeving.">
   <meta name="author" content="Robbe Wulgaert, AI in de Klas, robbewulgaert.be">
   <meta name="copyright" content="Copyright (c) 2026 Robbe Wulgaert">
-  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="./favicon.png?v=20260903-2">
   <title>Bordboek · Blockly in de Klas</title>
   <style>
     :root {
@@ -83,7 +83,8 @@
 
     button:focus-visible,
     select:focus-visible,
-    input:focus-visible {
+    input:focus-visible,
+    textarea:focus-visible {
       outline: none;
       box-shadow: 0 0 0 3px rgba(61, 255, 208, .42);
     }
@@ -148,6 +149,13 @@
 
     .control-cluster button { flex: 0 0 auto; white-space: nowrap; }
 
+    .teacher-header button,
+    .teacher-header select {
+      height: 36px;
+      min-height: 36px;
+      padding-block: 0;
+    }
+
     .class-cluster,
     .lesson-cluster {
       display: grid;
@@ -162,7 +170,7 @@
 
     .class-cluster {
       grid-area: class;
-      grid-template-columns: auto minmax(150px, 1fr) auto auto auto;
+      grid-template-columns: auto minmax(150px, 1fr) auto auto auto auto;
     }
 
     .lesson-cluster {
@@ -301,6 +309,15 @@
       background: var(--brand);
     }
 
+    .thumbnail-toggle {
+      width: 26px;
+      min-width: 26px;
+      height: 32px;
+      padding: 0;
+      font-size: 18px;
+      line-height: 1;
+    }
+
     .colour-input {
       width: 32px;
       height: 32px;
@@ -311,7 +328,13 @@
       cursor: pointer;
     }
 
-    .width-select { min-height: 32px; max-width: 76px; padding-block: 4px; font-size: 11px; }
+    .width-select {
+      height: 32px;
+      min-height: 32px;
+      max-width: 76px;
+      padding: 0 24px 0 8px;
+      font-size: 11px;
+    }
 
     .book-body {
       min-height: 0;
@@ -397,7 +420,8 @@
     }
 
     .pdf-page-canvas,
-    .ink-canvas {
+    .ink-canvas,
+    .text-layer {
       position: absolute;
       inset: 0;
       width: 100%;
@@ -423,10 +447,89 @@
       -webkit-touch-callout: none;
     }
 
+    .text-layer {
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .text-layer.is-active {
+      pointer-events: auto;
+      touch-action: manipulation;
+    }
+
+    .text-box {
+      position: absolute;
+      min-width: 8%;
+      min-height: 3.5%;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .72);
+      box-shadow: 0 2px 8px rgba(22, 0, 51, .08);
+    }
+
+    .text-box.is-selected,
+    .text-box:focus-within {
+      border-color: rgba(82, 0, 255, .62);
+      box-shadow: 0 0 0 2px rgba(61, 255, 208, .45), 0 4px 12px rgba(22, 0, 51, .14);
+    }
+
+    .text-box-input {
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      display: block;
+      padding: 24px 6px 5px;
+      border: 0;
+      border-radius: 5px;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+      font: inherit;
+      line-height: 1.2;
+      resize: none;
+      overflow: auto;
+    }
+
+    .text-box-control {
+      position: absolute;
+      z-index: 1;
+      width: 44px;
+      min-width: 44px;
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 1px solid rgba(82, 0, 255, .25);
+      border-radius: 5px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, .94);
+      font-size: 13px;
+      line-height: 1;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .text-box.is-selected .text-box-control,
+    .text-box:focus-within .text-box-control {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .text-box-grip { top: 2px; left: 2px; cursor: move; touch-action: none; }
+    .text-box-delete { top: 2px; right: 2px; }
+    .text-box-resize { right: 2px; bottom: 2px; cursor: nwse-resize; touch-action: none; }
+
+    .text-box-control:focus-visible {
+      outline: 2px solid var(--mint);
+      outline-offset: 1px;
+    }
+
+    .tool-button .compact-label { display: none; }
+
     .paper-loading {
       position: absolute;
       inset: 0;
-      z-index: 3;
+      z-index: 4;
       display: grid;
       place-items: center;
       color: var(--muted);
@@ -596,6 +699,7 @@
     @media (max-width: 1240px) {
       .workspace { grid-template-columns: minmax(390px, 45%) 8px minmax(520px, 1fr); }
       .tool-button .wide-label { display: none; }
+      .tool-button .compact-label { display: inline; }
     }
 
     @media (max-width: 1080px) {
@@ -667,6 +771,7 @@
 
     @container book-pane (max-width: 560px) {
       .tool-button .wide-label { display: none; }
+      .tool-button .compact-label { display: inline; }
       .book-toolbar { padding-inline: 6px; }
     }
 
@@ -697,6 +802,7 @@
         <select id="class-select" class="class-select" aria-label="Actieve klas"></select>
         <button id="new-class" type="button">Nieuwe klas</button>
         <button id="save-button" class="primary-button" type="button" title="Bewaar de huidige klas, pagina en aantekeningen op dit toestel">Opslaan</button>
+        <button id="export-button" type="button" title="Exporteer de actieve klas als back-up">Exporteer</button>
         <button id="import-button" type="button" title="Importeer een eerder gedownloade back-up">Importeer</button>
         <input id="import-input" class="screen-reader-only" type="file" accept="application/json,.json">
       </div>
@@ -712,7 +818,6 @@
         </select>
         <label class="screen-reader-only" for="level-select">Level</label>
         <select id="level-select" class="level-select"></select>
-        <button id="go-to-level" class="primary-button" type="button">Open lespagina</button>
       </div>
 
       <div class="control-cluster view-cluster">
@@ -729,19 +834,20 @@
     <main id="workspace" class="workspace" data-layout="split">
       <section class="book-shell" aria-label="Digitaal bordboek">
         <div class="book-toolbar">
-          <button id="toggle-thumbnails" class="tool-button" type="button" aria-pressed="true">Pagina’s</button>
-          <button id="previous-page" class="tool-button" type="button" aria-label="Vorige pagina">←</button>
-          <button id="next-page" class="tool-button" type="button" aria-label="Volgende pagina">→</button>
+          <button id="toggle-thumbnails" class="tool-button thumbnail-toggle" type="button" aria-expanded="true" aria-controls="thumbnail-rail" aria-label="Paginaoverzicht verbergen" title="Paginaoverzicht verbergen">‹</button>
           <div class="page-heading">
             <strong id="page-title">Voorblad</strong>
             <span id="page-position">Pagina 1 van 58</span>
           </div>
+          <button id="previous-page" class="tool-button" type="button" aria-label="Vorige pagina">←</button>
+          <button id="next-page" class="tool-button" type="button" aria-label="Volgende pagina">→</button>
 
-          <div class="tool-group" role="group" aria-label="Schrijfwerktuigen">
+          <div id="ink-toolbar" class="tool-group" role="group" aria-label="Schrijfwerktuigen">
             <button class="tool-button ink-tool" type="button" data-tool="pointer" aria-pressed="true">Hand</button>
             <button class="tool-button ink-tool" type="button" data-tool="pen" aria-pressed="false">Pen</button>
-            <button class="tool-button ink-tool" type="button" data-tool="highlighter" aria-label="Markeerstift" aria-pressed="false"><span class="wide-label">Markeer</span><span aria-hidden="true">▰</span></button>
-            <button class="tool-button ink-tool" type="button" data-tool="eraser" aria-label="Gum" aria-pressed="false"><span class="wide-label">Gum</span><span aria-hidden="true">⌫</span></button>
+            <button class="tool-button ink-tool" type="button" data-tool="highlighter" aria-label="Markeerstift" aria-pressed="false"><span class="wide-label">Markeer</span><span class="compact-label" aria-hidden="true">▰</span></button>
+            <button class="tool-button ink-tool" type="button" data-tool="eraser" aria-label="Gum" aria-pressed="false"><span class="wide-label">Gum</span><span class="compact-label" aria-hidden="true">⌫</span></button>
+            <button class="tool-button ink-tool" type="button" data-tool="text" aria-label="Tekstvak toevoegen" aria-pressed="false">Tekst</button>
             <label class="screen-reader-only" for="ink-colour">Penkleur</label>
             <input id="ink-colour" class="colour-input" type="color" value="#000000" title="Penkleur">
             <label class="screen-reader-only" for="ink-width">Pendikte</label>
@@ -751,6 +857,7 @@
               <option value="10">Dik</option>
             </select>
             <button id="undo-ink" class="tool-button" type="button" disabled>Ongedaan</button>
+            <button id="redo-ink" class="tool-button" type="button" disabled>Opnieuw</button>
             <button id="clear-ink" class="tool-button" type="button" disabled>Wis blad</button>
           </div>
 
@@ -768,6 +875,7 @@
               <div id="paper-loading" class="paper-loading" aria-hidden="true">Syllabuspagina laden…</div>
               <canvas id="pdf-canvas" class="pdf-page-canvas" aria-label="Syllabuspagina 1: Voorblad"></canvas>
               <canvas id="ink-canvas" class="ink-canvas" aria-label="Schrijflaag boven de syllabus"></canvas>
+              <div id="text-layer" class="text-layer" aria-label="Tekstlaag boven de syllabus"></div>
             </div>
           </div>
         </div>
@@ -849,9 +957,25 @@
       const MAX_PDF_RENDER_SCALE = 3;
       const MAX_PDF_RENDER_PIXELS = 16000000;
       const MAX_INK_RENDER_PIXELS = 12000000;
+      const MAX_TEXT_BOXES = 128;
+      const MAX_TEXT_LENGTH = 2000;
+      const MIN_TEXT_WIDTH = .08;
+      const MIN_TEXT_HEIGHT = .035;
+      const DEFAULT_TEXT_WIDTH = .30;
+      const DEFAULT_TEXT_HEIGHT = .09;
+      const DEFAULT_TEXT_FONT_SIZE = .018;
+      const PALM_TOOL_GUARD_MS = 700;
       const MIN_ZOOM = .75;
       const MAX_ZOOM = 4;
-      const ZOOM_STEP = .25;
+      const ZOOM_STEP_PERCENT = 10;
+      const FIRST_REGULAR_ZOOM_PERCENT = 80;
+      const ZOOM_STEPS = Object.freeze([
+        MIN_ZOOM,
+        ...Array.from(
+          { length: ((MAX_ZOOM * 100 - FIRST_REGULAR_ZOOM_PERCENT) / ZOOM_STEP_PERCENT) + 1 },
+          (_, index) => (FIRST_REGULAR_ZOOM_PERCENT + index * ZOOM_STEP_PERCENT) / 100
+        )
+      ]);
       const DEFAULT_INK_COLOURS = Object.freeze({
         pen: '#000000',
         highlighter: '#fff200'
@@ -911,8 +1035,11 @@
       const paperLoading = $('paper-loading');
       const inkCanvas = $('ink-canvas');
       const inkContext = inkCanvas.getContext('2d');
+      const textLayer = $('text-layer');
       const thumbnailRail = $('thumbnail-rail');
       const saveButton = $('save-button');
+      const exportButton = $('export-button');
+      const importButton = $('import-button');
       const toast = $('toast');
 
       let db;
@@ -927,12 +1054,17 @@
       let activeClass = null;
       let currentPage = 1;
       let currentStrokes = [];
+      let currentTextBoxes = [];
       let loadedAnnotationPage = null;
       let currentTool = 'pointer';
       let activeStroke = null;
+      let activeStrokePointerType = null;
       let activeStrokeRect = null;
       let activeRenderedPoint = 0;
       let currentPointerId = null;
+      let inkPointerFallbackInstalled = false;
+      let lastPenActivityAt = -Infinity;
+      let suppressInkToolbarUntil = -Infinity;
       let inkRenderFrame = null;
       let pendingInkResize = false;
       let pageStageResizeObserver = null;
@@ -944,6 +1076,11 @@
       let platformReady = false;
       let changingClass = false;
       let sessionDirty = false;
+      let activeTextId = null;
+      let activeTextEdit = null;
+      let textPointerState = null;
+      let annotationHistory = [];
+      let annotationRedo = [];
 
       function pageTitle(page) {
         return PAGE_SECTIONS.find((section) => page >= section.from && page <= section.to)?.title || `Syllabuspagina ${page}`;
@@ -951,6 +1088,68 @@
 
       function clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
+      }
+
+      function cloneValue(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function normalizeTextBox(raw, usedIds = new Set()) {
+        if (!raw || typeof raw !== 'object') return null;
+        let id = typeof raw.id === 'string' && /^[a-z0-9_-]{1,80}$/i.test(raw.id) ? raw.id : '';
+        if (!id || usedIds.has(id)) {
+          do { id = makeId('text'); } while (usedIds.has(id));
+        }
+        usedIds.add(id);
+        const width = clamp(Number.isFinite(Number(raw.width)) ? Number(raw.width) : DEFAULT_TEXT_WIDTH, MIN_TEXT_WIDTH, 1);
+        const height = clamp(Number.isFinite(Number(raw.height)) ? Number(raw.height) : DEFAULT_TEXT_HEIGHT, MIN_TEXT_HEIGHT, 1);
+        const x = clamp(Number.isFinite(Number(raw.x)) ? Number(raw.x) : 0, 0, 1 - width);
+        const y = clamp(Number.isFinite(Number(raw.y)) ? Number(raw.y) : 0, 0, 1 - height);
+        return {
+          id,
+          x,
+          y,
+          width: Math.min(width, 1 - x),
+          height: Math.min(height, 1 - y),
+          text: String(raw.text ?? '').slice(0, MAX_TEXT_LENGTH),
+          fontSize: clamp((Number(raw.fontSize) > .5 ? Number(raw.fontSize) / PAGE_WIDTH : Number(raw.fontSize)) || DEFAULT_TEXT_FONT_SIZE, .01, .05),
+          color: '#160033'
+        };
+      }
+
+      function normalizeTextBoxes(raw) {
+        if (!Array.isArray(raw)) return [];
+        const usedIds = new Set();
+        return raw.slice(0, MAX_TEXT_BOXES)
+          .map((item) => normalizeTextBox(item, usedIds))
+          .filter(Boolean);
+      }
+
+      function annotationSnapshot() {
+        return { strokes: cloneValue(currentStrokes), textBoxes: cloneValue(currentTextBoxes) };
+      }
+
+      function snapshotChanged(before, after = annotationSnapshot()) {
+        return JSON.stringify(before) !== JSON.stringify(after);
+      }
+
+      function pushAnnotationHistory(before = annotationSnapshot()) {
+        annotationHistory.push(cloneValue(before));
+        annotationRedo = [];
+        if (annotationHistory.length > 100) annotationHistory.shift();
+        updateInkButtons();
+      }
+
+      function restoreAnnotationSnapshot(snapshot) {
+        currentStrokes = Array.isArray(snapshot?.strokes) ? cloneValue(snapshot.strokes) : [];
+        currentTextBoxes = normalizeTextBoxes(snapshot?.textBoxes);
+        activeTextId = null;
+        activeTextEdit = null;
+        textPointerState = null;
+        renderStrokes();
+        renderTextBoxes();
+        updateInkButtons();
+        markSessionDirty();
       }
 
       function pdfRenderScale(cssWidth, cssHeight) {
@@ -1120,14 +1319,16 @@
           const newKey = annotationKey(record.id, newPage);
           const target = migratedNotes.get(newPage);
           if (target) {
-            target.strokes.push(...(note.strokes || []));
+            target.strokes.push(...(Array.isArray(note.strokes) ? note.strokes : []));
+            target.textBoxes.push(...normalizeTextBoxes(note.textBoxes));
           } else {
             migratedNotes.set(newPage, {
               ...note,
               key: newKey,
               page: newPage,
               contentRevision: CONTENT_REVISION,
-              strokes: [...(note.strokes || [])],
+              strokes: Array.isArray(note.strokes) ? [...note.strokes] : [],
+              textBoxes: normalizeTextBoxes(note.textBoxes),
               updatedAt: migratedAt
             });
           }
@@ -1136,7 +1337,10 @@
           const transaction = db.transaction('annotations', 'readwrite');
           const store = transaction.objectStore('annotations');
           notes.forEach((note) => store.delete(note.key || annotationKey(record.id, note.page)));
-          migratedNotes.forEach((note) => store.put(note));
+          migratedNotes.forEach((note) => {
+            note.textBoxes = normalizeTextBoxes(note.textBoxes);
+            store.put(note);
+          });
           await transactionResult(transaction);
         }
         const migratedRecord = {
@@ -1223,6 +1427,12 @@
         saveButton.title = 'Bewaar de huidige klas, pagina en aantekeningen op dit toestel';
       }
 
+      function updateBackupButtons() {
+        const canUse = Boolean(db && activeClass && !changingClass && !saveButton.disabled);
+        exportButton.disabled = !canUse;
+        importButton.disabled = !canUse;
+      }
+
       async function persistCurrentClass({ includeProgress = true, reportError = true } = {}) {
         if (!activeClass) return true;
         activeClass.page = currentPage;
@@ -1252,6 +1462,9 @@
 
       async function persistAnnotations({ reportError = true } = {}) {
         if (!activeClass || loadedAnnotationPage !== currentPage) return true;
+        finishActiveStroke();
+        cancelTextGesture();
+        commitActiveTextEdit();
         try {
           await storePut('annotations', {
             key: annotationKey(activeClass.id, currentPage),
@@ -1259,6 +1472,7 @@
             page: currentPage,
             contentRevision: CONTENT_REVISION,
             strokes: currentStrokes,
+            textBoxes: normalizeTextBoxes(currentTextBoxes),
             updatedAt: new Date().toISOString()
           });
           return true;
@@ -1273,17 +1487,26 @@
         if (!activeClass || saveButton.disabled) return false;
         saveButton.disabled = true;
         saveButton.textContent = 'Opslaan…';
-        const annotationsSaved = await persistAnnotations({ reportError: false });
-        const classSaved = await persistCurrentClass({ reportError: false });
-        const saved = annotationsSaved && classSaved;
-        if (saved) {
-          markSessionClean();
-          if (announce) showToast(`${activeClass.name} is opgeslagen op dit toestel.`);
-        } else if (announce) {
-          showToast('Opslaan is niet gelukt. Probeer het opnieuw.');
+        updateBackupButtons();
+        let saved = false;
+        try {
+          const annotationsSaved = await persistAnnotations({ reportError: false });
+          const classSaved = await persistCurrentClass({ reportError: false });
+          saved = annotationsSaved && classSaved;
+          if (saved) {
+            markSessionClean();
+            if (announce) showToast(`${activeClass.name} is opgeslagen op dit toestel.`);
+          } else if (announce) {
+            showToast('Opslaan is niet gelukt. Probeer het opnieuw.');
+          }
+        } catch (error) {
+          console.error(error);
+          if (announce) showToast('Opslaan is niet gelukt. Probeer het opnieuw.');
+        } finally {
+          saveButton.disabled = false;
+          saveButton.textContent = 'Opslaan';
+          updateBackupButtons();
         }
-        saveButton.disabled = false;
-        saveButton.textContent = 'Opslaan';
         return saved;
       }
 
@@ -1291,6 +1514,7 @@
         if (changingClass || (!options.initial && activeClass?.id === id)) return;
         changingClass = true;
         classSelect.disabled = true;
+        updateBackupButtons();
         try {
           if (activeClass) {
             await persistAnnotations();
@@ -1334,6 +1558,7 @@
         } finally {
           classSelect.disabled = false;
           changingClass = false;
+          updateBackupButtons();
         }
       }
 
@@ -1610,6 +1835,7 @@
       async function showPage(page, options = {}) {
         const nextPage = clamp(Number(page) || 1, 1, pageCount);
         const pageChanged = nextPage !== currentPage;
+        cancelTextGesture();
         let annotationsSaved = true;
         if (!options.skipPersist && activeClass && pageChanged) {
           annotationsSaved = await persistAnnotations({ reportError: false });
@@ -1625,15 +1851,22 @@
         updateThumbnailSelection();
 
         currentStrokes = [];
+        currentTextBoxes = [];
+        activeTextId = null;
+        activeTextEdit = null;
+        annotationHistory = [];
+        annotationRedo = [];
         loadedAnnotationPage = null;
         updateInkButtons();
         if (activeClass) {
           const record = await storeGet('annotations', annotationKey(activeClass.id, currentPage));
           if (token !== pageLoadToken) return;
           currentStrokes = Array.isArray(record?.strokes) ? record.strokes : [];
+          currentTextBoxes = normalizeTextBoxes(record?.textBoxes);
         }
         loadedAnnotationPage = currentPage;
         renderStrokes();
+        renderTextBoxes();
         updateInkButtons();
         fitPaper();
         if (options.focus) paper.focus?.();
@@ -1727,6 +1960,10 @@
         const fitWidth = Math.min(availableWidth, availableHeight * (PAGE_WIDTH / PAGE_HEIGHT));
         paper.style.width = `${Math.round(fitWidth * zoom)}px`;
         resizeInkCanvas();
+        textLayer.querySelectorAll('.text-box').forEach((element) => {
+          const box = textBoxById(element.dataset.textId);
+          if (box) updateTextBoxStyle(element, box);
+        });
         schedulePdfRender();
       }
 
@@ -1741,6 +1978,23 @@
         updateZoomLabel();
         fitPaper();
         markSessionDirty();
+      }
+
+      function stepZoom(direction) {
+        const currentIndex = ZOOM_STEPS.findIndex((value) => Math.abs(value - zoom) < 0.000001);
+        let nextIndex = currentIndex >= 0 ? currentIndex + direction : -1;
+        if (currentIndex < 0 && direction > 0) {
+          nextIndex = ZOOM_STEPS.findIndex((value) => value > zoom);
+        } else if (currentIndex < 0 && direction < 0) {
+          for (let index = ZOOM_STEPS.length - 1; index >= 0; index -= 1) {
+            if (ZOOM_STEPS[index] < zoom) {
+              nextIndex = index;
+              break;
+            }
+          }
+        }
+        if (nextIndex < 0 || nextIndex >= ZOOM_STEPS.length) return;
+        setZoom(ZOOM_STEPS[nextIndex]);
       }
 
       function resizeInkCanvas() {
@@ -1825,6 +2079,313 @@
         currentStrokes.forEach(drawStroke);
       }
 
+      function updateTextBoxStyle(element, box) {
+        element.style.left = `${box.x * 100}%`;
+        element.style.top = `${box.y * 100}%`;
+        element.style.width = `${box.width * 100}%`;
+        element.style.height = `${box.height * 100}%`;
+        element.style.color = box.color;
+        const input = element.querySelector('.text-box-input');
+        if (input) input.style.fontSize = `${Math.max(10, paper.getBoundingClientRect().width * box.fontSize)}px`;
+      }
+
+      function updateTextBoxInteractivity() {
+        const enabled = currentTool === 'text';
+        textLayer.querySelectorAll('.text-box, .text-box-input, .text-box-control').forEach((element) => {
+          element.tabIndex = enabled ? (element.classList.contains('text-box') ? 0 : 0) : -1;
+        });
+      }
+
+      function textBoxById(id) {
+        return currentTextBoxes.find((box) => box.id === id) || null;
+      }
+
+      function removeTextBox(id, { recordHistory = true } = {}) {
+        const before = annotationSnapshot();
+        const next = currentTextBoxes.filter((box) => box.id !== id);
+        if (next.length === currentTextBoxes.length) return;
+        currentTextBoxes = next;
+        activeTextId = null;
+        activeTextEdit = null;
+        if (recordHistory) pushAnnotationHistory(before);
+        renderTextBoxes();
+        updateInkButtons();
+        markSessionDirty();
+      }
+
+      function commitActiveTextEdit({ blur = false } = {}) {
+        if (!activeTextEdit) return true;
+        const edit = activeTextEdit;
+        const input = edit.input;
+        const box = textBoxById(edit.id);
+        if (!box || !input) {
+          activeTextEdit = null;
+          return true;
+        }
+        box.text = String(input.value || '').slice(0, MAX_TEXT_LENGTH);
+        if (!box.text.trim()) {
+          removeTextBox(box.id, { recordHistory: false });
+          if (blur) input.blur();
+          return true;
+        }
+        const changed = snapshotChanged(edit.before);
+        if (changed) pushAnnotationHistory(edit.before);
+        edit.before = annotationSnapshot();
+        updateTextBoxStyle(edit.element, box);
+        if (changed) markSessionDirty();
+        if (blur) {
+          input.blur();
+          activeTextEdit = null;
+        }
+        return true;
+      }
+
+      function cancelActiveTextEdit() {
+        if (!activeTextEdit) return;
+        const edit = activeTextEdit;
+        const restoreDirty = edit.dirtyBefore;
+        activeTextEdit = null;
+        activeTextId = null;
+        restoreAnnotationSnapshot(edit.before);
+        if (restoreDirty) markSessionDirty();
+        else markSessionClean();
+        edit.input?.blur();
+      }
+
+      function beginTextEdit(box, element, input) {
+        activeTextId = box.id;
+        element.classList.add('is-selected');
+        if (!activeTextEdit || activeTextEdit.id !== box.id) {
+          activeTextEdit = { id: box.id, element, input, before: annotationSnapshot(), dirtyBefore: sessionDirty };
+        }
+      }
+
+      function renderTextBoxes() {
+        textLayer.replaceChildren();
+        textLayer.classList.toggle('is-active', currentTool === 'text');
+        currentTextBoxes.forEach((box) => {
+          const element = document.createElement('div');
+          element.className = 'text-box';
+          element.dataset.textId = box.id;
+          element.tabIndex = 0;
+          element.setAttribute('role', 'group');
+          element.setAttribute('aria-label', `Tekstvak op pagina ${currentPage}`);
+
+          const input = document.createElement('textarea');
+          input.className = 'text-box-input';
+          input.value = box.text;
+          input.maxLength = MAX_TEXT_LENGTH;
+          input.setAttribute('aria-label', 'Tekst in tekstvak');
+          input.addEventListener('focus', () => beginTextEdit(box, element, input));
+          input.addEventListener('input', () => {
+            box.text = input.value.slice(0, MAX_TEXT_LENGTH);
+            markSessionDirty();
+          });
+          input.addEventListener('blur', () => commitActiveTextEdit({ blur: true }));
+          input.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              cancelActiveTextEdit();
+            } else if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+              event.preventDefault();
+              commitActiveTextEdit({ blur: true });
+            }
+          });
+
+          const grip = document.createElement('button');
+          grip.className = 'text-box-control text-box-grip';
+          grip.type = 'button';
+          grip.textContent = '↕';
+          grip.title = 'Tekstvak verplaatsen';
+          grip.setAttribute('aria-label', 'Tekstvak verplaatsen');
+          grip.addEventListener('pointerdown', (event) => beginTextPointer(event, box, element, 'move'));
+          grip.addEventListener('keydown', (event) => keyboardMoveTextBox(event, box));
+
+          const remove = document.createElement('button');
+          remove.className = 'text-box-control text-box-delete';
+          remove.type = 'button';
+          remove.textContent = '×';
+          remove.title = 'Tekstvak verwijderen';
+          remove.setAttribute('aria-label', 'Tekstvak verwijderen');
+          remove.addEventListener('click', () => {
+            commitActiveTextEdit();
+            removeTextBox(box.id);
+          });
+
+          const resize = document.createElement('button');
+          resize.className = 'text-box-control text-box-resize';
+          resize.type = 'button';
+          resize.textContent = '↘';
+          resize.title = 'Tekstvak groter of kleiner maken';
+          resize.setAttribute('aria-label', 'Tekstvak groter of kleiner maken');
+          resize.addEventListener('pointerdown', (event) => beginTextPointer(event, box, element, 'resize'));
+          resize.addEventListener('keydown', (event) => keyboardResizeTextBox(event, box));
+
+          element.addEventListener('focusin', () => {
+            activeTextId = box.id;
+            element.classList.add('is-selected');
+          });
+          element.addEventListener('focusout', () => {
+            window.setTimeout(() => {
+              if (!element.contains(document.activeElement)) element.classList.remove('is-selected');
+            }, 0);
+          });
+          element.addEventListener('keydown', (event) => {
+            if (event.target === input) return;
+            if (event.key === 'Delete' || event.key === 'Backspace') {
+              event.preventDefault();
+              removeTextBox(box.id);
+            }
+          });
+          element.append(input, grip, remove, resize);
+          updateTextBoxStyle(element, box);
+          textLayer.appendChild(element);
+        });
+        updateTextBoxInteractivity();
+      }
+
+      function textPoint(event) {
+        const rect = paper.getBoundingClientRect();
+        return {
+          x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
+          y: clamp((event.clientY - rect.top) / rect.height, 0, 1)
+        };
+      }
+
+      function createTextBox(event) {
+        if (currentTextBoxes.length >= MAX_TEXT_BOXES) {
+          showToast(`Maximaal ${MAX_TEXT_BOXES} tekstvakken per pagina.`);
+          return;
+        }
+        const before = annotationSnapshot();
+        const point = textPoint(event);
+        const box = normalizeTextBox({
+          id: makeId('text'),
+          x: point.x,
+          y: point.y,
+          width: DEFAULT_TEXT_WIDTH,
+          height: DEFAULT_TEXT_HEIGHT,
+          text: ''
+        });
+        currentTextBoxes.push(box);
+        renderTextBoxes();
+        const element = textLayer.querySelector(`[data-text-id="${box.id}"]`);
+        const input = element?.querySelector('.text-box-input');
+        if (!element || !input) return;
+        activeTextId = box.id;
+        activeTextEdit = { id: box.id, element, input, before, dirtyBefore: sessionDirty };
+        element.classList.add('is-selected');
+        input.focus();
+      }
+
+      function cancelTextGesture() {
+        const state = textPointerState;
+        if (!state) return;
+        state.cleanup?.();
+        state.box.x = state.x;
+        state.box.y = state.y;
+        state.box.width = state.width;
+        state.box.height = state.height;
+        updateTextBoxStyle(state.element, state.box);
+        textPointerState = null;
+        if (state.dirtyBefore) markSessionDirty();
+        else markSessionClean();
+      }
+
+      function beginTextPointer(event, box, element, mode) {
+        if (currentTool !== 'text' || event.button > 0) return;
+        event.preventDefault();
+        commitActiveTextEdit();
+        activeTextId = box.id;
+        element.classList.add('is-selected');
+        const rect = paper.getBoundingClientRect();
+        const control = event.currentTarget;
+        textPointerState = {
+          pointerId: event.pointerId,
+          mode,
+          box,
+          element,
+          control,
+          before: annotationSnapshot(),
+          dirtyBefore: sessionDirty,
+          startX: event.clientX,
+          startY: event.clientY,
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+          pageWidth: rect.width,
+          pageHeight: rect.height,
+          cleanup: null
+        };
+        const move = (moveEvent) => {
+          if (!textPointerState || moveEvent.pointerId !== textPointerState.pointerId) return;
+          const state = textPointerState;
+          const dx = (moveEvent.clientX - state.startX) / state.pageWidth;
+          const dy = (moveEvent.clientY - state.startY) / state.pageHeight;
+          if (state.mode === 'move') {
+            box.x = clamp(state.x + dx, 0, 1 - box.width);
+            box.y = clamp(state.y + dy, 0, 1 - box.height);
+          } else {
+            box.width = clamp(state.width + dx, MIN_TEXT_WIDTH, 1 - box.x);
+            box.height = clamp(state.height + dy, MIN_TEXT_HEIGHT, 1 - box.y);
+          }
+          updateTextBoxStyle(element, box);
+        };
+        const end = (endEvent) => {
+          if (!textPointerState || endEvent.pointerId !== textPointerState.pointerId) return;
+          const state = textPointerState;
+          state.cleanup?.();
+          if (snapshotChanged(state.before)) pushAnnotationHistory(state.before);
+          textPointerState = null;
+          markSessionDirty();
+        };
+        const cancel = () => cancelTextGesture();
+        textPointerState.cleanup = () => {
+          element.removeEventListener('pointermove', move);
+          element.removeEventListener('pointerup', end);
+          control.removeEventListener('pointercancel', cancel);
+          control.removeEventListener('lostpointercapture', cancel);
+        };
+        control.setPointerCapture?.(event.pointerId);
+        element.addEventListener('pointermove', move);
+        element.addEventListener('pointerup', end);
+        control.addEventListener('pointercancel', cancel);
+        control.addEventListener('lostpointercapture', cancel);
+      }
+
+      function keyboardMoveTextBox(event, box) {
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        commitActiveTextEdit();
+        const before = annotationSnapshot();
+        const step = event.shiftKey ? .05 : .01;
+        if (event.key === 'ArrowLeft') box.x = clamp(box.x - step, 0, 1 - box.width);
+        if (event.key === 'ArrowRight') box.x = clamp(box.x + step, 0, 1 - box.width);
+        if (event.key === 'ArrowUp') box.y = clamp(box.y - step, 0, 1 - box.height);
+        if (event.key === 'ArrowDown') box.y = clamp(box.y + step, 0, 1 - box.height);
+        const element = textLayer.querySelector(`[data-text-id="${box.id}"]`);
+        if (element) updateTextBoxStyle(element, box);
+        if (snapshotChanged(before)) pushAnnotationHistory(before);
+        markSessionDirty();
+      }
+
+      function keyboardResizeTextBox(event, box) {
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        commitActiveTextEdit();
+        const before = annotationSnapshot();
+        const step = event.shiftKey ? .05 : .01;
+        if (event.key === 'ArrowLeft') box.width = clamp(box.width - step, MIN_TEXT_WIDTH, 1 - box.x);
+        if (event.key === 'ArrowRight') box.width = clamp(box.width + step, MIN_TEXT_WIDTH, 1 - box.x);
+        if (event.key === 'ArrowUp') box.height = clamp(box.height - step, MIN_TEXT_HEIGHT, 1 - box.y);
+        if (event.key === 'ArrowDown') box.height = clamp(box.height + step, MIN_TEXT_HEIGHT, 1 - box.y);
+        const element = textLayer.querySelector(`[data-text-id="${box.id}"]`);
+        if (element) updateTextBoxStyle(element, box);
+        if (snapshotChanged(before)) pushAnnotationHistory(before);
+        markSessionDirty();
+      }
+
       function appendStrokePoint(event, finalPoint = false) {
         if (!activeStroke || !activeStrokeRect) return;
         const raw = pointOnCanvas(event, activeStrokeRect);
@@ -1853,7 +2414,96 @@
         if (inkRenderFrame === null) inkRenderFrame = window.requestAnimationFrame(drawActiveStrokeDelta);
       }
 
+      function drawingToolActive() {
+        return ['pen', 'highlighter', 'eraser'].includes(currentTool);
+      }
+
+      function notePenActivity(event) {
+        if (event?.pointerType === 'pen') lastPenActivityAt = performance.now();
+      }
+
+      function suppressPalmPointer(event) {
+        if (event.pointerType !== 'touch' || !drawingToolActive()) return false;
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+      }
+
+      function guardInkToolbarPointer(event) {
+        if (event.pointerType !== 'touch') return;
+        const penIsActive = activeStrokePointerType === 'pen';
+        if (!penIsActive && performance.now() - lastPenActivityAt > PALM_TOOL_GUARD_MS) return;
+        suppressInkToolbarUntil = performance.now() + PALM_TOOL_GUARD_MS;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+
+      function guardInkToolbarClick(event) {
+        if (performance.now() >= suppressInkToolbarUntil) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+
+      function installInkPointerFallback() {
+        if (inkPointerFallbackInstalled) return;
+        inkPointerFallbackInstalled = true;
+        document.addEventListener('pointermove', fallbackInkPointerMove, { passive: false });
+        document.addEventListener('pointerup', fallbackInkPointerUp, { passive: false });
+        document.addEventListener('pointercancel', fallbackInkPointerCancel, { passive: false });
+      }
+
+      function removeInkPointerFallback() {
+        if (!inkPointerFallbackInstalled) return;
+        inkPointerFallbackInstalled = false;
+        document.removeEventListener('pointermove', fallbackInkPointerMove);
+        document.removeEventListener('pointerup', fallbackInkPointerUp);
+        document.removeEventListener('pointercancel', fallbackInkPointerCancel);
+      }
+
+      function fallbackInkPointerMove(event) {
+        if (event.target !== inkCanvas) extendStroke(event);
+      }
+
+      function fallbackInkPointerUp(event) {
+        if (event.target !== inkCanvas) endStroke(event);
+      }
+
+      function fallbackInkPointerCancel(event) {
+        if (event.target !== inkCanvas) cancelStroke(event);
+      }
+
+      function finishActiveStroke(finalEvent = null) {
+        if (!activeStroke) return false;
+        const pointerId = currentPointerId;
+        if (finalEvent) appendStrokePoint(finalEvent, true);
+        if (inkRenderFrame !== null) {
+          window.cancelAnimationFrame(inkRenderFrame);
+          inkRenderFrame = null;
+        }
+        drawActiveStrokeDelta();
+        activeStroke = null;
+        activeStrokePointerType = null;
+        activeStrokeRect = null;
+        activeRenderedPoint = 0;
+        currentPointerId = null;
+        removeInkPointerFallback();
+        try {
+          if (pointerId !== null && inkCanvas.hasPointerCapture?.(pointerId)) {
+            inkCanvas.releasePointerCapture(pointerId);
+          }
+        } catch (_) {}
+        if (pendingInkResize) {
+          pendingInkResize = false;
+          resizeInkCanvas();
+        }
+        markSessionDirty();
+        return true;
+      }
+
       function setInkTool(tool) {
+        finishActiveStroke();
+        cancelTextGesture();
+        commitActiveTextEdit({ blur: true });
         currentTool = tool;
         const inkColour = $('ink-colour');
         if (DEFAULT_INK_COLOURS[tool]) inkColour.value = DEFAULT_INK_COLOURS[tool];
@@ -1863,22 +2513,33 @@
         document.querySelectorAll('.ink-tool').forEach((button) => {
           button.setAttribute('aria-pressed', String(button.dataset.tool === tool));
         });
-        inkCanvas.classList.toggle('is-drawing', tool !== 'pointer');
-        showToast(tool === 'pointer' ? 'Hand actief: je kunt de pagina verschuiven.' : `${tool === 'highlighter' ? 'Markeerstift' : tool === 'eraser' ? 'Gum' : 'Pen'} actief.`);
+        inkCanvas.classList.toggle('is-drawing', ['pen', 'highlighter', 'eraser'].includes(tool));
+        textLayer.classList.toggle('is-active', tool === 'text');
+        updateTextBoxInteractivity();
+        showToast(tool === 'pointer' ? 'Hand actief: je kunt de pagina verschuiven.' : tool === 'text' ? 'Tekst actief: klik op de pagina om een tekstvak te maken.' : `${tool === 'highlighter' ? 'Markeerstift' : tool === 'eraser' ? 'Gum' : 'Pen'} actief.`);
       }
 
       function updateInkButtons() {
-        $('undo-ink').disabled = currentStrokes.length === 0;
-        $('clear-ink').disabled = currentStrokes.length === 0;
+        $('undo-ink').disabled = annotationHistory.length === 0;
+        $('redo-ink').disabled = annotationRedo.length === 0;
+        $('clear-ink').disabled = currentStrokes.length === 0 && currentTextBoxes.length === 0;
+        inkCanvas.dataset.inkStrokeCount = String(currentStrokes.length);
       }
 
       function beginStroke(event) {
-        if (currentTool === 'pointer' || event.pointerType === 'touch' || event.button > 0) return;
+        if (currentTool === 'pointer' || currentTool === 'text') return;
+        if (suppressPalmPointer(event) || event.button > 0) return;
+        if (activeStroke) {
+          if (event.pointerId === currentPointerId) return;
+          finishActiveStroke();
+        }
         event.preventDefault();
+        notePenActivity(event);
+        const before = annotationSnapshot();
         currentPointerId = event.pointerId;
-        inkCanvas.setPointerCapture(event.pointerId);
         const rect = inkCanvas.getBoundingClientRect();
         activeStrokeRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+        activeStrokePointerType = event.pointerType || 'mouse';
         activeStroke = {
           tool: currentTool,
           color: currentTool === 'eraser' ? '#000000' : $('ink-colour').value,
@@ -1886,37 +2547,81 @@
           points: [pointOnCanvas(event, activeStrokeRect)]
         };
         currentStrokes.push(activeStroke);
+        pushAnnotationHistory(before);
+        installInkPointerFallback();
+        try { inkCanvas.setPointerCapture?.(event.pointerId); } catch (_) {}
         drawStroke(activeStroke);
         activeRenderedPoint = 0;
         updateInkButtons();
       }
 
       function extendStroke(event) {
+        if (suppressPalmPointer(event)) return;
         if (!activeStroke || event.pointerId !== currentPointerId) return;
         event.preventDefault();
+        notePenActivity(event);
         const events = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
         (events.length ? events : [event]).forEach((item) => appendStrokePoint(item));
         queueActiveStrokeRender();
       }
 
       function endStroke(event) {
+        if (suppressPalmPointer(event)) return;
         if (!activeStroke || event.pointerId !== currentPointerId) return;
         event.preventDefault();
-        if (event.type === 'pointerup') appendStrokePoint(event, true);
-        if (inkRenderFrame !== null) {
-          window.cancelAnimationFrame(inkRenderFrame);
-          inkRenderFrame = null;
-        }
-        drawActiveStrokeDelta();
-        activeStroke = null;
-        activeStrokeRect = null;
-        activeRenderedPoint = 0;
-        currentPointerId = null;
-        try { inkCanvas.releasePointerCapture(event.pointerId); } catch (_) {}
-        if (pendingInkResize) {
-          pendingInkResize = false;
-          resizeInkCanvas();
-        }
+        notePenActivity(event);
+        finishActiveStroke(event);
+      }
+
+      function cancelStroke(event) {
+        if (suppressPalmPointer(event)) return;
+        if (!activeStroke || event.pointerId !== currentPointerId) return;
+        event.preventDefault();
+        notePenActivity(event);
+        finishActiveStroke();
+      }
+
+      function handleLostInkPointerCapture(event) {
+        if (!activeStroke || event.pointerId !== currentPointerId) return;
+        notePenActivity(event);
+        installInkPointerFallback();
+      }
+
+      function undoAnnotations() {
+        finishActiveStroke();
+        commitActiveTextEdit({ blur: true });
+        cancelTextGesture();
+        const snapshot = annotationHistory.pop();
+        if (!snapshot) return;
+        annotationRedo.push(annotationSnapshot());
+        restoreAnnotationSnapshot(snapshot);
+      }
+
+      function redoAnnotations() {
+        finishActiveStroke();
+        commitActiveTextEdit({ blur: true });
+        cancelTextGesture();
+        const snapshot = annotationRedo.pop();
+        if (!snapshot) return;
+        annotationHistory.push(annotationSnapshot());
+        restoreAnnotationSnapshot(snapshot);
+      }
+
+      function clearAnnotations() {
+        finishActiveStroke();
+        cancelTextGesture();
+        commitActiveTextEdit({ blur: true });
+        if (!currentStrokes.length && !currentTextBoxes.length) return;
+        if (!window.confirm(`Alle aantekeningen op pagina ${currentPage} wissen voor ${activeClass?.name || 'deze klas'}?`)) return;
+        const before = annotationSnapshot();
+        currentStrokes = [];
+        currentTextBoxes = [];
+        activeTextId = null;
+        activeTextEdit = null;
+        pushAnnotationHistory(before);
+        renderStrokes();
+        renderTextBoxes();
+        updateInkButtons();
         markSessionDirty();
       }
 
@@ -1930,7 +2635,64 @@
         if (save) markSessionDirty();
       }
 
+      function exportFilename(name, exportedAt) {
+        const safeName = String(name || 'klas')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 48) || 'klas';
+        return `blockly-in-de-klas-${safeName}-${exportedAt.slice(0, 10)}.json`;
+      }
+
+      async function exportActiveClass() {
+        if (!db || !activeClass || changingClass || saveButton.disabled) return false;
+        exportButton.disabled = true;
+        importButton.disabled = true;
+        try {
+          const annotationsSaved = await persistAnnotations({ reportError: false });
+          const classSaved = await persistCurrentClass({ reportError: false });
+          if (!annotationsSaved || !classSaved) throw new Error('De actieve klas kon niet volledig worden opgeslagen.');
+
+          const classRecord = await storeGet('classes', activeClass.id);
+          if (!classRecord) throw new Error('De actieve klas kon niet worden gevonden.');
+          const annotations = await requestResult(
+            db.transaction('annotations', 'readonly').objectStore('annotations').index('classId').getAll(activeClass.id)
+          );
+          const exportedAt = new Date().toISOString();
+          const payload = {
+            format: 'aik-teacher-boardbook',
+            version: 1,
+            exportedAt,
+            classes: [cloneValue(classRecord)],
+            annotations: cloneValue(annotations)
+          };
+          const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = exportFilename(classRecord.name, exportedAt);
+          link.hidden = true;
+          document.body.append(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(url), 0);
+          showToast(`${classRecord.name} geëxporteerd.`);
+          return true;
+        } catch (error) {
+          console.error(error);
+          showToast(error.message || 'De klas kon niet worden geëxporteerd.');
+          return false;
+        } finally {
+          updateBackupButtons();
+        }
+      }
+
       async function importBackup(file) {
+        if (!db || !activeClass || changingClass || saveButton.disabled) return;
+        importButton.disabled = true;
+        exportButton.disabled = true;
         try {
           const payload = JSON.parse(await file.text());
           if (payload?.format !== 'aik-teacher-boardbook' || !Array.isArray(payload.classes)) {
@@ -1963,10 +2725,11 @@
             imported.push(record);
           }
           for (const note of Array.isArray(payload.annotations) ? payload.annotations : []) {
+            if (!note || typeof note !== 'object') continue;
             const target = idMap.get(note.classId);
             const classId = target?.id;
             const page = migratePageNumber(note.page, target?.sourceRevision);
-            if (!classId || !Array.isArray(note.strokes)) continue;
+            if (!classId || (!Array.isArray(note.strokes) && !Array.isArray(note.textBoxes))) continue;
             const key = annotationKey(classId, page);
             const existing = await storeGet('annotations', key);
             await storePut('annotations', {
@@ -1975,7 +2738,8 @@
               classId,
               page,
               contentRevision: CONTENT_REVISION,
-              strokes: [...(existing?.strokes || []), ...note.strokes],
+              strokes: [...(Array.isArray(existing?.strokes) ? existing.strokes : []), ...(Array.isArray(note.strokes) ? note.strokes : [])],
+              textBoxes: normalizeTextBoxes([...(Array.isArray(existing?.textBoxes) ? existing.textBoxes : []), ...(Array.isArray(note.textBoxes) ? note.textBoxes : [])]),
               updatedAt: new Date().toISOString()
             });
           }
@@ -1988,6 +2752,7 @@
           showToast(error.message || 'De back-up kon niet worden geïmporteerd.');
         } finally {
           $('import-input').value = '';
+          updateBackupButtons();
         }
       }
 
@@ -1996,39 +2761,45 @@
         $('next-page').addEventListener('click', () => showPage(currentPage + 1));
         $('toggle-thumbnails').addEventListener('click', () => {
           const hidden = $('book-body').classList.toggle('thumbs-hidden');
-          $('toggle-thumbnails').setAttribute('aria-pressed', String(!hidden));
+          const toggle = $('toggle-thumbnails');
+          toggle.textContent = hidden ? '›' : '‹';
+          toggle.setAttribute('aria-expanded', String(!hidden));
+          toggle.setAttribute('aria-label', hidden ? 'Paginaoverzicht tonen' : 'Paginaoverzicht verbergen');
+          toggle.title = hidden ? 'Paginaoverzicht tonen' : 'Paginaoverzicht verbergen';
           fitPaper();
           window.requestAnimationFrame(fitPaper);
         });
 
+        const inkToolbar = $('ink-toolbar');
+        inkToolbar.addEventListener('pointerdown', guardInkToolbarPointer, true);
+        inkToolbar.addEventListener('click', guardInkToolbarClick, true);
         document.querySelectorAll('.ink-tool').forEach((button) => {
           button.addEventListener('click', () => setInkTool(button.dataset.tool));
         });
-        $('undo-ink').addEventListener('click', () => {
-          currentStrokes.pop();
-          renderStrokes();
-          updateInkButtons();
-          markSessionDirty();
-        });
-        $('clear-ink').addEventListener('click', () => {
-          if (!currentStrokes.length) return;
-          if (!window.confirm(`Alle aantekeningen op pagina ${currentPage} wissen voor ${activeClass?.name || 'deze klas'}?`)) return;
-          currentStrokes = [];
-          renderStrokes();
-          updateInkButtons();
-          markSessionDirty();
-        });
+        $('undo-ink').addEventListener('click', undoAnnotations);
+        $('redo-ink').addEventListener('click', redoAnnotations);
+        $('clear-ink').addEventListener('click', clearAnnotations);
         inkCanvas.addEventListener('pointerdown', beginStroke);
         inkCanvas.addEventListener('pointermove', extendStroke);
         inkCanvas.addEventListener('pointerup', endStroke);
-        inkCanvas.addEventListener('pointercancel', endStroke);
-        inkCanvas.addEventListener('lostpointercapture', endStroke);
+        inkCanvas.addEventListener('pointercancel', cancelStroke);
+        inkCanvas.addEventListener('lostpointercapture', handleLostInkPointerCapture);
+        textLayer.addEventListener('pointerdown', (event) => {
+          if (currentTool === 'text' && event.target === textLayer) {
+            event.preventDefault();
+            createTextBox(event);
+          }
+        });
         pageStage.addEventListener('contextmenu', (event) => {
           if (currentTool !== 'pointer') event.preventDefault();
         });
+        window.addEventListener('blur', () => finishActiveStroke());
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') finishActiveStroke();
+        });
 
-        $('zoom-out').addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
-        $('zoom-in').addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
+        $('zoom-out').addEventListener('click', () => stepZoom(-1));
+        $('zoom-in').addEventListener('click', () => stepZoom(1));
         $('zoom-fit').addEventListener('click', () => setZoom(1));
 
         modeSelect.addEventListener('change', () => {
@@ -2036,7 +2807,6 @@
           syncLessonToPlatform();
         });
         levelSelect.addEventListener('change', () => syncLessonToPlatform());
-        $('go-to-level').addEventListener('click', () => syncLessonToPlatform());
         layoutSelect.addEventListener('change', () => applyLayout());
         classSelect.addEventListener('change', () => activateClass(classSelect.value));
 
@@ -2056,7 +2826,8 @@
         });
 
         saveButton.addEventListener('click', () => saveCurrentSession());
-        $('import-button').addEventListener('click', () => $('import-input').click());
+        exportButton.addEventListener('click', () => exportActiveClass());
+        importButton.addEventListener('click', () => $('import-input').click());
         $('import-input').addEventListener('change', () => {
           const file = $('import-input').files?.[0];
           if (file) importBackup(file);
@@ -2102,6 +2873,7 @@
 
         window.addEventListener('resize', fitPaper);
         window.visualViewport?.addEventListener('resize', fitPaper);
+        window.addEventListener('beforeunload', () => cancelTextGesture());
         if ('ResizeObserver' in window) {
           pageStageResizeObserver = new ResizeObserver(fitPaper);
           pageStageResizeObserver.observe(pageStage);
@@ -2124,12 +2896,16 @@
             event.preventDefault();
             showPage(currentPage + 1);
           }
-          if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && currentStrokes.length) {
+          if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && annotationHistory.length) {
+            if (event.shiftKey) return;
             event.preventDefault();
-            currentStrokes.pop();
-            renderStrokes();
-            updateInkButtons();
-            markSessionDirty();
+            undoAnnotations();
+          }
+          if (((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y')
+            || ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 'z')) {
+            if (!annotationRedo.length) return;
+            event.preventDefault();
+            redoAnnotations();
           }
         });
 
@@ -2137,6 +2913,7 @@
 
       async function initialize() {
         bindEvents();
+        updateBackupButtons();
         updateZoomLabel();
         try {
           await loadPdfDocument();
