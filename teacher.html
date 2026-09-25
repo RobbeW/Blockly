@@ -2297,7 +2297,9 @@
         const rect = inkCanvas.getBoundingClientRect();
         if (!rect.width) return;
         clearInkCanvas();
-        currentStrokes.forEach(drawStroke);
+        for (const stroke of currentStrokes) {
+          drawStroke(stroke, 0);
+        }
       }
 
       function updateTextBoxStyle(element, box) {
