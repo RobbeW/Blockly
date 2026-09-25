@@ -1081,6 +1081,11 @@
       let textPointerState = null;
       let annotationHistory = [];
       let annotationRedo = [];
+      let loadedAnnotationSnapshot = { strokes: [], textBoxes: [] };
+      let annotationWriteDepth = 0;
+      let annotationWritePromise = null;
+      let annotationSaveTimer = null;
+      let sessionRevision = 0;
 
       function pageTitle(page) {
         return PAGE_SECTIONS.find((section) => page >= section.from && page <= section.to)?.title || `Syllabuspagina ${page}`;
@@ -1092,6 +1097,117 @@
 
       function cloneValue(value) {
         return JSON.parse(JSON.stringify(value));
+      }
+
+      function strokeSignature(stroke) {
+        return JSON.stringify({
+          tool: stroke?.tool || 'pen',
+          color: stroke?.color || '#000000',
+          width: Number(stroke?.width) || 3,
+          points: Array.isArray(stroke?.points) ? stroke.points.map((point) => ({
+            x: Number(point?.x) || 0,
+            y: Number(point?.y) || 0,
+            p: Number.isFinite(Number(point?.p)) ? Number(point.p) : .5
+          })) : []
+        });
+      }
+
+      function stableHash(value) {
+        let hash = 2166136261;
+        const text = String(value ?? '');
+        for (let index = 0; index < text.length; index += 1) {
+          hash ^= text.charCodeAt(index);
+          hash = Math.imul(hash, 16777619);
+        }
+        return (hash >>> 0).toString(36);
+      }
+
+      function normalizeStrokes(raw) {
+        if (!Array.isArray(raw)) return [];
+        const usedIds = new Set();
+        const legacyCounts = new Map();
+        return raw.map((item) => {
+          if (!item || typeof item !== 'object' || !Array.isArray(item.points) || !item.points.length) return null;
+          const stroke = JSON.parse(JSON.stringify(item));
+          const signature = strokeSignature(stroke);
+          let id = typeof stroke.id === 'string' && /^[a-z0-9_-]{1,120}$/i.test(stroke.id) ? stroke.id : '';
+          if (!id || usedIds.has(id)) {
+            const base = `legacy-${stableHash(signature)}`;
+            let occurrence = (legacyCounts.get(base) || 0) + 1;
+            legacyCounts.set(base, occurrence);
+            id = `${base}-${occurrence}`;
+            while (usedIds.has(id)) {
+              occurrence += 1;
+              legacyCounts.set(base, occurrence);
+              id = `${base}-${occurrence}`;
+            }
+          }
+          usedIds.add(id);
+          stroke.id = id;
+          return stroke;
+        }).filter(Boolean);
+      }
+
+      function mergeStrokes(...groups) {
+        const merged = new Map();
+        groups.forEach((group) => {
+          normalizeStrokes(group).forEach((stroke) => {
+            if (!merged.has(stroke.id)) merged.set(stroke.id, stroke);
+          });
+        });
+        return [...merged.values()];
+      }
+
+      function mergeStrokeSnapshots(baseRaw, localRaw, remoteRaw) {
+        const base = normalizeStrokes(baseRaw);
+        const local = normalizeStrokes(localRaw);
+        const remote = normalizeStrokes(remoteRaw);
+        const baseMap = new Map(base.map((stroke) => [stroke.id, stroke]));
+        const localMap = new Map(local.map((stroke) => [stroke.id, stroke]));
+        const remoteMap = new Map(remote.map((stroke) => [stroke.id, stroke]));
+        const result = new Map(remoteMap);
+
+        baseMap.forEach((baseStroke, id) => {
+          if (localMap.has(id)) return;
+          const remoteStroke = remoteMap.get(id);
+          if (!remoteStroke || strokeSignature(remoteStroke) === strokeSignature(baseStroke)) result.delete(id);
+        });
+
+        localMap.forEach((localStroke, id) => {
+          const baseStroke = baseMap.get(id);
+          if (!baseStroke || strokeSignature(localStroke) !== strokeSignature(baseStroke)) {
+            result.set(id, localStroke);
+          }
+        });
+
+        return [...result.values()];
+      }
+
+      function textBoxSignature(box) {
+        return JSON.stringify(box || null);
+      }
+
+      function mergeTextBoxSnapshots(baseRaw, localRaw, remoteRaw) {
+        const base = normalizeTextBoxes(baseRaw);
+        const local = normalizeTextBoxes(localRaw);
+        const remote = normalizeTextBoxes(remoteRaw);
+        const baseMap = new Map(base.map((box) => [box.id, box]));
+        const localMap = new Map(local.map((box) => [box.id, box]));
+        const remoteMap = new Map(remote.map((box) => [box.id, box]));
+        const result = new Map(remoteMap);
+
+        baseMap.forEach((baseBox, id) => {
+          if (localMap.has(id)) return;
+          const remoteBox = remoteMap.get(id);
+          if (!remoteBox || textBoxSignature(remoteBox) === textBoxSignature(baseBox)) result.delete(id);
+        });
+
+        localMap.forEach((localBox, id) => {
+          const baseBox = baseMap.get(id);
+          if (!baseBox || textBoxSignature(localBox) !== textBoxSignature(baseBox)) result.set(id, localBox);
+        });
+
+        return normalizeTextBoxes([...result.values()]);
       }
 
       function normalizeTextBox(raw, usedIds = new Set()) {
@@ -1141,7 +1257,7 @@
       }
 
       function restoreAnnotationSnapshot(snapshot) {
-        currentStrokes = Array.isArray(snapshot?.strokes) ? cloneValue(snapshot.strokes) : [];
+        currentStrokes = normalizeStrokes(snapshot?.strokes);
         currentTextBoxes = normalizeTextBoxes(snapshot?.textBoxes);
         activeTextId = null;
         activeTextEdit = null;
@@ -1268,8 +1384,11 @@
         return requestResult(db.transaction(storeName, 'readonly').objectStore(storeName).getAll());
       }
 
-      function storePut(storeName, value) {
-        return requestResult(db.transaction(storeName, 'readwrite').objectStore(storeName).put(value));
+      async function storePut(storeName, value) {
+        const transaction = db.transaction(storeName, 'readwrite');
+        const request = transaction.objectStore(storeName).put(value);
+        const [result] = await Promise.all([requestResult(request), transactionResult(transaction)]);
+        return result;
       }
 
       function transactionResult(transaction) {
@@ -1419,6 +1538,7 @@
 
       function markSessionDirty() {
         sessionDirty = true;
+        sessionRevision += 1;
         saveButton.title = 'Bewaar de niet-opgeslagen wijzigingen op dit toestel';
       }
 
@@ -1460,31 +1580,128 @@
         return `${classId}:page-${page}`;
       }
 
+      function storeAnnotationAtomic(next, baseSnapshot) {
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction('annotations', 'readwrite');
+          const store = transaction.objectStore('annotations');
+          let savedRecord = null;
+          const request = store.get(next.key);
+
+          request.onsuccess = () => {
+            const existing = request.result || null;
+            const base = baseSnapshot || { strokes: [], textBoxes: [] };
+            const strokes = mergeStrokeSnapshots(base.strokes, next.strokes, existing?.strokes);
+            const textBoxes = mergeTextBoxSnapshots(base.textBoxes, next.textBoxes, existing?.textBoxes);
+            savedRecord = {
+              ...(existing || {}),
+              ...next,
+              revision: (Number(existing?.revision) || 0) + 1,
+              strokes,
+              textBoxes,
+              updatedAt: new Date().toISOString()
+            };
+            store.put(savedRecord);
+          };
+          request.onerror = () => transaction.abort();
+          transaction.oncomplete = () => resolve(savedRecord);
+          transaction.onerror = () => reject(transaction.error);
+          transaction.onabort = () => reject(transaction.error || request.error || new Error('Opslagtransactie afgebroken'));
+        });
+      }
+
+      function scheduleAnnotationPersist(delay = 400) {
+        if (annotationWriteDepth) return;
+        if (!db || !activeClass || loadedAnnotationPage !== currentPage) return;
+        window.clearTimeout(annotationSaveTimer);
+        const classId = activeClass.id;
+        const page = currentPage;
+        annotationSaveTimer = window.setTimeout(() => {
+          annotationSaveTimer = null;
+          if (!activeClass || activeClass.id !== classId || currentPage !== page || loadedAnnotationPage !== page) return;
+          if (activeStroke || textPointerState || activeTextEdit) {
+            scheduleAnnotationPersist(delay);
+            return;
+          }
+          persistAnnotations({ reportError: false }).catch((error) => console.error(error));
+        }, delay);
+      }
+
       async function persistAnnotations({ reportError = true } = {}) {
-        if (!activeClass || loadedAnnotationPage !== currentPage) return true;
-        finishActiveStroke();
-        cancelTextGesture();
-        commitActiveTextEdit();
+        if (!activeClass) return true;
+        if (loadedAnnotationPage !== currentPage) return false;
+        if (annotationWritePromise) return annotationWritePromise;
+
+        window.clearTimeout(annotationSaveTimer);
+        annotationSaveTimer = null;
+        annotationWriteDepth += 1;
+        let needsAnotherPersist = false;
+
+        const operation = (async () => {
+          try {
+            finishActiveStroke();
+            cancelTextGesture();
+            commitActiveTextEdit({ blur: true });
+
+            const classId = activeClass.id;
+            const page = currentPage;
+            const baseSnapshot = cloneValue(loadedAnnotationSnapshot);
+            const localSnapshot = {
+              strokes: normalizeStrokes(currentStrokes),
+              textBoxes: normalizeTextBoxes(currentTextBoxes)
+            };
+            const saved = await storeAnnotationAtomic({
+              key: annotationKey(classId, page),
+              classId,
+              page,
+              contentRevision: CONTENT_REVISION,
+              strokes: localSnapshot.strokes,
+              textBoxes: localSnapshot.textBoxes,
+              updatedAt: new Date().toISOString()
+            }, baseSnapshot);
+
+            if (activeClass?.id === classId && currentPage === page && loadedAnnotationPage === page && saved) {
+              const savedSnapshot = {
+                strokes: normalizeStrokes(saved.strokes),
+                textBoxes: normalizeTextBoxes(saved.textBoxes)
+              };
+              const liveSnapshot = annotationSnapshot();
+              const next = {
+                strokes: mergeStrokeSnapshots(localSnapshot.strokes, liveSnapshot.strokes, savedSnapshot.strokes),
+                textBoxes: mergeTextBoxSnapshots(localSnapshot.textBoxes, liveSnapshot.textBoxes, savedSnapshot.textBoxes)
+              };
+              currentStrokes = next.strokes;
+              currentTextBoxes = next.textBoxes;
+              loadedAnnotationSnapshot = cloneValue(savedSnapshot);
+              renderStrokes();
+              renderTextBoxes();
+              updateInkButtons();
+              needsAnotherPersist = snapshotChanged(savedSnapshot, next);
+            }
+            return true;
+          } catch (error) {
+            console.error(error);
+            if (reportError) showToast('De aantekeningen op deze pagina konden niet worden opgeslagen.');
+            return false;
+          } finally {
+            annotationWriteDepth = Math.max(0, annotationWriteDepth - 1);
+            if (needsAnotherPersist) scheduleAnnotationPersist();
+          }
+        })();
+
+        annotationWritePromise = operation;
         try {
-          await storePut('annotations', {
-            key: annotationKey(activeClass.id, currentPage),
-            classId: activeClass.id,
-            page: currentPage,
-            contentRevision: CONTENT_REVISION,
-            strokes: currentStrokes,
-            textBoxes: normalizeTextBoxes(currentTextBoxes),
-            updatedAt: new Date().toISOString()
-          });
-          return true;
-        } catch (error) {
-          console.error(error);
-          if (reportError) showToast('De aantekeningen op deze pagina konden niet worden opgeslagen.');
-          return false;
+          return await operation;
+        } finally {
+          if (annotationWritePromise === operation) annotationWritePromise = null;
         }
       }
 
       async function saveCurrentSession({ announce = true } = {}) {
         if (!activeClass || saveButton.disabled) return false;
+        finishActiveStroke();
+        cancelTextGesture();
+        commitActiveTextEdit({ blur: true });
+        const revisionAtStart = sessionRevision;
         saveButton.disabled = true;
         saveButton.textContent = 'Opslaan…';
         updateBackupButtons();
@@ -1494,7 +1711,7 @@
           const classSaved = await persistCurrentClass({ reportError: false });
           saved = annotationsSaved && classSaved;
           if (saved) {
-            markSessionClean();
+            if (sessionRevision === revisionAtStart) markSessionClean();
             if (announce) showToast(`${activeClass.name} is opgeslagen op dit toestel.`);
           } else if (announce) {
             showToast('Opslaan is niet gelukt. Probeer het opnieuw.');
@@ -1835,6 +2052,8 @@
       async function showPage(page, options = {}) {
         const nextPage = clamp(Number(page) || 1, 1, pageCount);
         const pageChanged = nextPage !== currentPage;
+        window.clearTimeout(annotationSaveTimer);
+        annotationSaveTimer = null;
         cancelTextGesture();
         let annotationsSaved = true;
         if (!options.skipPersist && activeClass && pageChanged) {
@@ -1857,13 +2076,15 @@
         annotationHistory = [];
         annotationRedo = [];
         loadedAnnotationPage = null;
+        loadedAnnotationSnapshot = { strokes: [], textBoxes: [] };
         updateInkButtons();
         if (activeClass) {
           const record = await storeGet('annotations', annotationKey(activeClass.id, currentPage));
           if (token !== pageLoadToken) return;
-          currentStrokes = Array.isArray(record?.strokes) ? record.strokes : [];
+          currentStrokes = normalizeStrokes(record?.strokes);
           currentTextBoxes = normalizeTextBoxes(record?.textBoxes);
         }
+        loadedAnnotationSnapshot = annotationSnapshot();
         loadedAnnotationPage = currentPage;
         renderStrokes();
         renderTextBoxes();
@@ -2111,6 +2332,7 @@
         renderTextBoxes();
         updateInkButtons();
         markSessionDirty();
+        scheduleAnnotationPersist();
       }
 
       function commitActiveTextEdit({ blur = false } = {}) {
@@ -2132,7 +2354,10 @@
         if (changed) pushAnnotationHistory(edit.before);
         edit.before = annotationSnapshot();
         updateTextBoxStyle(edit.element, box);
-        if (changed) markSessionDirty();
+        if (changed) {
+          markSessionDirty();
+          scheduleAnnotationPersist();
+        }
         if (blur) {
           input.blur();
           activeTextEdit = null;
@@ -2253,6 +2478,7 @@
       }
 
       function createTextBox(event) {
+        if (annotationWriteDepth || loadedAnnotationPage !== currentPage) return;
         if (currentTextBoxes.length >= MAX_TEXT_BOXES) {
           showToast(`Maximaal ${MAX_TEXT_BOXES} tekstvakken per pagina.`);
           return;
@@ -2293,7 +2519,7 @@
       }
 
       function beginTextPointer(event, box, element, mode) {
-        if (currentTool !== 'text' || event.button > 0) return;
+        if (currentTool !== 'text' || event.button > 0 || annotationWriteDepth || loadedAnnotationPage !== currentPage) return;
         event.preventDefault();
         commitActiveTextEdit();
         activeTextId = box.id;
@@ -2339,6 +2565,7 @@
           if (snapshotChanged(state.before)) pushAnnotationHistory(state.before);
           textPointerState = null;
           markSessionDirty();
+          scheduleAnnotationPersist();
         };
         const cancel = () => cancelTextGesture();
         textPointerState.cleanup = () => {
@@ -2368,6 +2595,7 @@
         if (element) updateTextBoxStyle(element, box);
         if (snapshotChanged(before)) pushAnnotationHistory(before);
         markSessionDirty();
+        scheduleAnnotationPersist();
       }
 
       function keyboardResizeTextBox(event, box) {
@@ -2384,6 +2612,7 @@
         if (element) updateTextBoxStyle(element, box);
         if (snapshotChanged(before)) pushAnnotationHistory(before);
         markSessionDirty();
+        scheduleAnnotationPersist();
       }
 
       function appendStrokePoint(event, finalPoint = false) {
@@ -2497,6 +2726,7 @@
           resizeInkCanvas();
         }
         markSessionDirty();
+        scheduleAnnotationPersist();
         return true;
       }
 
@@ -2528,6 +2758,7 @@
 
       function beginStroke(event) {
         if (currentTool === 'pointer' || currentTool === 'text') return;
+        if (annotationWriteDepth || loadedAnnotationPage !== currentPage) return;
         if (suppressPalmPointer(event) || event.button > 0) return;
         if (activeStroke) {
           if (event.pointerId === currentPointerId) return;
@@ -2541,6 +2772,7 @@
         activeStrokeRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
         activeStrokePointerType = event.pointerType || 'mouse';
         activeStroke = {
+          id: makeId('stroke'),
           tool: currentTool,
           color: currentTool === 'eraser' ? '#000000' : $('ink-colour').value,
           width: Number($('ink-width').value) || 3,
@@ -2595,6 +2827,7 @@
         if (!snapshot) return;
         annotationRedo.push(annotationSnapshot());
         restoreAnnotationSnapshot(snapshot);
+        scheduleAnnotationPersist();
       }
 
       function redoAnnotations() {
@@ -2605,6 +2838,7 @@
         if (!snapshot) return;
         annotationHistory.push(annotationSnapshot());
         restoreAnnotationSnapshot(snapshot);
+        scheduleAnnotationPersist();
       }
 
       function clearAnnotations() {
@@ -2623,6 +2857,7 @@
         renderTextBoxes();
         updateInkButtons();
         markSessionDirty();
+        scheduleAnnotationPersist();
       }
 
       function applyLayout(save = true) {
@@ -2738,7 +2973,7 @@
               classId,
               page,
               contentRevision: CONTENT_REVISION,
-              strokes: [...(Array.isArray(existing?.strokes) ? existing.strokes : []), ...(Array.isArray(note.strokes) ? note.strokes : [])],
+              strokes: mergeStrokes(existing?.strokes, note.strokes),
               textBoxes: normalizeTextBoxes([...(Array.isArray(existing?.textBoxes) ? existing.textBoxes : []), ...(Array.isArray(note.textBoxes) ? note.textBoxes : [])]),
               updatedAt: new Date().toISOString()
             });
@@ -2795,7 +3030,9 @@
         });
         window.addEventListener('blur', () => finishActiveStroke());
         document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'hidden') finishActiveStroke();
+          if (document.visibilityState !== 'hidden') return;
+          finishActiveStroke();
+          persistAnnotations({ reportError: false }).catch((error) => console.error(error));
         });
 
         $('zoom-out').addEventListener('click', () => stepZoom(-1));
@@ -2873,7 +3110,16 @@
 
         window.addEventListener('resize', fitPaper);
         window.visualViewport?.addEventListener('resize', fitPaper);
-        window.addEventListener('beforeunload', () => cancelTextGesture());
+        window.addEventListener('pagehide', () => {
+          finishActiveStroke();
+          cancelTextGesture();
+          persistAnnotations({ reportError: false }).catch(() => {});
+        });
+        window.addEventListener('beforeunload', () => {
+          finishActiveStroke();
+          cancelTextGesture();
+          persistAnnotations({ reportError: false }).catch(() => {});
+        });
         if ('ResizeObserver' in window) {
           pageStageResizeObserver = new ResizeObserver(fitPaper);
           pageStageResizeObserver.observe(pageStage);
