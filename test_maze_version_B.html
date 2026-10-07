@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#5200ff">
   <meta name="author" content="Robbe Wulgaert, AI in de Klas, robbewulgaert.be">
-  <title>Toets Blockly · Maze · Versie A</title>
+  <title>Toets Blockly · Maze · Versie B</title>
   <link rel="icon" href="./favicon.png">
   <link rel="stylesheet" href="./assessment/assessment.css">
   <script defer src="./assessment/vendor/blockly/blockly_compressed.js"></script>
@@ -15,14 +15,14 @@
   <script defer src="./assessment/vendor/blockly/nl.js"></script>
   <script defer src="./assessment/vendor/jspdf/jspdf.umd.min.js"></script>
   <script defer src="./assessment/assets-bundle.js"></script>
-  <script defer src="./assessment/maze-version-a.js"></script>
+  <script defer src="./assessment/maze-version-b.js"></script>
   <script defer src="./assessment/maze-runtime.js"></script>
   <script defer src="./assessment/pdf-export.js"></script>
   <script defer src="./assessment/assessment.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brand-icon" aria-hidden="true">B</span><div>Blockly in de Klas<small>Evaluatie · <span id="version-label">Versie A</span></small></div></div>
+    <div class="brand"><span class="brand-icon" aria-hidden="true">B</span><div>Blockly in de Klas<small>Evaluatie · <span id="version-label">Versie B</span></small></div></div>
     <div class="header-actions"><span id="identity-label"></span><div id="exam-timer" class="exam-timer" hidden><small>Resterende tijd</small><span id="timer-value" role="timer" aria-live="off">45:00</span></div><span class="save-status" id="save-status" role="status">Nog niet gestart</span><button id="review-top" type="button" hidden>Overzicht &amp; indienen</button></div>
   </header>
   <aside id="timer-warning" class="timer-warning" hidden aria-label="Tijdwaarschuwing"><p id="timer-warning-message" role="alert"></p><div class="completion-actions"><button type="button" data-review>Overzicht &amp; indienen</button><button id="dismiss-timer-warning" type="button">Melding sluiten</button></div></aside>
