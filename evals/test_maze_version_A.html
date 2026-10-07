@@ -1,0 +1,50 @@
+<!-- © 2026 Robbe Wulgaert, AI in de Klas, robbewulgaert.be. Educational use with explicit attribution. Based on Blockly by Google / Raspberry Pi Foundation. -->
+<!doctype html>
+<html lang="nl-BE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#5200ff">
+  <meta name="author" content="Robbe Wulgaert, AI in de Klas, robbewulgaert.be">
+  <title>Toets Blockly · Maze · Versie A</title>
+  <link rel="icon" href="favicon.png">
+  <link rel="stylesheet" href="assessment/assessment.css">
+  <script defer src="assessment/vendor/blockly/blockly_compressed.js"></script>
+  <script defer src="assessment/vendor/blockly/blocks_compressed.js"></script>
+  <script defer src="assessment/vendor/blockly/javascript_compressed.js"></script>
+  <script defer src="assessment/vendor/blockly/nl.js"></script>
+  <script defer src="assessment/vendor/jspdf/jspdf.umd.min.js"></script>
+  <script defer src="assessment/assets-bundle.js"></script>
+  <script defer src="assessment/maze-version-a.js"></script>
+  <script defer src="assessment/maze-runtime.js"></script>
+  <script defer src="assessment/pdf-export.js"></script>
+  <script defer src="assessment/assessment.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">B</span><div>Blockly in de Klas<small>Evaluatie · <span id="version-label">Versie A</span></small></div></div>
+    <div class="header-actions"><span id="identity-label"></span><span class="save-status" id="save-status" role="status">Nog niet gestart</span><button id="review-top" type="button" hidden>Overzicht &amp; indienen</button></div>
+  </header>
+  <main id="gate" class="gate-wrap">
+    <section class="card gate-card" aria-labelledby="gate-title">
+      <span class="eyebrow">INFORMATICAWETENSCHAPPEN · JAAR 1</span>
+      <h1 id="gate-title">Toets Blockly · Maze</h1>
+      <p id="exam-subtitle">Sequentie, selectie en voorwaardelijke herhaling</p>
+      <div class="callout"><strong>Zo werk je</strong><ul><li>Je antwoorden worden op dit toestel bewaard.</li><li>Kies bij elke maze blokken (maximaal 50% van de punten) of JavaScript (maximaal 100%).</li><li>Download op het einde je volledige toets als PDF.</li><li>Dien je PDF in via Smartschool.</li></ul></div>
+      <form id="start-form">
+        <div class="identity-grid"><label>Voornaam en naam<input id="student-name" name="name" required autocomplete="name" maxlength="100"></label><label>Klas<input id="student-class" name="class" required placeholder="1STEAM1" pattern="(?:1STEAM)?[1-6]" title="Kies 1STEAM1 tot en met 1STEAM6. Je kunt ook alleen het klasnummer 1 tot en met 6 invullen." autocomplete="off" autocapitalize="characters" spellcheck="false"></label><label>Klasnummer<input id="student-number" name="number" required inputmode="numeric" maxlength="10"></label></div>
+        <label>Startwachtwoord<input id="start-password" type="password" required autocomplete="off"></label>
+        <label class="checkbox-label"><input id="new-attempt" type="checkbox" checked> Start een nieuwe poging in plaats van mijn opgeslagen antwoorden te hervatten.</label>
+        <p id="gate-error" class="error" role="alert"></p>
+        <button class="primary" type="submit">Ontgrendel de toets <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+  </main>
+  <div id="exam" class="exam-layout" hidden>
+    <aside class="sidebar" aria-label="Toetsnavigatie"><p class="eyebrow">JOUW TOETS</p><nav id="question-nav"></nav><div class="sidebar-footer"><strong id="progress-label">0 / 7 onderdelen</strong><p>Bekijk elk antwoord voor je indient.</p><button id="review-side" type="button">Overzicht & PDF</button></div></aside>
+    <main id="question-panel" class="question-panel" tabindex="-1"></main>
+  </div>
+  <footer class="site-footer">© 2026 Robbe Wulgaert · AI in de Klas · robbewulgaert.be</footer>
+  <noscript><p class="error">JavaScript moet ingeschakeld zijn om deze toets te maken.</p></noscript>
+</body>
+</html>
