@@ -12,7 +12,7 @@ Digital version A adapts the supplied paper **Permutatie B**, with its figures a
 | q6 | Algorithm, syntax, computational thinking | Three open answers | 3 |
 | q7 | Order the five computational-thinking steps | Number selectors | 1 |
 | q8 | Explain an infinite loop, distinguish syntax from algorithm errors, correct it | Supplied code + three open answers | 2 |
-| q9 | Predict execution inside/outside a loop and the effect of moving an instruction | Supplied code + two open answers | 1 |
+| q9 | Build a level-5 algorithm and mark action blocks executed once or in the loop | Executable Blockly workspace + execution markings | 1 |
 
 ## Coding rules
 
@@ -33,7 +33,7 @@ Digital version A adapts the supplied paper **Permutatie B**, with its figures a
 
 ### Teacher criteria
 
-For JavaScript, assess directly within these totals: Maze 1 — functionality 1, required repetition 0.5, syntax/structure 0.5; Maze 2 — functionality 1.5, syntax/structure 0.5; Maze 3 — functionality 1, required selection/repetition 0.5, syntax/structure 0.5; Maze 4 — functionality 1.5, explanation 1, syntax/structure 0.5. Structure includes one instruction per line and indentation matching loops/choices. For blocks, each criterion has half that allocation and structure means a clear connected block arrangement; assign points directly within the displayed ceiling, without halving again. Q8 allocates 0.5 for explaining nontermination, 0.5 for identifying/justifying the error type and 1 for a precise correction in either JS or described blocks. Q9 allocates 0.5 per prediction. Q8/Q9 have full credit available to all students. DLC/FPS are excluded.
+For JavaScript, assess directly within these totals: Maze 1 — functionality 1, required repetition 0.5, syntax/structure 0.5; Maze 2 — functionality 1.5, syntax/structure 0.5; Maze 3 — functionality 1, required selection/repetition 0.5, syntax/structure 0.5; Maze 4 — functionality 1.5, explanation 1, syntax/structure 0.5. Structure includes one instruction per line and indentation matching loops/choices. For blocks, each criterion has half that allocation and structure means a clear connected block arrangement; assign points directly within the displayed ceiling, without halving again. Q8 allocates 0.5 for explaining nontermination, 0.5 for identifying/justifying the error type and 1 for a precise correction in either JS or described blocks. Q9 allocates 0.5 for a working algorithm with an appropriate while loop and one-time setup, and 0.5 for correctly marking its action blocks as once or in the loop. Q9 is a blocks-only concept question with a full one-point ceiling; it is not subject to Q4's 50% rule. Markings are student choices, never automatic feedback. Changes to the workspace clear its prior result and markings. Workspace, marks and result persist in the attempt and export as a block diagram; generated JavaScript is not a submitted answer. Older text answers to the previous Q9 remain in storage, while the new workspace begins empty. Q8/Q9 have full credit available to all students. DLC/FPS are excluded.
 
 Older saved version-A attempts retain their existing answers and gain empty fields for the added questions and explanations when resumed.
 

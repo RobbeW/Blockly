@@ -4,7 +4,7 @@
 
 Deze eerste digitale toetsversie is een aanpassing van **Toets Blockly Deel 1 – Maze – Permutatie B (2025–2026)**. Ze is versie **A** van de digitale afname; dit is geen reconstructie van een papieren Permutatie A.
 
-De toets bevat 25 punten: vertalen (3), debugging (3), een algoritme lezen (1), vier Maze-oefeningen (2 + 2 + 2 + 3 = 9), acties en voorwaarden markeren (2), begrippen uitleggen (3), computationeel denken (1), een oneindige lus analyseren en verbeteren (2) en instructies binnen/buiten een lus voorspellen (1). Per Maze kan de leerling blokken of JavaScript kiezen. Blokken leveren maximaal de helft van de punten van die oefening op; JavaScript kan het volledige aantal opleveren. Beide ontwerpen blijven apart bewaard, maar alleen de gekozen tak komt in de definitieve PDF. Maze 1 vereist een while-lus, Maze 3 een while met if/else. Maze 4 vraagt een uitleg binnen de oefenpunten. Werking, vereiste concepten, structuur en JavaScript-inspringingen worden door de leerkracht beoordeeld; de criteria staan in `SPEC.md`. De twee nieuwe inzichtvragen bieden volledige punten voor iedereen. DLC/FPS zijn niet opgenomen.
+De toets bevat 25 punten: vertalen (3), debugging (3), een algoritme lezen (1), vier Maze-oefeningen (2 + 2 + 2 + 3 = 9), acties en voorwaarden markeren (2), begrippen uitleggen (3), computationeel denken (1), een oneindige lus analyseren en verbeteren (2) en een level-5-algoritme bouwen en actieblokken als één keer/in de lus markeren (1). Per Maze kan de leerling blokken of JavaScript kiezen. Blokken leveren maximaal de helft van de punten van die oefening op; JavaScript kan het volledige aantal opleveren. Beide ontwerpen blijven apart bewaard, maar alleen de gekozen tak komt in de definitieve PDF. Maze 1 vereist een while-lus, Maze 3 een while met if/else. Maze 4 vraagt een uitleg binnen de oefenpunten. Werking, vereiste concepten, structuur en JavaScript-inspringingen worden door de leerkracht beoordeeld; de criteria staan in `SPEC.md`. De twee nieuwe inzichtvragen bieden volledige punten voor iedereen. DLC/FPS zijn niet opgenomen.
 
 In de blokkenversie wordt alleen de Blockly-werkruimte opgeslagen. De door Blockly gegenereerde JavaScript blijft intern voor het uitvoeren van de Maze en wordt niet als studentantwoord getoond. De codeversie heeft een eigen JavaScript-veld en een worker-gebaseerde uitvoering. De antwoordtypen voor korte antwoorden, correcties, open antwoorden, volgorde en markeringen zijn in dezelfde toetsarchitectuur beschikbaar.
 
@@ -44,6 +44,16 @@ Voer na een wijziging aan de gebundelde lettertypen of afbeeldingen `node script
 
 ## Een volgende versie maken
 
+### Beschikbare variaties
+
+Versies A, B en C zijn beschikbaar via `test_maze_version_A.html`, `test_maze_version_B.html` en `test_maze_version_C.html`. Elke pagina laadt uitsluitend haar eigen configuratie, met dezelfde gedeelde interface, 25 punten, 45 minuten, het wachtwoord `Charles`, Smartschool-link, taalzorg en blokken/JavaScript-plafonds. Opgeslagen pogingen en PDF-bestandsnamen bevatten de toetsversie. De browsercontrole bevestigt dat dezelfde leerling in een andere versie geen antwoorden uit de eerste versie hervat.
+
+B gebruikt horizontaal gespiegelde mazes; C gebruikt mazes die 180 graden gedraaid zijn. Startpositie, kijkrichting en doel worden mee getransformeerd. De afbeeldingen komen rechtstreeks uit dezelfde runtime als de interactieve mazes. Vertaaloefeningen, debugging, het te lezen blokkenalgoritme, begripsvragen, de volgorde van denkstappen en de twee lusvragen variëren. Zie `VARIATIONS.md` voor de vergelijking voor leerkrachten.
+
+Controleer alle configuraties met `node scripts/assessment-variations-check.cjs`. Kies voor de browsercontrole `$env:ASSESSMENT_VERSION = 'B'` of `'C'` en voer `node scripts/assessment-check.cjs` uit; zonder deze variabele wordt A getest. QA-bestanden verschijnen per versie in `tmp/assessment-check/A`, `B` of `C`.
+
+Na aanpassing van de kaarten of de opgegeven blokkenalgoritmes kun je hun native afbeeldingen opnieuw renderen met `node scripts/build-assessment-variations.cjs` (Playwright/Chrome vereist). Voer vervolgens `node scripts/build-assessment-assets.cjs` uit voor de bundel. Publiceer ook de twee nieuwe HTML-bestanden; alle drie zijn onder een GitHub Pages-repositorypad getest.
+
 1. Kopieer `test_maze_version_A.html` naar bijvoorbeeld `test_maze_version_B.html` in de projecthoofdmap.
 2. Kopieer `assessment/maze-version-a.js` naar `assessment/maze-version-b.js`.
 3. Vervang in de nieuwe HTML uitsluitend de configuratiescriptverwijzing door `assessment/maze-version-b.js`. De CSS, runtime, antwoordcomponenten en PDF-export blijven gedeeld.
@@ -69,7 +79,7 @@ $env:ASSESSMENT_BROWSER = 'C:\Program Files\Google\Chrome\Application\chrome.exe
 node scripts/assessment-check.cjs
 ```
 
-Stel indien nodig `NODE_PATH` in op de map met Playwright. De controle start zelf een tijdelijke lokale server en sluit de testbrowser daarna. Ze controleert de startpoort, onafhankelijke ontwerpen, een Blockly-lus, begrensde JavaScript-uitvoering, markeringen, herstel na herladen, opslagfouten, de vertaaldelen, Maze-statussen en de controle bij verdergaan. PDF-export wordt zowel via HTTP als rechtstreeks via `file://` gecontroleerd, inclusief consolefouten. De Smartschool-link gebruikt een nagebootste bestemming. Browserbeelden en voorbeeld-PDF's verschijnen in `tmp/assessment-check/`. Dit vervangt niet de echte SEB/Smartschool-pilot.
+Stel indien nodig `NODE_PATH` in op de map met Playwright. De controle start zelf een tijdelijke lokale server en sluit de testbrowser daarna. Ze controleert de startpoort, onafhankelijke ontwerpen, een Blockly-lus, begrensde JavaScript-uitvoering, markeringen, herstel na herladen, opslagfouten, de vertaaldelen, Maze-statussen en de controle bij verdergaan. PDF-export wordt zowel via HTTP als rechtstreeks via `file://` gecontroleerd, inclusief consolefouten. De Smartschool-link gebruikt een nagebootste bestemming. Browserbeelden en voorbeeld-PDF's verschijnen per versie onder `tmp/assessment-check/`. Dit vervangt niet de echte SEB/Smartschool-pilot.
 
 ## Publiceren
 

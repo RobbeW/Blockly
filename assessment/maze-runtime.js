@@ -192,8 +192,8 @@
     _applyMarkingClasses() {
       this._allBlocks().forEach(block => {
         const el = block.getSvgRoot && block.getSvgRoot(); if (!el) return;
-        el.classList.remove('assessment-mark-action','assessment-mark-condition');
-        const mark = this.markings[block.id]; if (mark) el.classList.add(mark.kind === 'condition' ? 'assessment-mark-condition' : 'assessment-mark-action');
+        el.classList.remove('assessment-mark-action','assessment-mark-condition','assessment-mark-once','assessment-mark-repeated');
+        const mark = this.markings[block.id]; if (mark) el.classList.add('assessment-mark-'+mark.kind);
       });
     }
     _applySelectedMarking(id) {
@@ -203,7 +203,7 @@
       else this.markings[id] = {kind:this.markingTool, signature:this._signature(block)};
       this._applyMarkingClasses(); this._notifyChange();
     }
-    setMarkingTool(kind) { this.markingTool = kind === 'action' || kind === 'condition' || kind === 'erase' ? kind : null; }
+    setMarkingTool(kind) { this.markingTool = ['action','condition','once','repeated','erase'].includes(kind) ? kind : null; }
     setCode(code) { this.code = String(code == null ? '' : code); this._notifyChange(); }
 
     capture() {
@@ -321,7 +321,7 @@
       const previous=this._displayPosition; this._draw(position);
       const image=this.canvas.toDataURL('image/png'); this._draw(previous || this.start); return image;
     }
-    async getBlockEvidence() {
+    async getBlockEvidence(options = {}) {
       if (!this.workspace) return null;
       const B=root.Blockly;
       const wsSvg = this.workspace.getParentSvg ? this.workspace.getParentSvg() : this.blocklyElement.querySelector('svg');
@@ -349,9 +349,10 @@
       originals.forEach((el,index)=>{ const copy=copies[index]; if(!copy)return; const computed=getComputedStyle(el); styleProps.forEach(prop=>{let value=computed.getPropertyValue(prop);if(!value)return;const externalRef=/url\((?:['"])?([^)'\"]+)/ig;let ref,hasExternal=false;while((ref=externalRef.exec(value)))if(!ref[1].trim().startsWith('#'))hasExternal=true;if(['filter','clip-path','mask'].includes(prop)&&hasExternal)value='none';copy.style.setProperty(prop,value);}); });
       blockLayer.querySelectorAll('.assessment-mark-action > .blocklyPath').forEach(el=>{el.style.setProperty('stroke','#ffe45c');el.style.setProperty('stroke-width','4px');});
       blockLayer.querySelectorAll('.assessment-mark-condition > .blocklyPath').forEach(el=>{el.style.setProperty('stroke','#00b874');el.style.setProperty('stroke-width','4px');});
+      for(const [kind,color] of [['once','#b4a0ff'],['repeated','#ffc47e']])blockLayer.querySelectorAll('.assessment-mark-'+kind+' > .blocklyPath').forEach(el=>{el.style.setProperty('stroke',color);el.style.setProperty('stroke-width','4px');});
       layer.appendChild(blockLayer); svg.appendChild(layer);
       // Add compact per-block badges and a key so markings remain legible in PDFs.
-      const colors={action:'#ffe45c',condition:'#00b874'};
+      const colors={action:'#ffe45c',condition:'#00b874',once:'#b4a0ff',repeated:'#ffc47e'};
       const badgeCenters=[];
       for(const block of this._allBlocks()) {
         const mark=this.markings[block.id]; if(!mark || !colors[mark.kind]) continue;
@@ -361,9 +362,9 @@
         for(const [dx,dy] of offsets){const tx=xy.x+size.width-2+dx,ty=xy.y-2+dy;if(badgeCenters.every(p=>Math.hypot(tx-p.x,ty-p.y)>=20)){cx=tx;cy=ty;break;}}
         badgeCenters.push({x:cx,y:cy});
         const badge=document.createElementNS(ns,'circle');badge.setAttribute('cx',cx);badge.setAttribute('cy',cy);badge.setAttribute('r','10');badge.setAttribute('fill',colors[mark.kind]);badge.setAttribute('stroke','#27324b');badge.setAttribute('stroke-width','1.5');layer.appendChild(badge);
-        const label=document.createElementNS(ns,'text');label.setAttribute('x',cx);label.setAttribute('y',cy+4);label.setAttribute('text-anchor','middle');label.setAttribute('font-family','Arial,sans-serif');label.setAttribute('font-size','11');label.setAttribute('font-weight','700');label.setAttribute('fill','#172033');label.textContent=mark.kind==='action'?'A':'V';layer.appendChild(label);
+        const label=document.createElementNS(ns,'text');label.setAttribute('x',cx);label.setAttribute('y',cy+4);label.setAttribute('text-anchor','middle');label.setAttribute('font-family','Arial,sans-serif');label.setAttribute('font-size','11');label.setAttribute('font-weight','700');label.setAttribute('fill','#172033');label.textContent=({action:'A',condition:'V',once:'1×',repeated:'L'})[mark.kind];layer.appendChild(label);
       }
-      const legend=document.createElementNS(ns,'text');legend.setAttribute('x',pad);legend.setAttribute('y','20');legend.setAttribute('font-family','Arial,sans-serif');legend.setAttribute('font-size','12');legend.setAttribute('font-weight','600');legend.setAttribute('fill','#27324b');legend.textContent='A = Actie     V = Voorwaarde';svg.appendChild(legend);
+      if(options.includeLegend!==false){const legend=document.createElementNS(ns,'text');legend.setAttribute('x',pad);legend.setAttribute('y','20');legend.setAttribute('font-family','Arial,sans-serif');legend.setAttribute('font-size','12');legend.setAttribute('font-weight','600');legend.setAttribute('fill','#27324b');legend.textContent=options.markingScheme==='execution'?'1× = Eén keer     L = In de lus':'A = Actie     V = Voorwaarde';svg.appendChild(legend);}
       const xml=new XMLSerializer().serializeToString(svg), image=new Image();
       await new Promise((resolve,reject)=>{ image.onload=resolve; image.onerror=()=>reject(new Error('Blockly-blokken konden niet als afbeelding worden gerenderd.')); image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml); });
       const rasterScale=3, canvas=document.createElement('canvas'); canvas.width=width*rasterScale; canvas.height=height*rasterScale; const ctx=canvas.getContext('2d'); ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.scale(rasterScale,rasterScale);ctx.drawImage(image,0,0,width,height);return canvas.toDataURL('image/png');

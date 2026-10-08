@@ -84,10 +84,11 @@
       text(`Poging: ${state.attemptId}`,{size:8,color:muted});
       for(const [index,group] of config.groups.entries()) {
         if(group.type!=='coding') {
-          space(group.type==='ordering'?140:55);
+          const reference=group.asset?await loadImage(group.asset):null;
+          space(reference?Math.min(bottom-24,70+(group.type==='loop-boundary'?58:95)*reference.naturalHeight/reference.naturalWidth):group.type==='ordering'?140:55);
           heading(`${index+1}. ${group.title} — ${pointText(group.points)}`);text(group.prompt);
         }
-        if(group.asset)await picture(group.asset,95);
+        if(group.asset)await picture(group.asset,group.type==='loop-boundary'?58:95);
         if(group.codeSample){text('Gegeven programma',{bold:true});codeLines(group.codeSample);}
         if(group.type==='open')text('Taalzorg: gebruik hoofdletters en leestekens. Schrijf je uitleg in duidelijke, volledige zinnen.',{size:9,color:muted});
         if(group.rows) {
@@ -98,6 +99,17 @@
             if(group.type==='short'&&!group.parts)text(row[0],{size:8,color:muted});
             const answer=state.answers[group.id]?.[i];
             if(!String(answer||'').trim())blankAnswer();else if(group.type==='correction')codeLines(answer);else text(answer);
+          }
+        } else if(group.type==='loop-boundary') {
+          text('Alleen blokken; het volledige punt is beschikbaar. 1× (paars) = één keer; L (oranje) = in de lus. De indeling is door de leerling gekozen.',{size:9,color:muted});
+          const answer=state.boundaries?.[group.id];
+          if(!answer?.workspace?.blocks?.blocks?.length)blankAnswer();
+          else {
+            host=document.createElement('div');host.style.cssText='position:fixed;left:-12000px;top:0;width:900px;height:650px;';const blockly=document.createElement('div');blockly.style.cssText='width:900px;height:650px;';host.appendChild(blockly);const canvas=document.createElement('canvas');canvas.width=420;canvas.height=420;host.appendChild(canvas);document.body.appendChild(host);
+            runtime=new window.AssessmentMaze({blocklyElement:blockly,canvas});runtime.mount({...group.referenceMaze,mode:'blocks',workspace:answer.workspace,markings:answer.markings});await runtime.ready();
+            heading('Jouw algoritme en markeringen');const evidence=await runtime.getBlockEvidence({markingScheme:'execution'});if(!evidence)throw new Error('Vraag 9 kon niet worden afgebeeld.');await picture(evidence,width,3);
+            text(`Laatste uitvoering: ${answer.result?.status==='reached'?'doel bereikt':answer.result?'doel niet bereikt':'nog niet uitgevoerd'}`,{size:9,color:muted});
+            const marks=Object.values(answer.markings||{});text(`${marks.filter(m=>m.kind==='once').length} blokken aangeduid als één keer; ${marks.filter(m=>m.kind==='repeated').length} als in de lus.`,{size:9});runtime.dispose();runtime=null;host.remove();host=null;
           }
         } else if(group.type==='coding') {
           for(const exercise of config.exercises){

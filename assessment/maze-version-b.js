@@ -1,12 +1,10 @@
 /* © 2026 Robbe Wulgaert · AI in de Klas · robbewulgaert.be.
- * Source: Toets Blockly Deel 1 - Maze - Permutatie B (2025-2026).
- * Version A is the digital adaptation, not a recovered paper permutation A.
- * Teacher configuration: change startPassword and Smartschool URLs before use.
- * The SEB quit password belongs ONLY in the .seb configuration.
- */
+ * Digital variation B of the Blockly Maze assessment. Based on syllabus pp. 1–32;
+ * this is not a recovered historical paper permutation. Keep student config free
+ * of model answers and solution programs. */
 window.ASSESSMENT_CONFIG = {
   "id": "maze-deel-1",
-  "version": "A",
+  "version": "B",
   "schemaVersion": 1,
   "title": "Toets Blockly · Maze",
   "subtitle": "Sequentie, selectie en voorwaardelijke herhaling",
@@ -16,7 +14,7 @@ window.ASSESSMENT_CONFIG = {
   "teacher": "Robbe Wulgaert",
   "totalPoints": 25,
   "durationMinutes": 45,
-  "source": "Toets Blockly Deel 1 - Maze - Permutatie B (2025-2026)",
+  "source": "Digitale variatie B op basis van dezelfde leerstof (syllabus pp. 1–32); geen historische papieren permutatie.",
   "groups": [
     {
       "id": "q1",
@@ -55,19 +53,19 @@ window.ASSESSMENT_CONFIG = {
       "rows": [
         [
           "Programmeerconcept 1",
-          "Code wordt in volgorde uitgevoerd of in ... (programmeerconcept 1)."
+          "Instructies worden één voor één uitgevoerd. Dit programmeerconcept heet ..."
         ],
         [
           "JavaScript",
-          "Als"
+          "Draai rechts"
         ],
         [
           "Nederlands",
-          "isPathRight"
+          "isPathAhead"
         ],
         [
           "Nederlands",
-          "else"
+          "if"
         ],
         [
           "Nederlands",
@@ -75,7 +73,7 @@ window.ASSESSMENT_CONFIG = {
         ],
         [
           "Nederlands",
-          "isPathForward"
+          "notDone"
         ]
       ]
     },
@@ -88,15 +86,15 @@ window.ASSESSMENT_CONFIG = {
       "rows": [
         [
           "Codefragment",
-          "moveForward()"
+          "moveFoward();"
         ],
         [
           "Codefragment",
-          "if (pathRight) {turnRight()}"
+          "if isPathRight() { turnRight(); }"
         ],
         [
           "Codefragment",
-          "While notDone() {if (pathleft) {turnleft();}"
+          "while (notDone() { if (isPathLeft) { turnleft(); } }"
         ]
       ]
     },
@@ -105,7 +103,7 @@ window.ASSESSMENT_CONFIG = {
       "title": "Lees het algoritme",
       "points": 1,
       "type": "open",
-      "asset": "assessment/assets/program.png",
+      "asset": "assessment/assets/program-b.png",
       "prompt": "Schrijf in Nederlandse volzinnen wat het mannetje zal doen.",
       "rows": [
         [
@@ -133,19 +131,19 @@ window.ASSESSMENT_CONFIG = {
       "title": "Leg uit in eigen woorden",
       "points": 3,
       "type": "open",
-      "prompt": "Leg de volgende begrippen uit in je eigen woorden.",
+      "prompt": "Leg elk begrip uit met een eigen voorbeeld of toepassing.",
       "rows": [
         [
           "Begrip",
-          "Algoritme"
+          "Leg uit wat een algoritme is. Geef als voorbeeld een stappenplan voor een dagelijkse taak."
         ],
         [
           "Begrip",
-          "Syntax"
+          "Leg uit wat syntax betekent bij programmeren. Geef een voorbeeld van een JavaScript-schrijfregel."
         ],
         [
           "Begrip",
-          "Computationeel denken"
+          "Leg uit wat computationeel denken betekent. Geef een voorbeeld van hoe je een groot probleem in kleinere delen verdeelt."
         ]
       ]
     },
@@ -158,15 +156,7 @@ window.ASSESSMENT_CONFIG = {
       "rows": [
         [
           "Stap",
-          "Patroonherkenning"
-        ],
-        [
-          "Stap",
-          "Debuggen"
-        ],
-        [
-          "Stap",
-          "Abstraheren"
+          "Decompositie"
         ],
         [
           "Stap",
@@ -174,7 +164,15 @@ window.ASSESSMENT_CONFIG = {
         ],
         [
           "Stap",
-          "Decompositie"
+          "Patroonherkenning"
+        ],
+        [
+          "Stap",
+          "Abstraheren"
+        ],
+        [
+          "Stap",
+          "Debuggen"
         ]
       ]
     },
@@ -183,35 +181,12 @@ window.ASSESSMENT_CONFIG = {
       "title": "De oneindige lus",
       "points": 2,
       "type": "open",
-      "prompt": "Bekijk de Pegman-maze uit level 3 en het programma hieronder. Analyseer het programma zonder het uit te voeren.",
-      "asset": "assessment/assets/infinite-loop-a.png",
-      "assetAlt": "Pegman level 3: het mannetje kijkt naar rechts in een rechte gang; het doel ligt vijf vakken verder naar rechts.",
-      "referenceMaze": {
-        "start": {
-          "x": 1,
-          "y": 4,
-          "dir": 1
-        },
-        "goal": {
-          "x": 6,
-          "y": 4
-        },
-        "map": [
-          "########",
-          "########",
-          "########",
-          "########",
-          "#......#",
-          "########",
-          "########",
-          "########"
-        ]
-      },
-      "codeSample": "while (notDone()) {\n  turnLeft();\n}",
+      "prompt": "In een klein raster is S de start, G het doel en # een muur: #G# / #S# / ###. Het mannetje kijkt naar rechts (oost); het vak vóór hem is een muur. Het doel ligt één vrij vak boven hem. Analyseer dit programma zonder het uit te voeren.",
+      "codeSample": "while (notDone()) {\n  moveForward();\n}",
       "rows": [
         [
           "Vraag",
-          "Wat doet het mannetje wanneer de computer dit programma uitvoert? Waarom vormt dit programma een probleem voor de computer? Leg uit waarom de lus niet stopt. (0,5 punt)"
+          "Waarom blijft dit programma herhalen? Leg uit wat er met de voorwaarde gebeurt. (0,5 punt)"
         ],
         [
           "Vraag",
@@ -229,26 +204,26 @@ window.ASSESSMENT_CONFIG = {
       "points": 1,
       "type": "loop-boundary",
       "prompt": "Bouw met blokken een algoritme voor deze maze, gebaseerd op level 5. Gebruik een while-lus (herhaal zolang) en test je oplossing. Markeer daarna elk actieblok: wordt het één keer uitgevoerd buiten de lus, of herhaald in de lus?",
-      "asset": "assessment/assets/loop-boundary-a.png",
+      "asset": "assessment/assets/loop-boundary-b.png",
       "assetAlt": "Pegman-maze met een aanloop, een bocht en een rechte gang naar het doel.",
       "referenceMaze": {
         "map": [
           "########",
-          "#####.##",
-          "#####.##",
-          "#####.##",
-          "#####.##",
-          "#####.##",
-          "###...##",
+          "##.#####",
+          "##.#####",
+          "##.#####",
+          "##.#####",
+          "##.#####",
+          "##...###",
           "########"
         ],
         "start": {
-          "x": 3,
+          "x": 4,
           "y": 6,
-          "dir": 1
+          "dir": 3
         },
         "goal": {
-          "x": 5,
+          "x": 2,
           "y": 1
         }
       }
@@ -262,49 +237,49 @@ window.ASSESSMENT_CONFIG = {
       "requirements": [
         "Gebruik een while-lus (herhaal zolang) om het terugkerende patroon te herhalen."
       ],
-      "asset": "assessment/assets/maze-1.png",
+      "asset": "assessment/assets/maze-b-1.png",
       "start": {
-        "x": 1,
+        "x": 6,
         "y": 6,
-        "dir": 1
+        "dir": 3
       },
       "goal": {
-        "x": 5,
+        "x": 2,
         "y": 2
       },
       "map": [
-        "#######.",
-        "######..",
-        "#####..#",
-        "####..##",
-        "###..###",
-        "##..####",
+        ".#######",
+        "..######",
         "#..#####",
-        "#.######"
+        "##..####",
+        "###..###",
+        "####..##",
+        "#####..#",
+        "######.#"
       ]
     },
     {
       "id": "maze-2",
       "title": "Maze 2",
       "points": 2,
-      "asset": "assessment/assets/maze-2.png",
+      "asset": "assessment/assets/maze-b-2.png",
       "start": {
-        "x": 1,
+        "x": 6,
         "y": 6,
-        "dir": 1
+        "dir": 3
       },
       "goal": {
-        "x": 5,
+        "x": 2,
         "y": 6
       },
       "map": [
         "########",
         "########",
-        "#....###",
-        "#.##..##",
-        "#...#.##",
-        "###.#.##",
-        "#...#.##"
+        "###....#",
+        "##..##.#",
+        "##.#...#",
+        "##.#.###",
+        "##.#...#"
       ]
     },
     {
@@ -314,24 +289,24 @@ window.ASSESSMENT_CONFIG = {
       "requirements": [
         "Gebruik een while-lus (herhaal zolang) met een if/else (als/anders) om keuzes te maken op basis van een padvoorwaarde."
       ],
-      "asset": "assessment/assets/maze-3.png",
+      "asset": "assessment/assets/maze-b-3.png",
       "start": {
-        "x": 5,
+        "x": 1,
         "y": 6,
-        "dir": 1
+        "dir": 3
       },
       "goal": {
-        "x": 0,
+        "x": 6,
         "y": 3
       },
       "map": [
         "#######",
         "#.....#",
-        "##.####",
+        "####.##",
         ".......",
-        "#.#.#..",
-        ".....#.",
-        "#.#.#.."
+        "..#.#.#",
+        ".#.....",
+        "..#.#.#"
       ]
     },
     {
@@ -339,24 +314,24 @@ window.ASSESSMENT_CONFIG = {
       "title": "Maze 4",
       "points": 3,
       "explanationPrompt": "Waarom werkt jouw algoritme? Leg uit welk patroon je herkent, welke keuzes of herhalingen je gebruikt en waarom je oplossing bij het doel stopt.",
-      "asset": "assessment/assets/maze-4.png",
+      "asset": "assessment/assets/maze-b-4.png",
       "start": {
-        "x": 5,
+        "x": 1,
         "y": 6,
-        "dir": 1
+        "dir": 3
       },
       "goal": {
-        "x": 2,
+        "x": 4,
         "y": 1
       },
       "map": [
         "#######",
         "#.....#",
-        "##.####",
+        "####.##",
         ".......",
-        "#.#.#..",
-        ".....#.",
-        "#.#.#.."
+        "..#.#.#",
+        ".#.....",
+        "..#.#.#"
       ]
     }
   ]

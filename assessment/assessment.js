@@ -17,6 +17,7 @@
     return {schemaVersion:config.schemaVersion, examId:config.id, version:config.version,
       attemptId:crypto.randomUUID(), identity, startedAt:new Date().toISOString(), updatedAt:null,
       answers:Object.fromEntries(config.groups.filter(g=>g.rows).map(g=>[g.id,g.rows.map(()=> '')])),
+      boundaries:Object.fromEntries(config.groups.filter(g=>g.type==='loop-boundary').map(g=>[g.id,{workspace:null,markings:{},result:null}])),
       exercises:Object.fromEntries(config.exercises.map(e=>[e.id,emptyExercise()]))};
   }
   function validState(value) {
@@ -29,6 +30,8 @@
       const saved = JSON.parse(localStorage.getItem(prefix+active));
       if (!validState(saved)) { $('gate-error').textContent = 'De opgeslagen poging heeft een onbekend formaat. Start een nieuwe poging of vraag je leerkracht om hulp.'; return null; }
       if (JSON.stringify(saved.identity) !== JSON.stringify(identity)) return null;
+      if(!saved.boundaries){saved.boundaries={};saved.lastExport=null;}
+      for(const group of config.groups.filter(g=>g.type==='loop-boundary'))saved.boundaries[group.id]??={workspace:null,markings:{},result:null};
       if(config.groups.some(g=>g.rows&&saved.answers[g.id]?.length!==g.rows.length)||config.exercises.some(e=>e.explanationPrompt&&['blocks','code'].some(branch=>saved.exercises[e.id].drafts[branch].explanation===undefined)))saved.lastExport=null;
       for(const group of config.groups.filter(g=>g.rows))saved.answers[group.id]=group.rows.map((_,i)=>saved.answers[group.id]?.[i]??'');
       for(const exercise of config.exercises)for(const branch of ['blocks','code'])saved.exercises[exercise.id].drafts[branch].explanation??='';
@@ -87,6 +90,7 @@
   }
   function captureRuntime() {
     if (!runtime || !activeExercise) return;
+    if(activeExercise.boundary){const captured=runtime.capture(),answer=state.boundaries[activeExercise.id];answer.workspace=captured.workspace;answer.markings=captured.markings;return;}
     const ex = selectedExercise(), captured = runtime.capture();
     if (runtime.mode === 'blocks') {
       ex.drafts.blocks.workspace = captured.workspace; ex.drafts.blocks.markings = captured.markings;
@@ -95,6 +99,26 @@
   function flush() { captureRuntime(); persist(); }
   function disposeRuntime() { captureRuntime(); runtime?.dispose(); runtime=null; activeExercise=null; }
   function hasBlocks(workspace) { return Boolean(workspace?.blocks?.blocks?.length); }
+  function boundaryActions(workspace){const blocks=[];function visit(node){if(!node||typeof node!=='object')return;if(['assessment_maze_move_forward','assessment_maze_turn_left','assessment_maze_turn_right'].includes(node.type)&&node.id)blocks.push(node);for(const value of Object.values(node))if(value&&typeof value==='object')visit(value);}visit(workspace);return blocks;}
+  function updateBoundaryMarks(){
+    const answer=state.boundaries[currentGroup],actions=boundaryActions(answer.workspace);
+    if(!$('boundary-marks'))return;
+    const labels={assessment_maze_move_forward:'stap vooruit',assessment_maze_turn_left:'draai links',assessment_maze_turn_right:'draai rechts'};
+    $('boundary-marks').innerHTML=`<p>${actions.filter(b=>answer.markings[b.id]).length} van ${actions.length} actieblokken gemarkeerd. Je leerkracht beoordeelt de indeling.</p>`+actions.map((b,i)=>`<p>${i+1}. ${labels[b.type]}: <strong>${answer.markings[b.id]?.kind==='once'?'1× · Eén keer':answer.markings[b.id]?.kind==='repeated'?'L · In de lus':'Nog niet gemarkeerd'}</strong></p>`).join('');
+  }
+  function renderBoundary(group){
+    const answer=state.boundaries[group.id];
+    $('question-panel').innerHTML=heading(group)+`<div class="callout"><strong>Alleen blokken · 1 punt</strong><p>Dit is een inzichtvraag over de lus: je kunt hier het volledige punt behalen met blokken. De markeringen worden niet automatisch nagekeken.</p></div><div class="editor-layout"><section class="card editor-card"><div class="editor-tools"><button type="button" class="primary" data-run>▶ Uitvoeren</button><button type="button" data-stop>Stop</button><button type="button" data-reset>Maze herstellen</button></div><div id="blockly-host" class="blockly-host"></div><div class="mark-tools"><button type="button" data-boundary-tool="once" aria-pressed="false">1× · Eén keer</button><button type="button" data-boundary-tool="repeated" aria-pressed="false">L · In de lus</button><button type="button" data-boundary-tool="erase" aria-pressed="false">Markering verwijderen</button><button type="button" data-clear-boundary>Alle markeringen wissen</button></div><p class="editor-note">Kies een markering en klik op een actieblok. Gebruik de wis-knop of een andere markering om je keuze te wijzigen. Als je je algoritme wijzigt, controleer je alle markeringen opnieuw.</p><div id="boundary-marks" aria-live="polite"></div></section><section class="card editor-card"><h3>Maze level 5</h3><canvas id="maze-canvas" class="maze-canvas" width="420" height="420" aria-label="${esc(group.assetAlt)}"></canvas><p id="runtime-status" class="runtime-status" role="status"></p></section></div>`+footer(group);
+    activeExercise={id:group.id,boundary:true};
+    runtime=new window.AssessmentMaze({blocklyElement:$('blockly-host'),canvas:$('maze-canvas'),statusElement:$('runtime-status'),onChange(captured){
+      if(rendering)return;
+      if(JSON.stringify(answer.workspace)!==JSON.stringify(captured.workspace)){answer.result=null;captured.markings={};runtime.markings={};runtime._applyMarkingClasses();}
+      answer.workspace=captured.workspace;answer.markings=captured.markings;state.lastExport=null;changed();updateBoundaryMarks();
+    },onResult(result){answer.result={...result,executedAt:new Date().toISOString()};state.lastExport=null;changed();}});
+    runtime.mount({...group.referenceMaze,mode:'blocks',workspace:answer.workspace,markings:answer.markings});
+    if(answer.result)$('runtime-status').textContent=answer.result.status==='reached'?'Laatste uitvoering: doel bereikt.':'Controleer de laatste uitvoering van jouw algoritme.';
+    updateBoundaryMarks();
+  }
   function exerciseStatus(exercise) {
     const ex=state.exercises[exercise.id],branch=ex.choice;
     const filled=branch==='code'?Boolean(ex.drafts.code.code.trim()):branch==='blocks'&&hasBlocks(ex.drafts.blocks.workspace);
@@ -117,6 +141,7 @@
     }
   }
   function answered(group) {
+    if(group.type==='loop-boundary'){const answer=state.boundaries[group.id],actions=boundaryActions(answer.workspace);return actions.length>0&&actions.every(b=>answer.markings[b.id]);}
     if (group.id === 'q4') return config.exercises.every(e=>{const ex=state.exercises[e.id];const filled=ex.choice==='code'?ex.drafts.code.code.trim():ex.choice==='blocks'&&hasBlocks(ex.drafts.blocks.workspace);return filled&&(!e.explanationPrompt||ex.drafts[ex.choice].explanation?.trim());});
     if (group.id === 'q5') return config.exercises.every(e=>{const ex=state.exercises[e.id];return !ex.needsReview && (ex.choice==='blocks' ? Object.keys(ex.drafts.blocks.markings).length : ex.choice==='code' && ex.drafts.code.markings.length);});
     return state.answers[group.id]?.every(value=>String(value).trim());
@@ -135,7 +160,7 @@
   }
   function renderFields(group) {
     const answers=state.answers[group.id]; let html=heading(group);
-    if (group.asset) html+=`<img class="reference-program" src="${group.asset}" alt="Blockly-algoritme uit de toets: lees de blokken en beschrijf het gedrag.">`;
+    if (group.asset) html+=`<img class="reference-program" src="${group.asset}" alt="${esc(group.assetAlt||'Blockly-algoritme uit de toets: lees de blokken en beschrijf het gedrag.')}">`;
     if (group.codeSample) html+=`<section class="card answer-card"><h2>Gegeven programma</h2><pre class="reference-code">${esc(group.codeSample)}</pre></section>`;
     if(group.type==='short'&&group.parts) {
       html+=group.parts.map(part=>`<section class="card answer-card"><h2>${esc(part.title)}</h2>${part.layout==='sentence'?part.indices.map(i=>`<label for="answer-${group.id}-${i}">${esc(group.rows[i][1])}<input id="answer-${group.id}-${i}" data-answer="${group.id}" data-index="${i}" value="${esc(answers[i])}" autocomplete="off"></label>`).join(''):`<table class="answer-table"><thead><tr><th scope="col">${esc(part.givenLanguage)}</th><th scope="col">${esc(part.answerLanguage)}</th></tr></thead><tbody>${part.indices.map(i=>`<tr><td><label for="answer-${group.id}-${i}">${esc(group.rows[i][1])}</label></td><td><input id="answer-${group.id}-${i}" data-answer="${group.id}" data-index="${i}" value="${esc(answers[i])}" autocomplete="off"></td></tr>`).join('')}</tbody></table>`}</section>`).join('');
@@ -250,6 +275,7 @@
     const group=config.groups.find(g=>g.id===groupId);
     if(group.type==='coding') renderCoding(group);
     else if(group.type==='marking') renderMarking(group);
+    else if(group.type==='loop-boundary')renderBoundary(group);
     else renderFields(group);
     rendering=false; updateNav();updateMazeIndicators();persist();
     if(focus){$('question-panel').focus();window.scrollTo({top:0,behavior:'instant'});}
@@ -321,7 +347,9 @@
     else if(button.dataset.maze!==undefined){flush();if(button.dataset.marking==='true'){markIndex=Number(button.dataset.maze);render('q5');}else{mazeIndex=Number(button.dataset.maze);render('q4');}}
     else if(button.dataset.openCoding!==undefined){mazeIndex=Number(button.dataset.openCoding);render('q4');}
     else if(button.dataset.branch){flush();const ex=state.exercises[config.exercises[mazeIndex].id];if(ex.choice!==button.dataset.branch){ex.choice=button.dataset.branch;ex.needsReview=Boolean(Object.keys(ex.drafts.blocks.markings).length||ex.drafts.code.markings.length);state.lastExport=null;}render('q4');}
-    else if(button.hasAttribute('data-run')){captureRuntime();runtime?.run(selectedExercise().choice==='code'?$('code-answer').value:undefined);}
+    else if(button.hasAttribute('data-run')){captureRuntime();runtime?.run(activeExercise?.boundary?undefined:selectedExercise().choice==='code'?$('code-answer').value:undefined);}
+    else if(button.dataset.boundaryTool){runtime?.setMarkingTool(button.dataset.boundaryTool);document.querySelectorAll('[data-boundary-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));}
+    else if(button.hasAttribute('data-clear-boundary')){const answer=state.boundaries[currentGroup];answer.markings={};runtime.markings={};runtime._applyMarkingClasses();state.lastExport=null;changed();updateBoundaryMarks();}
     else if(button.hasAttribute('data-stop')){runtime?.stop();$('runtime-status').textContent='Uitvoering gestopt.';}
     else if(button.hasAttribute('data-reset')) runtime?.reset();
     else if(button.id==='export-pdf') exportPDF();
