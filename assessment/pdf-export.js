@@ -17,7 +17,7 @@
   const label=n=>Number(n).toLocaleString('nl-BE',{maximumFractionDigits:2});
   const pointText=n=>`${label(n)} ${Number(n)===1?'punt':'punten'}`;
   const safeName=value=>String(value).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,90)||'leerling';
-  async function exportAssessment(config,state) {
+  async function exportAssessment(config,state,{download=false}={}) {
     const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4',compress:true});
     const [regular,bold,mono]=await Promise.all([
       fontData('assessment/vendor/fonts/NotoSans-Regular.ttf'),fontData('assessment/vendor/fonts/NotoSans-Bold.ttf'),fontData('assessment/vendor/fonts/NotoSansMono-Regular.ttf')]);
@@ -164,8 +164,14 @@
         pdf.text(`${p} / ${pdf.getNumberOfPages()}`,192,287,{align:'right'});
       }
       const filename=`${safeName(state.identity.name)}-${safeName(state.identity.className)}-Toets_Maze_${safeName(config.version)}.pdf`;
-      return {filename,blob:pdf.output('blob')};
+      if(download)pdf.save(filename);
+      return {filename,blob:download?null:pdf.output('blob')};
     } finally {runtime?.dispose();host?.remove();}
   }
-  window.AssessmentPDF={create:exportAssessment};
+  window.AssessmentPDF={
+    create:exportAssessment,
+    // Compatibility with assessment.js copies cached before PDF preparation
+    // moved to the review screen. Keep their original download behaviour.
+    export:(config,state)=>exportAssessment(config,state,{download:true})
+  };
 })();

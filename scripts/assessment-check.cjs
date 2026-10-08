@@ -145,6 +145,10 @@ async function main() {
     assert.equal(await page.evaluate(()=>window.__pdfBuilds),1,'download uses the prepared PDF without rebuilding');
     const repeatDownloadPromise=page.waitForEvent('download');await page.locator('#export-pdf').click();await repeatDownloadPromise;
     assert.equal(await page.evaluate(()=>window.__pdfBuilds),1,'repeat download reuses the current prepared PDF');
+    const legacyDownloadPromise=page.waitForEvent('download',{timeout:60000});
+    await page.evaluate(()=>window.AssessmentPDF.export(window.AssessmentApp.config,window.AssessmentApp.getState()));
+    const legacyDownload=await legacyDownloadPromise;
+    assert.equal(legacyDownload.suggestedFilename(),download.suggestedFilename(),'cached legacy caller still exports and downloads the same assessment');
     await page.waitForFunction(()=>window.AssessmentApp.getState().lastExport!==null);
     check((await page.locator('#completion').textContent()).includes('nog niet ingediend'),'download not represented as upload');
     await context.route('https://school.example/toets-upload',route=>route.fulfill({contentType:'text/html',body:'<h1>Upload fixture</h1>'}));
