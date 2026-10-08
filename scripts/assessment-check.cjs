@@ -59,7 +59,6 @@ async function main() {
     assert.equal(await page.locator('.question-heading .points').textContent(),'1 punt');
     check((await page.locator('.taalzorg').textContent()).includes('hoofdletters en leestekens'),'taalzorg marker on open answer');
     await page.locator('.nav-button[data-group="q4"]').click();await page.locator('[data-branch="code"]').click();
-    check((await page.locator('#question-panel').textContent()).includes('Gebruik een while-lus'),'Maze 1 explicitly requires while');
     check((await page.locator('[data-maze="1"] .maze-state').textContent()).includes('Nog leeg'),'unfinished maze indicator');
     await page.locator('[data-coding-next]').click();await page.waitForSelector('#coding-review-dialog[open]');
     assert.equal(await page.locator('[data-resume-maze]').count(),4);await page.locator('[data-close-coding]').click();
@@ -95,7 +94,6 @@ async function main() {
       await page.waitForTimeout(150);await page.locator('[data-run]').click();await page.waitForFunction(id=>window.AssessmentApp.getState().exercises[id].results.blocks!==null,`maze-${i+1}`);await page.locator('[data-stop]').click();
     }
     await page.screenshot({path:path.join(output,'coding-blocks.png'),fullPage:true});
-    check((await page.locator('#question-panel').textContent()).includes('met een if/else'),'Maze 3 explicitly requires if/else');
     await page.locator('[data-maze="3"]').click();await page.locator('[data-branch="code"]').click();
     await page.locator('#maze-explanation').fill('EXPLANATION_JS: Ik herken het padpatroon en controleer mijn keuzes tot het doel bereikt is.');
     await page.locator('[data-branch="blocks"]').click();assert.equal(await page.locator('#maze-explanation').inputValue(),'');await page.locator('#maze-explanation').fill('UNSUBMITTED_EXPLANATION_SECRET');

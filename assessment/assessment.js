@@ -11,6 +11,7 @@
   const prefix = `blockly-assessment:${config.id}:${config.version}:`;
   let state = null, runtime = null, activeExercise = null, rendering = false, saveTimer = null;
   let currentGroup = 'q1', mazeIndex = 0, markIndex = 0, exporting = false;
+  let preparedPDF=null;
   let timerInterval=null, timerPhase='';
   const emptyExercise = () => ({choice:null, drafts:{blocks:{workspace:null,markings:{},explanation:''}, code:{code:'',markings:[],explanation:''}}, results:{blocks:null,code:null}, needsReview:false});
   function fresh(identity) {
@@ -151,8 +152,8 @@
     $('question-nav').innerHTML = config.groups.map((g,i)=>`<button type="button" class="nav-button" data-group="${g.id}" ${currentGroup===g.id?'aria-current="step"':''}><span class="nav-number">${i+1}</span><span>${esc(g.title)}</span>${answered(g)?'<span class="done" aria-label="Ingevuld">✓</span>':''}</button>`).join('');
     $('progress-label').textContent = `${config.groups.filter(answered).length} / ${config.groups.length} onderdelen ingevuld`;
   }
-  function heading(group) {
-    return `<div class="question-heading"><div><span class="eyebrow">VRAAG ${config.groups.indexOf(group)+1} VAN ${config.groups.length}</span><h1>${esc(group.title)}</h1></div><span class="points">${pointText(group.points)}</span></div><p class="instructions">${esc(group.prompt)}</p>`;
+  function heading(group,{instructions=true}={}) {
+    return `<div class="question-heading"><div><span class="eyebrow">VRAAG ${config.groups.indexOf(group)+1} VAN ${config.groups.length}</span><h1>${esc(group.title)}</h1></div><span class="points">${pointText(group.points)}</span></div>${instructions?`<p class="instructions">${esc(group.prompt)}</p>`:''}`;
   }
   function footer(group) {
     const i=config.groups.indexOf(group);
@@ -199,8 +200,7 @@
   }
   function renderCoding(group) {
     const exercise=config.exercises[mazeIndex],ex=state.exercises[exercise.id];
-    $('question-panel').innerHTML=heading(group)+mazeTabs(mazeIndex)+choiceHtml(exercise,ex)+(ex.choice?`<p class="ceiling"><strong>Definitief antwoord: ${ex.choice==='blocks'?'Blokken':'JavaScript'}</strong> · maximaal ${points(ex.choice==='blocks'?exercise.points/2:exercise.points)} / ${points(exercise.points)} punten. Je leerkracht beoordeelt de kwaliteit van je oplossing.</p><div class="editor-layout"><section class="card editor-card"><div class="editor-tools"><button class="primary" type="button" data-run>▶ Uitvoeren</button><button type="button" data-stop>Stop</button><button type="button" data-reset>Maze herstellen</button></div><div id="blockly-host" class="blockly-host" ${ex.choice==='code'?'hidden':''}></div>${ex.choice==='code'?`<label for="code-answer">Jouw JavaScript</label><textarea id="code-answer" class="code-editor" spellcheck="false" autocomplete="off" autocapitalize="off">${esc(ex.drafts.code.code)}</textarea>`:''}<p class="editor-note">${ex.choice==='blocks'?'Bouw je eigen programma. De gegenereerde JavaScript wordt niet getoond.':'Schrijf je eigen programma. Blokken worden niet omgezet naar dit antwoord.'}</p></section><section class="card editor-card"><h3>${exercise.title}</h3><canvas id="maze-canvas" class="maze-canvas" width="420" height="420" aria-label="Interactieve maze. Pegman: jouw positie en richting. Rode marker: doel."></canvas><p id="runtime-status" class="runtime-status" role="status"></p></section></div>`:`<section class="card answer-card"><img class="reference-program" src="${exercise.asset}" alt="Oorspronkelijke figuur ${exercise.title}"><p>Kies hierboven blokken of JavaScript om te beginnen.</p></section>`)+footer(group);
-    $('question-panel').querySelector('.maze-tabs').insertAdjacentHTML('afterend',`<section class="callout"><strong>Waarop word je beoordeeld?</strong><ul>${(exercise.requirements||[]).map(r=>`<li>${esc(r)} Dit geldt voor blokken én JavaScript.</li>`).join('')}<li>Je programma bereikt het doel en heeft een duidelijke structuur.</li><li>Bij JavaScript: correcte syntax, één instructie per regel en inspringingen die de lussen en keuzes duidelijk maken.</li>${exercise.explanationPrompt?'<li>Je legt hieronder uit waarom jouw algoritme werkt. De uitleg telt mee binnen de punten van deze maze.</li>':''}</ul></section>`);
+    $('question-panel').innerHTML=heading(group,{instructions:false})+mazeTabs(mazeIndex)+choiceHtml(exercise,ex)+(ex.choice?`<p class="ceiling"><strong>Definitief antwoord: ${ex.choice==='blocks'?'Blokken':'JavaScript'}</strong> · maximaal ${points(ex.choice==='blocks'?exercise.points/2:exercise.points)} / ${points(exercise.points)} punten. Je leerkracht beoordeelt de kwaliteit van je oplossing.</p><div class="editor-layout"><section class="card editor-card"><div class="editor-tools"><button class="primary" type="button" data-run>▶ Uitvoeren</button><button type="button" data-stop>Stop</button><button type="button" data-reset>Maze herstellen</button></div><div id="blockly-host" class="blockly-host" ${ex.choice==='code'?'hidden':''}></div>${ex.choice==='code'?`<label for="code-answer">Jouw JavaScript</label><textarea id="code-answer" class="code-editor" spellcheck="false" autocomplete="off" autocapitalize="off">${esc(ex.drafts.code.code)}</textarea>`:''}<p class="editor-note">${ex.choice==='blocks'?'Bouw je eigen programma. De gegenereerde JavaScript wordt niet getoond.':'Schrijf je eigen programma. Blokken worden niet omgezet naar dit antwoord.'}</p></section><section class="card editor-card"><h3>${exercise.title}</h3><canvas id="maze-canvas" class="maze-canvas" width="420" height="420" aria-label="Interactieve maze. Pegman: jouw positie en richting. Rode marker: doel."></canvas><p id="runtime-status" class="runtime-status" role="status"></p></section></div>`:`<section class="card answer-card"><img class="reference-program" src="${exercise.asset}" alt="Oorspronkelijke figuur ${exercise.title}"><p>Kies hierboven blokken of JavaScript om te beginnen.</p></section>`)+footer(group);
     if(ex.choice&&exercise.explanationPrompt)$('question-panel').querySelector('.question-footer').insertAdjacentHTML('beforebegin',`<section class="card answer-card">${taalzorg}<label for="maze-explanation">${esc(exercise.explanationPrompt)}<textarea id="maze-explanation" data-explanation="${exercise.id}">${esc(ex.drafts[ex.choice].explanation||'')}</textarea></label></section>`);
     if(ex.choice) mountRuntime(exercise,ex,false);
   }
@@ -286,26 +286,47 @@
     const ceiling=config.totalPoints-config.exercises.reduce((n,e)=>n+(state.exercises[e.id].choice==='blocks'?e.points/2:0),0);
     $('question-panel').innerHTML=`<div class="question-heading"><div><span class="eyebrow">OVERZICHT & INDIENEN</span><h1>Controleer je antwoorden</h1></div><span class="points">Toets op ${points(config.totalPoints)}</span></div><p>De vinkjes geven aan of je iets hebt ingevuld. Ze zeggen niet of je antwoord correct is.</p><div class="callout mint"><strong>Maximum met je huidige keuzes: ${points(ceiling)} / ${points(config.totalPoints)}</strong><p>${config.exercises.map(e=>{const ex=state.exercises[e.id];return `${e.title}: ${ex.choice==='blocks'?'blokken':ex.choice==='code'?'JavaScript':'nog geen keuze'} (max. ${points(ex.choice==='blocks'?e.points/2:e.points)} p.)`;}).join(' · ')}</p></div>${missing.length?`<p class="error">Nog niet volledig ingevuld: ${missing.map(g=>config.groups.indexOf(g)+1).join(', ')}. Je mag bewust een antwoord leeg laten.</p>`:''}<div class="review-list">${config.groups.map((g,i)=>`<div class="review-row"><div><strong>${i+1}. ${esc(g.title)}</strong><p>${answered(g)?'Ingevuld':'Nog nakijken'} · ${pointText(g.points)}</p></div><button type="button" data-group="${g.id}">Nakijken</button></div>`).join('')}</div><section class="card"><h2>1. Download je toets als PDF</h2><p>Je PDF bevat je antwoorden en je definitieve keuze per maze. Je andere ontwerp wordt niet ingediend.</p><button class="primary" type="button" id="export-pdf">${state.lastExport?'PDF opnieuw downloaden':'Download mijn volledige toets'}</button><p id="export-error" class="error" role="alert"></p><div id="completion" ${state.lastExport?'':'hidden'}></div></section>`;
     if(state.lastExport) renderCompletion();$('question-panel').focus();window.scrollTo(0,0);
+    preparePDF();
   }
   function safeUrl(url) { try {const u=new URL(url);return /^https:$/.test(u.protocol)?u.href:null;} catch(_){return null;} }
   function renderCompletion() {
     const url=safeUrl(config.smartschoolUrl)||safeUrl(config.smartschoolFallbackUrl);
     const fallback=safeUrl(config.smartschoolFallbackUrl);
     $('completion').hidden=false;
-    $('completion').innerHTML=`<div class="callout mint"><strong>PDF aangemaakt</strong><p>Controleer of het bestand op je toestel is gedownload. Het is nog niet ingediend.</p></div><p class="download-name">${esc(state.lastExport.filename)}</p><h2>2. Dien je PDF in via Smartschool</h2><p>Open Smartschool, meld je aan en upload dit bestand bij de juiste toetsopdracht. Controleer in Smartschool of je bestand werd ingediend.</p>${url?'<div class="completion-actions"><button id="smartschool-open" class="primary" type="button">Open Smartschool ↗</button></div>':'<p class="error">De Smartschool-link is nog niet ingesteld. Vraag je leerkracht om hulp; je PDF en antwoorden blijven bewaard.</p>'}${fallback&&fallback!==url?'<p><button id="smartschool-fallback" type="button">Open de schoolaanmelding</button></p>':''}<h2>3. Sluit Safe Exam Browser</h2><p>Na het indienen sluit je Safe Exam Browser met het afsluitwachtwoord van je leerkracht. Vul dat wachtwoord in het afsluitvenster van SEB in.</p><p class="editor-note">Deze toets kan niet controleren of je PDF in Smartschool is ingediend.</p>`;
+    $('completion').innerHTML=`<div class="callout mint"><strong>PDF aangemaakt</strong><p>Controleer of het bestand op je toestel is gedownload. Het is nog niet ingediend.</p></div><p class="download-name">${esc(state.lastExport.filename)}</p><h2>2. Dien je PDF in via Smartschool</h2><p>Smartschool opent in dit venster. Controleer eerst of je PDF is gedownload. Meld je daarna aan en upload dit bestand bij de juiste toetsopdracht. Controleer in Smartschool of je bestand werd ingediend.</p>${url?'<div class="completion-actions"><button id="smartschool-open" class="primary" type="button">Open Smartschool →</button></div>':'<p class="error">De Smartschool-link is nog niet ingesteld. Vraag je leerkracht om hulp; je PDF en antwoorden blijven bewaard.</p>'}${fallback&&fallback!==url?'<p><button id="smartschool-fallback" type="button">Open de schoolaanmelding</button></p>':''}<h2>3. Sluit Safe Exam Browser</h2><p>Na het indienen sluit je Safe Exam Browser met het afsluitwachtwoord van je leerkracht. Vul dat wachtwoord in het afsluitvenster van SEB in.</p><p class="editor-note">Deze toets kan niet controleren of je PDF in Smartschool is ingediend.</p>`;
   }
-  async function exportPDF() {
+  // Prepare before the download click: SEB must receive the download while the
+  // student's click is still active, without awaiting fonts/images/Blockly.
+  async function preparePDF() {
     if(exporting)return;
     flush();exporting=true;
     const controls=[...document.querySelectorAll('button')].map(button=>({button,disabled:button.disabled}));
     controls.forEach(({button})=>button.disabled=true);
-    const button=$('export-pdf');button.textContent='PDF wordt gemaakt…';$('export-error').textContent='';
+    if(preparedPDF){URL.revokeObjectURL(preparedPDF.url);preparedPDF=null;}
+    const button=$('export-pdf');button.textContent='PDF wordt klaargezet…';$('export-error').textContent='';
     try {
       const snapshot=JSON.parse(JSON.stringify(state));
-      const result=await window.AssessmentPDF.export(config,snapshot);
-      state.lastExport={filename:result.filename,generatedAt:new Date().toISOString()};persist();renderCompletion();button.textContent='PDF opnieuw downloaden';
-    } catch(error) { $('export-error').textContent='PDF maken is mislukt. Je antwoorden blijven bewaard. Probeer opnieuw of vraag je leerkracht om hulp. '+error.message;button.textContent='Opnieuw proberen'; }
+      const result=await window.AssessmentPDF.create(config,snapshot);
+      preparedPDF={filename:result.filename,url:URL.createObjectURL(result.blob)};
+      button.textContent=state.lastExport?'PDF opnieuw downloaden':'Download mijn volledige toets';
+    } catch(error) { $('export-error').textContent='PDF klaarzetten is mislukt. Je antwoorden blijven bewaard. Probeer opnieuw of vraag je leerkracht om hulp. '+error.message;button.textContent='Opnieuw PDF klaarzetten'; }
     finally {exporting=false;controls.forEach(({button,disabled})=>button.disabled=disabled);}
+  }
+  function exportPDF() {
+    if(exporting)return;
+    if(!preparedPDF){preparePDF();return;}
+    try {
+      const link=document.createElement('a');link.href=preparedPDF.url;link.download=preparedPDF.filename;
+      document.body.appendChild(link);
+      try {link.click();} finally {link.remove();}
+      state.lastExport={filename:preparedPDF.filename,generatedAt:new Date().toISOString()};
+      persist();renderCompletion();$('export-pdf').textContent='PDF opnieuw downloaden';
+    } catch(error) {$('export-error').textContent='Download starten is mislukt. Probeer opnieuw of vraag je leerkracht om hulp. '+error.message;}
+  }
+  function openSmartschool(url) {
+    const destination=safeUrl(url);
+    if(!destination)return;
+    flush();window.location.assign(destination);
   }
   function formatClass(){
     const field=$('student-class');
@@ -353,8 +374,8 @@
     else if(button.hasAttribute('data-stop')){runtime?.stop();$('runtime-status').textContent='Uitvoering gestopt.';}
     else if(button.hasAttribute('data-reset')) runtime?.reset();
     else if(button.id==='export-pdf') exportPDF();
-    else if(button.id==='smartschool-open') window.open(safeUrl(config.smartschoolUrl)||safeUrl(config.smartschoolFallbackUrl),'assessment-smartschool','noopener');
-    else if(button.id==='smartschool-fallback') window.open(safeUrl(config.smartschoolFallbackUrl),'assessment-smartschool','noopener');
+    else if(button.id==='smartschool-open') openSmartschool(safeUrl(config.smartschoolUrl)||safeUrl(config.smartschoolFallbackUrl));
+    else if(button.id==='smartschool-fallback') openSmartschool(config.smartschoolFallbackUrl);
     else if(button.dataset.tool){
       const ex=state.exercises[config.exercises[markIndex].id];
       if(ex.choice==='blocks'){runtime?.setMarkingTool(button.dataset.tool);document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));}
