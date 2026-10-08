@@ -178,7 +178,7 @@ window.ASSESSMENT_CONFIG = {
     },
     {
       "id": "q8",
-      "title": "De oneindige lus",
+      "title": "Analyseer het programma",
       "points": 2,
       "type": "open",
       "prompt": "In een klein raster is S de start, G het doel en # een muur: #G# / #S# / ###. Het mannetje kijkt naar rechts (oost); het vak vóór hem is een muur. Het doel ligt één vrij vak boven hem. Analyseer dit programma zonder het uit te voeren.",
@@ -186,7 +186,7 @@ window.ASSESSMENT_CONFIG = {
       "rows": [
         [
           "Vraag",
-          "Waarom blijft dit programma herhalen? Leg uit wat er met de voorwaarde gebeurt. (0,5 punt)"
+          "Wat gebeurt er wanneer de computer dit programma uitvoert? Beschrijf het gedrag van het mannetje en leg uit welk probleem je vaststelt. (0,5 punt)"
         ],
         [
           "Vraag",

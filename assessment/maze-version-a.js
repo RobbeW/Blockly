@@ -180,7 +180,7 @@ window.ASSESSMENT_CONFIG = {
     },
     {
       "id": "q8",
-      "title": "De oneindige lus",
+      "title": "Analyseer het programma",
       "points": 2,
       "type": "open",
       "prompt": "Bekijk de Pegman-maze uit level 3 en het programma hieronder. Analyseer het programma zonder het uit te voeren.",
@@ -211,7 +211,7 @@ window.ASSESSMENT_CONFIG = {
       "rows": [
         [
           "Vraag",
-          "Wat doet het mannetje wanneer de computer dit programma uitvoert? Waarom vormt dit programma een probleem voor de computer? Leg uit waarom de lus niet stopt. (0,5 punt)"
+          "Wat gebeurt er wanneer de computer dit programma uitvoert? Beschrijf het gedrag van het mannetje en leg uit welk probleem je vaststelt. (0,5 punt)"
         ],
         [
           "Vraag",
