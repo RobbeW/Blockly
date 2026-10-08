@@ -164,8 +164,8 @@
         pdf.text(`${p} / ${pdf.getNumberOfPages()}`,192,287,{align:'right'});
       }
       const filename=`${safeName(state.identity.name)}-${safeName(state.identity.className)}-Toets_Maze_${safeName(config.version)}.pdf`;
-      pdf.save(filename);return {filename};
+      return {filename,blob:pdf.output('blob')};
     } finally {runtime?.dispose();host?.remove();}
   }
-  window.AssessmentPDF={export:exportAssessment};
+  window.AssessmentPDF={create:exportAssessment};
 })();
