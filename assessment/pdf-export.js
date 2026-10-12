@@ -122,12 +122,13 @@
             text('Oorspronkelijke figuur',{size:9,color:muted});await picture(exercise.asset,58);
             if(!branch){blankAnswer();continue;}
             const draft=ex.drafts[branch];heading('Jouw definitieve antwoord');
-            if(branch==='code')codeLines(draft.code,draft.markings);
+            const submittedMarkings=exercise.id===state.markingExerciseId;
+            if(branch==='code')codeLines(draft.code);
             host=document.createElement('div');host.style.cssText='position:fixed;left:-12000px;top:0;width:900px;height:650px;pointer-events:none;';
             const blockly=document.createElement('div');blockly.style.cssText='width:900px;height:650px;';host.appendChild(blockly);
             const canvas=document.createElement('canvas');canvas.width=420;canvas.height=420;canvas.style.cssText='width:420px;height:420px;';host.appendChild(canvas);document.body.appendChild(host);
             runtime=new window.AssessmentMaze({blocklyElement:blockly,canvas});
-            runtime.mount({...exercise,mode:branch,workspace:branch==='blocks'?draft.workspace:null,code:branch==='code'?draft.code:'',markings:branch==='blocks'?draft.markings:{}});
+            runtime.mount({...exercise,mode:branch,workspace:branch==='blocks'?draft.workspace:null,code:branch==='code'?draft.code:'',markings:branch==='blocks'&&submittedMarkings?draft.markings:{}});
             await runtime.ready();
             if(branch==='blocks') {
               if(draft.workspace?.blocks?.blocks?.length){const evidence=await runtime.getBlockEvidence();if(!evidence)throw new Error('Een blokkenantwoord kon niet worden afgebeeld.');await picture(evidence,width,3);}
@@ -142,13 +143,22 @@
           }
         } else if(group.type==='marking') {
           text('Geel = actie (A). Groen = voorwaarde (V). De kleuren/labels zijn door de leerling gekozen; ze zijn geen automatische correctie.',{color:muted});
-          for(const exercise of config.exercises){
-            const ex=state.exercises[exercise.id];text(exercise.title,{bold:true});
+          for(const exercise of config.exercises.filter(e=>e.id===state.markingExerciseId)){
+            const ex=state.exercises[exercise.id];text(`${exercise.title} · willekeurig toegewezen maze`,{bold:true});
             if(ex.needsReview)text('LET OP: antwoord gewijzigd; markeringen nog na te kijken.',{bold:true});
-            const marks=ex.choice==='code'?ex.drafts.code.markings:ex.choice==='blocks'?Object.values(ex.drafts.blocks.markings):[];
+            const draft=ex.choice==='code'?(ex.drafts.code.blockMarking?.source===ex.drafts.code.code?ex.drafts.code.blockMarking:null):ex.choice==='blocks'?ex.drafts.blocks:null;
+            const marks=Object.values(draft?.markings||{});
             if(!marks.length)text('[Geen markeringen]',{color:muted});
-            else if(ex.choice==='code')for(const mark of marks){text(`${mark.kind==='action'?'Actie (geel)':'Voorwaarde (groen)'}:`,{bold:true,size:9});codeLines(ex.drafts.code.code.slice(mark.start,mark.end));}
-            else text(`${marks.filter(m=>m.kind==='action').length} blokken gemarkeerd als actie; ${marks.filter(m=>m.kind==='condition').length} als voorwaarde. Zie de A/V-labels bij de blokken in vraag 4.`);
+            if(draft?.workspace?.blocks?.blocks?.length){
+              if(ex.choice==='code')text('Je JavaScript-antwoord uit vraag 4, weergegeven als blokken.',{size:9,color:muted});
+              host=document.createElement('div');host.style.cssText='position:fixed;left:-12000px;top:0;width:900px;height:650px;';
+              const blockly=document.createElement('div');blockly.style.cssText='width:900px;height:650px;';host.appendChild(blockly);
+              const canvas=document.createElement('canvas');canvas.width=420;canvas.height=420;host.appendChild(canvas);document.body.appendChild(host);
+              runtime=new window.AssessmentMaze({blocklyElement:blockly,canvas});runtime.mount({...exercise,mode:'blocks',workspace:draft.workspace,markings:draft.markings,markingOnly:true});await runtime.ready();
+              const evidence=await runtime.getBlockEvidence();if(!evidence)throw new Error('De blokmarkeringen van vraag 5 konden niet worden afgebeeld.');await picture(evidence,width,3);
+              text(`${marks.filter(m=>m.kind==='action').length} blokken gemarkeerd als actie; ${marks.filter(m=>m.kind==='condition').length} als voorwaarde.`);
+              runtime.dispose();runtime=null;host.remove();host=null;
+            }
           }
         }
         if(group.type!=='coding')text(`Score leerkracht: ______ / ${label(group.points)}`,{size:9,bold:true});

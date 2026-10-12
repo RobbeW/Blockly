@@ -161,7 +161,7 @@
       if (!B) throw new Error('window.Blockly moet geladen zijn voordat de Maze-editor wordt gekoppeld.');
       registerBlocks(B);
       if (this.workspace && typeof this.workspace.dispose === 'function') this.workspace.dispose();
-      this.workspace = B.inject(this.blocklyElement, {toolbox:defaultToolbox(), media:'assessment/vendor/blockly/media/', sounds:false, trashcan:true, move:{scrollbars:true,drag:true,wheel:true}, zoom:{controls:true,wheel:true,startScale:0.9,maxScale:1.5,minScale:0.5}, renderer:'zelos'});
+      this.workspace = B.inject(this.blocklyElement, {readOnly:Boolean(config.markingOnly), toolbox:config.markingOnly?null:defaultToolbox(), media:'assessment/vendor/blockly/media/', sounds:false, trashcan:!config.markingOnly, move:{scrollbars:true,drag:true,wheel:true}, zoom:{controls:true,wheel:true,startScale:0.9,maxScale:1.5,minScale:0.5}, renderer:'zelos'});
       this._changeListener = event => {
         if (event && event.type === (B.Events && B.Events.SELECTED)) this._applySelectedMarking(event.newElementId);
         if (this._loading || (event && event.isUiEvent)) return;
@@ -177,6 +177,11 @@
         } catch (e) { this._status('Blockly-werkruimte kon niet worden hersteld: ' + e.message); }
       }
       this._loading = false;
+      if(config.markingOnly)this._allBlocks().forEach(block=>{
+        block.getSvgRoot()?.addEventListener('click',event=>{
+          event.stopPropagation();this._applySelectedMarking(block.id);
+        });
+      });
       this._pruneMarkings(); this._applyMarkingClasses(); this.reset(); this.resize();
       return this;
     }

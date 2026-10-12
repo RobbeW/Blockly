@@ -10,13 +10,22 @@
   const durationMs = (config.durationMinutes||45)*60*1000;
   const prefix = `blockly-assessment:${config.id}:${config.version}:`;
   let state = null, runtime = null, activeExercise = null, rendering = false, saveTimer = null;
-  let currentGroup = 'q1', mazeIndex = 0, markIndex = 0, exporting = false;
+  let currentGroup = 'q1', mazeIndex = 0, exporting = false;
   let preparedPDF=null;
   let timerInterval=null, timerPhase='';
   const emptyExercise = () => ({choice:null, drafts:{blocks:{workspace:null,markings:{},explanation:''}, code:{code:'',markings:[],explanation:''}}, results:{blocks:null,code:null}, needsReview:false});
+  function randomMarkingExerciseId() {
+    const values = new Uint32Array(1);
+    const limit = Math.floor(0x100000000 / config.exercises.length) * config.exercises.length;
+    let value;
+    do { crypto.getRandomValues(values); value = values[0]; } while (value >= limit);
+    const index = value % config.exercises.length;
+    return config.exercises[index].id;
+  }
   function fresh(identity) {
     return {schemaVersion:config.schemaVersion, examId:config.id, version:config.version,
       attemptId:crypto.randomUUID(), identity, startedAt:new Date().toISOString(), updatedAt:null,
+      markingExerciseId:randomMarkingExerciseId(), markingFormat:'blocks',
       answers:Object.fromEntries(config.groups.filter(g=>g.rows).map(g=>[g.id,g.rows.map(()=> '')])),
       boundaries:Object.fromEntries(config.groups.filter(g=>g.type==='loop-boundary').map(g=>[g.id,{workspace:null,markings:{},result:null}])),
       exercises:Object.fromEntries(config.exercises.map(e=>[e.id,emptyExercise()]))};
@@ -32,6 +41,8 @@
       if (!validState(saved)) { $('gate-error').textContent = 'De opgeslagen poging heeft een onbekend formaat. Start een nieuwe poging of vraag je leerkracht om hulp.'; return null; }
       if (JSON.stringify(saved.identity) !== JSON.stringify(identity)) return null;
       if(!saved.boundaries){saved.boundaries={};saved.lastExport=null;}
+      if(saved.markingFormat!=='blocks'){saved.markingFormat='blocks';saved.lastExport=null;}
+      if(!config.exercises.some(e=>e.id===saved.markingExerciseId)) {saved.markingExerciseId=randomMarkingExerciseId();saved.lastExport=null;}
       for(const group of config.groups.filter(g=>g.type==='loop-boundary'))saved.boundaries[group.id]??={workspace:null,markings:{},result:null};
       if(config.groups.some(g=>g.rows&&saved.answers[g.id]?.length!==g.rows.length)||config.exercises.some(e=>e.explanationPrompt&&['blocks','code'].some(branch=>saved.exercises[e.id].drafts[branch].explanation===undefined)))saved.lastExport=null;
       for(const group of config.groups.filter(g=>g.rows))saved.answers[group.id]=group.rows.map((_,i)=>saved.answers[group.id]?.[i]??'');
@@ -87,12 +98,14 @@
     const draft = exercise.drafts[branch];
     const hasMarks = branch === 'blocks' ? Object.keys(draft.markings||{}).length : (draft.markings||[]).length;
     if (hasMarks) { draft.markings = branch === 'blocks' ? {} : []; exercise.needsReview = true; }
+    if(branch==='code'&&draft.blockMarking){if(Object.keys(draft.blockMarking.markings).length)exercise.needsReview=true;delete draft.blockMarking;}
     state.lastExport = null;
   }
   function captureRuntime() {
     if (!runtime || !activeExercise) return;
     if(activeExercise.boundary){const captured=runtime.capture(),answer=state.boundaries[activeExercise.id];answer.workspace=captured.workspace;answer.markings=captured.markings;return;}
     const ex = selectedExercise(), captured = runtime.capture();
+    if(activeExercise.marking){const draft=markingDraft(ex);draft.workspace=captured.workspace;draft.markings=captured.markings;return;}
     if (runtime.mode === 'blocks') {
       ex.drafts.blocks.workspace = captured.workspace; ex.drafts.blocks.markings = captured.markings;
     } else if (runtime.mode === 'code' && $('code-answer')) ex.drafts.code.code = $('code-answer').value;
@@ -138,13 +151,13 @@
     });
     if($('coding-progress')) {
       const complete=config.exercises.filter(e=>exerciseStatus(e).complete).length;
-      $('coding-progress').textContent=`${complete} van de ${config.exercises.length} mazes: doel bereikt. Bekijk alle vier de oefeningen.`;
+      $('coding-progress').textContent=`${complete} van de ${config.exercises.length} mazes: doel bereikt. Bekijk alle ${config.exercises.length} oefeningen.`;
     }
   }
   function answered(group) {
     if(group.type==='loop-boundary'){const answer=state.boundaries[group.id],actions=boundaryActions(answer.workspace);return actions.length>0&&actions.every(b=>answer.markings[b.id]);}
     if (group.id === 'q4') return config.exercises.every(e=>{const ex=state.exercises[e.id];const filled=ex.choice==='code'?ex.drafts.code.code.trim():ex.choice==='blocks'&&hasBlocks(ex.drafts.blocks.workspace);return filled&&(!e.explanationPrompt||ex.drafts[ex.choice].explanation?.trim());});
-    if (group.id === 'q5') return config.exercises.every(e=>{const ex=state.exercises[e.id];return !ex.needsReview && (ex.choice==='blocks' ? Object.keys(ex.drafts.blocks.markings).length : ex.choice==='code' && ex.drafts.code.markings.length);});
+    if (group.id === 'q5') {const ex=state.exercises[state.markingExerciseId],draft=ex&&markingDraft(ex);return Boolean(draft&&!ex.needsReview&&(ex.choice!=='code'||draft.source===ex.drafts.code.code)&&Object.keys(draft.markings).length);}
     return state.answers[group.id]?.every(value=>String(value).trim());
   }
   function updateNav() {
@@ -185,14 +198,19 @@
     $('ordering-error').textContent= new Set(values).size<values.length ? 'Je hebt een nummer meerdere keren gekozen. Gebruik elk nummer eenmaal.' : '';
   }
   function mazeTabs(index,marking=false) {
-    return `<div class="maze-tabs" role="group" aria-label="Alle vier de codingoefeningen">${config.exercises.map((e,i)=>{const status=exerciseStatus(e);return `<button type="button" data-maze="${i}" data-marking="${marking}" data-status="${status.kind}" aria-pressed="${index===i}"><span>${e.title} · ${pointText(e.points)}</span><small class="maze-state">${status.label}</small></button>`;}).join('')}</div>${!marking?'<p id="coding-progress" class="coding-progress" role="status"></p>':''}`;
+    const exercises=marking?config.exercises.filter(e=>e.id===state.markingExerciseId):config.exercises;
+    const tabs=exercises.map((e,i)=>{
+      const status=exerciseStatus(e);
+      return `<button type="button" ${marking?'disabled':`data-maze="${i}"`} data-status="${status.kind}" aria-pressed="${marking||index===i}"><span>${e.title} · ${pointText(e.points)}${marking?' · toegewezen':''}</span><small class="maze-state">${status.label}</small></button>`;
+    }).join('');
+    return `<div class="maze-tabs" role="group" aria-label="${marking?'Toegewezen maze':'Alle '+config.exercises.length+' codingoefeningen'}">${tabs}</div>${!marking?'<p id="coding-progress" class="coding-progress" role="status"></p>':''}`;
   }
   function checkCodingBeforeNext() {
     flush();const unfinished=config.exercises.filter(e=>!exerciseStatus(e).complete);
     if(!unfinished.length)return false;
     let dialog=$('coding-review-dialog');if(!dialog){dialog=document.createElement('dialog');dialog.id='coding-review-dialog';dialog.className='coding-review-dialog';document.body.appendChild(dialog);}
     dialog.setAttribute('aria-labelledby','coding-review-title');
-    dialog.innerHTML=`<h2 id="coding-review-title">Controleer de vier mazes</h2><p>Deze oefeningen zijn nog niet afgewerkt. Je kunt eraan verder werken of bewust met een gedeeltelijk antwoord doorgaan.</p><div class="unfinished-list">${unfinished.map(e=>`<button type="button" data-resume-maze="${config.exercises.indexOf(e)}"><strong>${e.title}</strong><span>${exerciseStatus(e).label}</span></button>`).join('')}</div><div class="completion-actions"><button type="button" class="primary" data-close-coding>Verder werken</button><button type="button" data-continue-coding>Toch naar vraag 5</button></div>`;
+    dialog.innerHTML=`<h2 id="coding-review-title">Controleer de ${config.exercises.length} mazes</h2><p>Deze oefeningen zijn nog niet afgewerkt. Je kunt eraan verder werken of bewust met een gedeeltelijk antwoord doorgaan.</p><div class="unfinished-list">${unfinished.map(e=>`<button type="button" data-resume-maze="${config.exercises.indexOf(e)}"><strong>${e.title}</strong><span>${exerciseStatus(e).label}</span></button>`).join('')}</div><div class="completion-actions"><button type="button" class="primary" data-close-coding>Verder werken</button><button type="button" data-continue-coding>Toch naar vraag 5</button></div>`;
     dialog.showModal();return true;
   }
   function choiceHtml(exercise,ex) {
@@ -202,9 +220,9 @@
     const exercise=config.exercises[mazeIndex],ex=state.exercises[exercise.id];
     $('question-panel').innerHTML=heading(group,{instructions:false})+mazeTabs(mazeIndex)+choiceHtml(exercise,ex)+(ex.choice?`<p class="ceiling"><strong>Definitief antwoord: ${ex.choice==='blocks'?'Blokken':'JavaScript'}</strong> · maximaal ${points(ex.choice==='blocks'?exercise.points/2:exercise.points)} / ${points(exercise.points)} punten. Je leerkracht beoordeelt de kwaliteit van je oplossing.</p><div class="editor-layout"><section class="card editor-card"><div class="editor-tools"><button class="primary" type="button" data-run>▶ Uitvoeren</button><button type="button" data-stop>Stop</button><button type="button" data-reset>Maze herstellen</button></div><div id="blockly-host" class="blockly-host" ${ex.choice==='code'?'hidden':''}></div>${ex.choice==='code'?`<label for="code-answer">Jouw JavaScript</label><textarea id="code-answer" class="code-editor" spellcheck="false" autocomplete="off" autocapitalize="off">${esc(ex.drafts.code.code)}</textarea>`:''}<p class="editor-note">${ex.choice==='blocks'?'Bouw je eigen programma. De gegenereerde JavaScript wordt niet getoond.':'Schrijf je eigen programma. Blokken worden niet omgezet naar dit antwoord.'}</p></section><section class="card editor-card"><h3>${exercise.title}</h3><canvas id="maze-canvas" class="maze-canvas" width="420" height="420" aria-label="Interactieve maze. Pegman: jouw positie en richting. Rode marker: doel."></canvas><p id="runtime-status" class="runtime-status" role="status"></p></section></div>`:`<section class="card answer-card"><img class="reference-program" src="${exercise.asset}" alt="Oorspronkelijke figuur ${exercise.title}"><p>Kies hierboven blokken of JavaScript om te beginnen.</p></section>`)+footer(group);
     if(ex.choice&&exercise.explanationPrompt)$('question-panel').querySelector('.question-footer').insertAdjacentHTML('beforebegin',`<section class="card answer-card">${taalzorg}<label for="maze-explanation">${esc(exercise.explanationPrompt)}<textarea id="maze-explanation" data-explanation="${exercise.id}">${esc(ex.drafts[ex.choice].explanation||'')}</textarea></label></section>`);
-    if(ex.choice) mountRuntime(exercise,ex,false);
+    if(ex.choice) mountRuntime(exercise,ex);
   }
-  function mountRuntime(exercise,ex,marking) {
+  function mountRuntime(exercise,ex) {
     try {
       activeExercise=exercise;
       const branch=ex.choice, draft=ex.drafts[branch];
@@ -213,65 +231,73 @@
           if(rendering) return;
           if(branch==='blocks') {
             const before=JSON.stringify(ex.drafts.blocks.workspace), after=JSON.stringify(captured.workspace);
-            if(before!==after && !marking) { invalidate(ex,'blocks'); captured.markings={}; runtime.markings={}; }
+            if(before!==after) { invalidate(ex,'blocks'); captured.markings={}; runtime.markings={}; }
             ex.drafts.blocks.workspace=captured.workspace; ex.drafts.blocks.markings=captured.markings;
           }
           state.lastExport=null; changed();
-          if(marking) renderMarkList(ex);
         },
         onResult(result) { ex.results[branch]={...result,executedAt:new Date().toISOString()}; state.lastExport=null; changed(); }
       });
       runtime.mount({...exercise,mode:branch,workspace:branch==='blocks'?draft.workspace:null,code:branch==='code'?draft.code:'',markings:branch==='blocks'?draft.markings:{}});
-      if(marking && runtime.workspace) {
-        runtime.workspace.options.readOnly=true;
-        runtime.workspace.getAllBlocks(false).forEach(b=>{b.setMovable(false);b.setDeletable(false);b.setEditable(false);});
-        runtime.workspace.updateToolbox({kind:'categoryToolbox',contents:[]});
-      }
       if(ex.results[branch]) $('runtime-status').textContent=ex.results[branch].message || (ex.results[branch].status==='reached'?'Laatste uitvoering: doel bereikt.':'Laatste uitvoering: doel nog niet bereikt.');
     } catch(error) {
       $('runtime-status').textContent='Editor kon niet geladen worden. Vraag je leerkracht om hulp. '+error.message;
       storageStatus('Editor niet beschikbaar',true);
     }
   }
-  function markedCode(code,marks) {
-    let cursor=0,html='';
-    [...marks].sort((a,b)=>a.start-b.start).forEach(m=>{html+=esc(code.slice(cursor,m.start))+`<mark class="mark-${m.kind}" title="${m.kind==='action'?'Actie':'Voorwaarde'}">${esc(code.slice(m.start,m.end))}</mark>`;cursor=m.end;});
-    return html+esc(code.slice(cursor));
+  function markingDraft(ex) {
+    return ex.choice==='code'?ex.drafts.code.blockMarking:ex.choice==='blocks'?ex.drafts.blocks:null;
+  }
+  function prepareMarkingDraft(ex) {
+    if(ex.choice==='code'&&ex.drafts.code.blockMarking?.source!==ex.drafts.code.code) {
+      const workspace=window.AssessmentCodeBlocks.convert(ex.drafts.code.code);
+      ex.drafts.code.blockMarking={source:ex.drafts.code.code,workspace,markings:{}};
+      state.lastExport=null;
+    }
+    return markingDraft(ex);
+  }
+  function mountMarkingRuntime(exercise,ex,draft) {
+    activeExercise={...exercise,marking:true};
+    runtime=new window.AssessmentMaze({blocklyElement:$('blockly-host'),canvas:$('maze-canvas'),statusElement:$('runtime-status'),onChange(captured){
+      if(rendering)return;
+      const markingsChanged=JSON.stringify(draft.markings)!==JSON.stringify(captured.markings);
+      draft.workspace=captured.workspace;draft.markings=captured.markings;
+      if(!markingsChanged)return;
+      ex.needsReview=false;state.lastExport=null;changed();renderMarkList(ex);
+      if($('mark-warning'))$('mark-warning').hidden=true;
+      if(document.querySelector('[data-mark-reviewed]'))document.querySelector('[data-mark-reviewed]').hidden=true;
+    }});
+    runtime.mount({...exercise,mode:'blocks',workspace:draft.workspace,markings:draft.markings,markingOnly:true});
   }
   function renderMarking(group) {
-    const exercise=config.exercises[markIndex],ex=state.exercises[exercise.id];
-    let html=heading(group)+mazeTabs(markIndex,true);
+    const markIndex=config.exercises.findIndex(e=>e.id===state.markingExerciseId);
+    const exercise=config.exercises[markIndex];
+    if(!exercise){$('question-panel').innerHTML=heading(group)+'<section class="card"><p>Er werd geen toegewezen maze gevonden. Vraag je leerkracht om hulp.</p></section>'+footer(group);return;}
+    const ex=state.exercises[exercise.id];
+    let html=heading(group)+mazeTabs(markIndex,true)+`<p class="instructions">Markeer alleen de blokken van deze willekeurig toegewezen maze: <strong>${exercise.title}</strong>.</p>`;
+    const returnButton=`<button type="button" data-open-coding="${markIndex}">Ga naar ${exercise.title} in vraag 4</button>`;
     if(!ex.choice) {
-      $('question-panel').innerHTML=html+`<section class="card"><p>Kies eerst een antwoordtype voor ${exercise.title} in vraag 4.</p><button type="button" data-open-coding="${markIndex}">Ga naar ${exercise.title}</button></section>`+footer(group);return;
+      $('question-panel').innerHTML=html+`<section class="card"><p>Werk eerst jouw toegewezen maze (${exercise.title}) af in vraag 4.</p>${returnButton}</section>`+footer(group);return;
     }
-    html+=`<section class="card"><h2>${exercise.title} · ${ex.choice==='blocks'?'Blokken':'JavaScript'}</h2><p>${ex.choice==='code'?'Selecteer tekst in je antwoord en klik daarna op Actie of Voorwaarde.':'Kies Actie of Voorwaarde en klik daarna op een blok in je antwoord.'}</p><div class="mark-tools"><button type="button" data-tool="action" aria-pressed="false">Geel · Actie</button><button type="button" data-tool="condition" aria-pressed="false">Groen · Voorwaarde</button><button type="button" data-clear-marks>Alle markeringen wissen</button></div>${ex.needsReview?'<p class="error" id="mark-warning">Je antwoord of antwoordtype is gewijzigd. Controleer je markeringen opnieuw.</p><button type="button" data-mark-reviewed>Markeringen gecontroleerd</button>':''}`;
-    if(ex.choice==='code') html+=`<label for="mark-source">Selecteer een deel van je antwoord<textarea id="mark-source" class="code-editor mark-source" readonly spellcheck="false">${esc(ex.drafts.code.code)}</textarea></label><p class="editor-note">Met het toetsenbord: selecteer tekst met Shift + pijltjes en Tab naar Actie of Voorwaarde.</p><h3>Jouw markeringen</h3><pre id="mark-code" class="marked-preview">${markedCode(ex.drafts.code.code,ex.drafts.code.markings)}</pre>`;
-    else html+='<div id="blockly-host" class="blockly-host"></div><canvas id="maze-canvas" hidden width="420" height="420"></canvas><p id="runtime-status" role="status"></p>';
-    html+='<p id="mark-error" class="error" role="status"></p><div id="mark-list" class="mark-list"></div></section>';
+    let draft;
+    try {draft=prepareMarkingDraft(ex);} catch(error) {
+      $('question-panel').innerHTML=html+`<section class="card"><p class="error" role="alert">Je JavaScript kan nog niet volledig als blokken worden getoond. ${esc(error.message)}</p><p>Gebruik de maze-acties, padvoorwaarden, while en if/else. Controleer je antwoord in vraag 4 of vraag je leerkracht om hulp.</p>${returnButton}</section>`+footer(group);return;
+    }
+    if(!hasBlocks(draft.workspace)) {
+      $('question-panel').innerHTML=html+`<section class="card"><p>Je antwoord bevat nog geen blokken om te markeren. Werk jouw toegewezen maze eerst af in vraag 4.</p>${returnButton}</section>`+footer(group);return;
+    }
+    html+=`<section class="card"><h2>${exercise.title} · Blokken markeren</h2>${ex.choice==='code'?'<p>Je JavaScript-antwoord wordt hier als blokken getoond.</p>':''}<p>Kies Actie of Voorwaarde en klik daarna op een blok. Je kunt hier alleen markeren.</p><div class="mark-tools"><button type="button" data-tool="action" aria-pressed="false">Geel · Actie</button><button type="button" data-tool="condition" aria-pressed="false">Groen · Voorwaarde</button><button type="button" data-clear-marks>Alle markeringen wissen</button></div>${ex.needsReview?'<p class="error" id="mark-warning">Je antwoord of antwoordtype is gewijzigd. Controleer je markeringen opnieuw.</p><button type="button" data-mark-reviewed>Markeringen gecontroleerd</button>':''}<div id="blockly-host" class="blockly-host"></div><canvas id="maze-canvas" hidden width="420" height="420"></canvas><p id="runtime-status" role="status"></p><div id="mark-list" class="mark-list"></div></section>`;
     $('question-panel').innerHTML=html+footer(group);
-    if(ex.choice==='blocks') mountRuntime(exercise,ex,true);
-    renderMarkList(ex);
+    mountMarkingRuntime(exercise,ex,draft);renderMarkList(ex);
   }
   function renderMarkList(ex) {
-    const list=$('mark-list'); if(!list) return;
-    const marks=ex.choice==='code'?ex.drafts.code.markings:Object.entries(ex.drafts.blocks.markings).map(([id,m])=>({...m,id}));
-    list.innerHTML=marks.length?marks.map((m,i)=>`<div class="mark-row"><span>${m.kind==='action'?'Geel · Actie':'Groen · Voorwaarde'}: ${esc(ex.choice==='code'?ex.drafts.code.code.slice(m.start,m.end):runtime?.workspace?.getBlockById(m.id)?.toString()||m.id)}</span><button type="button" data-remove-mark="${i}">Verwijder<span class="sr-only"> markering ${i+1}</span></button></div>`).join(''):'<p>Nog geen onderdelen gemarkeerd.</p>';
+    const list=$('mark-list');if(!list)return;
+    const marks=Object.entries(markingDraft(ex).markings).map(([id,m])=>({...m,id}));
+    list.innerHTML=marks.length?marks.map((m,i)=>`<div class="mark-row"><span>${m.kind==='action'?'Geel · Actie':'Groen · Voorwaarde'}: ${esc(runtime?.workspace?.getBlockById(m.id)?.toString()||m.id)}</span><button type="button" data-remove-mark="${i}">Verwijder<span class="sr-only"> markering ${i+1}</span></button></div>`).join(''):'<p>Nog geen onderdelen gemarkeerd.</p>';
   }
-  let codeSelection=null;
-  function rememberSelection() {
-    const source=$('mark-source');
-    if(source && document.activeElement===source && source.selectionStart!==source.selectionEnd){codeSelection={start:source.selectionStart,end:source.selectionEnd};return;}
-    const preview=$('mark-code'),selection=window.getSelection();
-    if(!preview || !selection?.rangeCount || selection.isCollapsed) return;
-    const range=selection.getRangeAt(0);
-    if(!preview.contains(range.startContainer) || !preview.contains(range.endContainer)) return;
-    const before=range.cloneRange();before.selectNodeContents(preview);before.setEnd(range.startContainer,range.startOffset);
-    codeSelection={start:before.toString().length,end:before.toString().length+range.toString().length};
-  }
-  document.addEventListener('selectionchange',rememberSelection);
   function render(groupId,focus=true) {
     if(!state) return;
-    rendering=true; disposeRuntime(); currentGroup=groupId;codeSelection=null;
+    rendering=true; disposeRuntime(); currentGroup=groupId;
     const group=config.groups.find(g=>g.id===groupId);
     if(group.type==='coding') renderCoding(group);
     else if(group.type==='marking') renderMarking(group);
@@ -365,9 +391,9 @@
     else if(button.id==='dismiss-timer-warning')$('timer-warning').hidden=true;
     else if(button.dataset.group){if(button.hasAttribute('data-coding-next')&&checkCodingBeforeNext())return;flush();render(button.dataset.group);}
     else if(button.matches('[data-review],#review-top,#review-side')) renderReview();
-    else if(button.dataset.maze!==undefined){flush();if(button.dataset.marking==='true'){markIndex=Number(button.dataset.maze);render('q5');}else{mazeIndex=Number(button.dataset.maze);render('q4');}}
+    else if(button.dataset.maze!==undefined){flush();mazeIndex=Number(button.dataset.maze);render('q4');}
     else if(button.dataset.openCoding!==undefined){mazeIndex=Number(button.dataset.openCoding);render('q4');}
-    else if(button.dataset.branch){flush();const ex=state.exercises[config.exercises[mazeIndex].id];if(ex.choice!==button.dataset.branch){ex.choice=button.dataset.branch;ex.needsReview=Boolean(Object.keys(ex.drafts.blocks.markings).length||ex.drafts.code.markings.length);state.lastExport=null;}render('q4');}
+    else if(button.dataset.branch){flush();const ex=state.exercises[config.exercises[mazeIndex].id];if(ex.choice!==button.dataset.branch){ex.choice=button.dataset.branch;ex.needsReview=Boolean(Object.keys(ex.drafts.blocks.markings).length||Object.keys(ex.drafts.code.blockMarking?.markings||{}).length);state.lastExport=null;}render('q4');}
     else if(button.hasAttribute('data-run')){captureRuntime();runtime?.run(activeExercise?.boundary?undefined:selectedExercise().choice==='code'?$('code-answer').value:undefined);}
     else if(button.dataset.boundaryTool){runtime?.setMarkingTool(button.dataset.boundaryTool);document.querySelectorAll('[data-boundary-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));}
     else if(button.hasAttribute('data-clear-boundary')){const answer=state.boundaries[currentGroup];answer.markings={};runtime.markings={};runtime._applyMarkingClasses();state.lastExport=null;changed();updateBoundaryMarks();}
@@ -376,19 +402,10 @@
     else if(button.id==='export-pdf') exportPDF();
     else if(button.id==='smartschool-open') openSmartschool(safeUrl(config.smartschoolUrl)||safeUrl(config.smartschoolFallbackUrl));
     else if(button.id==='smartschool-fallback') openSmartschool(config.smartschoolFallbackUrl);
-    else if(button.dataset.tool){
-      const ex=state.exercises[config.exercises[markIndex].id];
-      if(ex.choice==='blocks'){runtime?.setMarkingTool(button.dataset.tool);document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));}
-      else {
-        const selection=codeSelection,code=ex.drafts.code.code;
-        if(!selection||selection.start===selection.end){$('mark-error').textContent='Selecteer eerst tekst in je JavaScript-antwoord.';return;}
-        ex.drafts.code.markings=ex.drafts.code.markings.filter(m=>m.end<=selection.start||m.start>=selection.end);
-        ex.drafts.code.markings.push({...selection,kind:button.dataset.tool});ex.needsReview=false;state.lastExport=null;render('q5');
-      }
-    }
-    else if(button.hasAttribute('data-clear-marks')){const ex=state.exercises[config.exercises[markIndex].id];ex.drafts[ex.choice].markings=ex.choice==='blocks'?{}:[];if(runtime)runtime.markings={};state.lastExport=null;render('q5');}
-    else if(button.hasAttribute('data-mark-reviewed')){state.exercises[config.exercises[markIndex].id].needsReview=false;state.lastExport=null;render('q5');}
-    else if(button.dataset.removeMark!==undefined){const ex=state.exercises[config.exercises[markIndex].id];const i=Number(button.dataset.removeMark);if(ex.choice==='code')ex.drafts.code.markings.splice(i,1);else {const id=Object.keys(ex.drafts.blocks.markings)[i];delete ex.drafts.blocks.markings[id];if(runtime)delete runtime.markings[id];}state.lastExport=null;render('q5');}
+    else if(button.dataset.tool){runtime?.setMarkingTool(button.dataset.tool);document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));}
+    else if(button.hasAttribute('data-clear-marks')){const ex=state.exercises[state.markingExerciseId];markingDraft(ex).markings={};if(runtime)runtime.markings={};state.lastExport=null;render('q5');}
+    else if(button.hasAttribute('data-mark-reviewed')){state.exercises[state.markingExerciseId].needsReview=false;state.lastExport=null;render('q5');}
+    else if(button.dataset.removeMark!==undefined){const draft=markingDraft(state.exercises[state.markingExerciseId]);const id=Object.keys(draft.markings)[Number(button.dataset.removeMark)];delete draft.markings[id];if(runtime)delete runtime.markings[id];state.lastExport=null;render('q5');}
   });
   window.addEventListener('pagehide',()=>{if(state)flush();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&state)flush();else if(state)updateTimer();});

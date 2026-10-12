@@ -13,7 +13,7 @@ assert.ok(['A','B','C'].includes(version),'ASSESSMENT_VERSION must be A, B or C'
 const entry=`test_maze_version_${version}.html`;
 const basePath=process.env.ASSESSMENT_BASE_PATH||'/';
 assert.ok(basePath.startsWith('/')&&basePath.endsWith('/'),'ASSESSMENT_BASE_PATH must start and end with /');
-const output = path.join(root, 'tmp', 'assessment-check',version);
+const output = path.resolve(process.env.ASSESSMENT_OUTPUT_ROOT||path.join(root, 'tmp', 'assessment-check',version));
 fs.mkdirSync(output, {recursive:true});
 const mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.gif':'image/gif','.ttf':'font/ttf','.json':'application/json'};
 const server = http.createServer((req,res)=>{
@@ -33,6 +33,9 @@ async function main() {
   try {
     const context=await browser.newContext({viewport:{width:1366,height:768},acceptDownloads:true});
     const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+    await page.addInitScript(()=>{window.__markingDraw=0;const native=crypto.getRandomValues.bind(crypto);Object.defineProperty(crypto,'getRandomValues',{configurable:true,value(array){if(array instanceof Uint32Array&&array.length===1){array[0]=window.__markingDraw;return array;}return native(array);}});});
+    const clickMarkedBlock=async(type,tool)=>{await page.locator(`[data-tool="${tool}"]`).click();const id=await page.evaluate(typeName=>window.Blockly.getMainWorkspace().getAllBlocks(false).find(block=>block.type===typeName)?.id,type);assert.ok(id,`missing ${type} in Q5 workspace`);await page.locator(`#blockly-host .blocklyBlockCanvas [data-id="${id}"]`).click();await page.waitForTimeout(80);};
+    const assertMarkingWorkspaceReadonly=async()=>{const status=await page.evaluate(()=>{const workspace=Blockly.getMainWorkspace(),blocks=workspace.getAllBlocks(false);return {readOnly:workspace.options.readOnly,toolbox:document.querySelector('#blockly-host .blocklyToolboxDiv'),trash:document.querySelector('#blockly-host .blocklyTrash'),movable:blocks.some(block=>block.isMovable()),editable:blocks.some(block=>block.isEditable()),deletable:blocks.some(block=>block.isDeletable())};});assert.equal(status.readOnly,true);assert.equal(status.toolbox,null);assert.equal(status.trash,null);assert.equal(status.movable,false);assert.equal(status.editable,false);assert.equal(status.deletable,false);};
     const address=`http://127.0.0.1:${server.address().port}${basePath}${entry}`;
     page.on('response',response=>{if(response.status()>=400)errors.push(`${response.status()}: ${response.url()}`);});
     page.on('request',request=>{if(/^https?:/.test(request.url())&&!request.url().startsWith(new URL(address).origin)&&request.url()!=='https://school.example/toets-upload')externalRequests.push(request.url());});
@@ -46,7 +49,8 @@ async function main() {
     await page.locator('#start-password').fill('Charles');await page.locator('#start-form button').click();
     await page.waitForSelector('#exam:not([hidden])');
     check(await page.locator('#exam-timer').isVisible(),'timer starts after unlock');check(/^(45:00|44:5\d)$/.test(await page.locator('#timer-value').textContent()),'timer starts at 45 minutes');
-    const testConfig=await page.evaluate(()=>window.AssessmentApp.config);assert.equal(testConfig.groups.reduce((sum,g)=>sum+g.points,0),25);assert.equal(testConfig.exercises.reduce((sum,e)=>sum+e.points,0),9);
+    const testConfig=await page.evaluate(()=>window.AssessmentApp.config);assert.equal(testConfig.groups.length,8);assert.equal(testConfig.groups.reduce((sum,g)=>sum+g.points,0),21);assert.equal(testConfig.groups.find(g=>g.id==='q4').points,6);assert.equal(testConfig.exercises.length,3);assert.equal(testConfig.exercises.reduce((sum,e)=>sum+e.points,0),6);assert.ok(!testConfig.groups.some(g=>g.id==='q9'));assert.equal(await page.locator('.nav-button[data-group="q9"]').count(),0);
+    assert.equal(await page.evaluate(()=>window.AssessmentApp.getState().markingExerciseId),'maze-1','fresh attempt assigns first deterministic maze');check(await page.evaluate(()=>typeof window.AssessmentCodeBlocks?.convert==='function'),'restricted code-to-block converter is loaded');
     assert.equal(testConfig.version,version);assert.equal(await page.locator('#version-label').textContent(),`Versie ${version}`);
     check(await page.getByRole('heading',{name:'1b. Vertaal naar JavaScript'}).isVisible(),'clear JavaScript translation section');
     check(await page.getByRole('heading',{name:'1c. Vertaal naar Nederlands'}).isVisible(),'clear Dutch translation section');
@@ -58,10 +62,10 @@ async function main() {
     await page.locator('.nav-button[data-group="q3"]').click();await page.locator('[data-answer="q3"]').fill('Hij onderzoekt het pad en voert de blokken in volgorde uit.');
     assert.equal(await page.locator('.question-heading .points').textContent(),'1 punt');
     check((await page.locator('.taalzorg').textContent()).includes('hoofdletters en leestekens'),'taalzorg marker on open answer');
-    await page.locator('.nav-button[data-group="q4"]').click();await page.locator('[data-branch="code"]').click();
+    await page.locator('.nav-button[data-group="q4"]').click();assert.equal(await page.locator('[data-maze]').count(),3,'question 4 has exactly three maze tabs');await page.locator('[data-branch="code"]').click();
     check((await page.locator('[data-maze="1"] .maze-state').textContent()).includes('Nog leeg'),'unfinished maze indicator');
     await page.locator('[data-coding-next]').click();await page.waitForSelector('#coding-review-dialog[open]');
-    assert.equal(await page.locator('[data-resume-maze]').count(),4);await page.locator('[data-close-coding]').click();
+    assert.equal(await page.locator('[data-resume-maze]').count(),3);await page.locator('[data-close-coding]').click();
     const firstTurn=version==='B'?'Right':'Left',secondTurn=version==='B'?'Left':'Right';
     const correct=`while (notDone()) {\n  moveForward();\n  turn${firstTurn}();\n  moveForward();\n  turn${secondTurn}();\n}`;
     await page.locator('#code-answer').fill(correct);await page.locator('[data-run]').click();
@@ -94,39 +98,52 @@ async function main() {
       await page.waitForTimeout(150);await page.locator('[data-run]').click();await page.waitForFunction(id=>window.AssessmentApp.getState().exercises[id].results.blocks!==null,`maze-${i+1}`);await page.locator('[data-stop]').click();
     }
     await page.screenshot({path:path.join(output,'coding-blocks.png'),fullPage:true});
-    await page.locator('[data-maze="3"]').click();await page.locator('[data-branch="code"]').click();
-    await page.locator('#maze-explanation').fill('EXPLANATION_JS: Ik herken het padpatroon en controleer mijn keuzes tot het doel bereikt is.');
-    await page.locator('[data-branch="blocks"]').click();assert.equal(await page.locator('#maze-explanation').inputValue(),'');await page.locator('#maze-explanation').fill('UNSUBMITTED_EXPLANATION_SECRET');
-    await page.locator('[data-branch="code"]').click();check((await page.locator('#maze-explanation').inputValue()).startsWith('EXPLANATION_JS'),'explanation drafts remain independent');
-    const code4='// Laatste maze: eigen ontwerp\n'+Array.from({length:80},(_,i)=>`// Lange regel ${i}: deze code blijft leesbaar en wordt volledig geëxporteerd.`).join('\n');
-    await page.locator('#code-answer').fill(code4);
+    await page.locator('[data-maze="2"]').click();await page.locator('[data-branch="code"]').click();
+    const longCode=correct+'\n'+Array.from({length:80},(_,i)=>`// Lange regel ${i}: deze code blijft leesbaar en wordt volledig geëxporteerd.`).join('\n');
+    await page.locator('#code-answer').fill(correct);
+    const beforeJsMarking=await page.evaluate(()=>{const ex=window.AssessmentApp.getState().exercises['maze-1'];return {choice:ex.choice,code:ex.drafts.code.code,blocks:JSON.stringify(ex.drafts.blocks.workspace)};});
     await page.locator('.nav-button[data-group="q5"]').click();
-    await page.evaluate(()=>{const el=document.querySelector('#mark-code'),node=el.firstChild,start=node.textContent.indexOf('moveForward'),range=document.createRange();range.setStart(node,start);range.setEnd(node,start+13);const sel=getSelection();sel.removeAllRanges();sel.addRange(range);});
-    await page.waitForTimeout(80);await page.locator('[data-tool="action"]').click();
-    check(await page.evaluate(()=>window.AssessmentApp.getState().exercises['maze-1'].drafts.code.markings.length===1),'code marking persisted');
-    // Mark any block with either classification: the exam must not reveal correctness.
-    await page.locator('[data-maze="1"]').click();await page.locator('[data-tool="condition"]').click();
-    await page.evaluate(()=>{const w=Blockly.getMainWorkspace(),b=w.getAllBlocks(false)[0];Blockly.Events.fire(new Blockly.Events.Selected(null,b.id,w.id));});
-    await page.waitForTimeout(150);
-    check(await page.evaluate(()=>Object.values(window.AssessmentApp.getState().exercises['maze-2'].drafts.blocks.markings).some(m=>m.kind==='condition')),'incorrect classification accepted');
+    check(await page.locator('[data-maze]').count()===0,'question 5 does not let students choose a different maze');check((await page.locator('#question-panel').textContent()).includes('Maze 1'),'question 5 displays its assigned maze');
+    check(await page.locator('#blockly-host').count()===1,'JavaScript answer is converted to a Blockly workspace');check(await page.locator('#mark-source,#mark-code').count()===0,'JavaScript text selection is removed from question 5');await assertMarkingWorkspaceReadonly();
+    await clickMarkedBlock('assessment_maze_move_forward','action');await clickMarkedBlock('assessment_maze_not_done','condition');
+    let jsMarkState=await page.evaluate(()=>{const ex=window.AssessmentApp.getState().exercises['maze-1'],marking=ex.drafts.code.blockMarking;return {choice:ex.choice,code:ex.drafts.code.code,blocks:JSON.stringify(ex.drafts.blocks.workspace),marking};});
+    assert.equal(jsMarkState.choice,'code');assert.equal(jsMarkState.code,beforeJsMarking.code);assert.equal(jsMarkState.blocks,beforeJsMarking.blocks,'Q5 block marking leaves the original Blockly draft unchanged');assert.equal(jsMarkState.marking.source,correct);assert.equal(Object.keys(jsMarkState.marking.markings).length,2);assert.deepEqual(new Set(Object.values(jsMarkState.marking.markings).map(mark=>mark.kind)),new Set(['action','condition']));
+    await page.locator('[data-remove-mark]').first().click();assert.equal(await page.evaluate(()=>Object.keys(window.AssessmentApp.getState().exercises['maze-1'].drafts.code.blockMarking.markings).length),1,'removing a classification clears that block mark');
+    await clickMarkedBlock('assessment_maze_move_forward','action');assert.equal(await page.evaluate(()=>Object.keys(window.AssessmentApp.getState().exercises['maze-1'].drafts.code.blockMarking.markings).length),2,'reclassifying a block restores its mark');
+    await page.locator('[data-clear-marks]').click();assert.equal(await page.evaluate(()=>Object.keys(window.AssessmentApp.getState().exercises['maze-1'].drafts.code.blockMarking.markings).length),0,'clear removes JS-derived block markings');
+    await clickMarkedBlock('assessment_maze_move_forward','action');await clickMarkedBlock('assessment_maze_not_done','condition');
+    await page.locator('.nav-button[data-group="q4"]').click();await page.locator('[data-maze="0"]').click();await page.locator('[data-branch="blocks"]').click();
+    await page.locator('.nav-button[data-group="q5"]').click();await page.waitForSelector('[data-mark-reviewed]');await assertMarkingWorkspaceReadonly();
+    await clickMarkedBlock('assessment_maze_move_forward','action');await clickMarkedBlock('assessment_maze_not_done','condition');
+    const nativeMarks=await page.evaluate(()=>{const ex=window.AssessmentApp.getState().exercises['maze-1'];return {choice:ex.choice,native:Object.values(ex.drafts.blocks.markings).map(mark=>mark.kind),js:Object.values(ex.drafts.code.blockMarking.markings).map(mark=>mark.kind),needsReview:ex.needsReview};});
+    assert.equal(nativeMarks.choice,'blocks');check(nativeMarks.native.includes('action')&&nativeMarks.native.includes('condition'),'native Blockly marking uses block clicks');check(nativeMarks.js.includes('action')&&nativeMarks.js.includes('condition'),'native marking keeps JS-derived marks independent');assert.equal(nativeMarks.needsReview,false,'a new classification clears the review warning');
+    await page.locator('.nav-button[data-group="q4"]').click();await page.locator('[data-maze="0"]').click();await page.locator('[data-branch="code"]').click();
+    await page.locator('.nav-button[data-group="q5"]').click();await page.waitForSelector('[data-mark-reviewed]');
+    await page.locator('[data-mark-reviewed]').click();await assertMarkingWorkspaceReadonly();
+    const retained=await page.evaluate(()=>window.AssessmentApp.getState().exercises['maze-1'].drafts.code.blockMarking);assert.equal(retained.source,correct);assert.equal(Object.keys(retained.markings).length,2,'JS-derived markings persist across branch changes and Q5 reentry');
+    await page.locator('.nav-button[data-group="q4"]').click();await page.locator('[data-maze="0"]').click();await page.locator('#code-answer').fill(longCode);
+    const invalidated=await page.evaluate(()=>window.AssessmentApp.getState().exercises['maze-1']);assert.equal(invalidated.drafts.code.blockMarking,undefined,'editing code discards stale converted blocks and marks');assert.equal(invalidated.needsReview,true,'editing marked JavaScript requests a fresh review');
+    await page.locator('.nav-button[data-group="q5"]').click();await page.waitForSelector('[data-mark-reviewed]');await assertMarkingWorkspaceReadonly();
+    await clickMarkedBlock('assessment_maze_move_forward','action');await clickMarkedBlock('assessment_maze_not_done','condition');
+    const longMark=await page.evaluate(()=>window.AssessmentApp.getState().exercises['maze-1'].drafts.code.blockMarking);assert.equal(longMark.source,longCode);assert.equal(Object.keys(longMark.markings).length,2);
+    await page.locator('.nav-button[data-group="q4"]').click();await page.locator('[data-maze="0"]').click();await page.locator('#code-answer').fill('');
+    await page.locator('.nav-button[data-group="q5"]').click();check(await page.getByRole('alert').count()===0,'blank JavaScript gives a direct return prompt');check((await page.locator('#question-panel').textContent()).includes('bevat nog geen blokken'),'blank JavaScript has no block marking workspace');
+    await page.locator('[data-open-coding]').click();await page.locator('#code-answer').fill('const x = 1;');await page.locator('.nav-button[data-group="q5"]').click();check(await page.getByRole('alert').count()===1,'unsupported JavaScript explains why conversion failed');check(await page.locator('#mark-source,#mark-code').count()===0,'unsupported JavaScript has no text-marking fallback');
+    await page.locator('[data-open-coding]').click();await page.locator('#code-answer').fill(longCode);await page.locator('.nav-button[data-group="q5"]').click();await page.waitForSelector('#blockly-host');await assertMarkingWorkspaceReadonly();
+    await clickMarkedBlock('assessment_maze_move_forward','action');await clickMarkedBlock('assessment_maze_not_done','condition');
+    check(await page.locator('.nav-button[data-group="q5"] .done').count()===1,'markings on the assigned maze complete question 5 without marking other mazes');check(await page.evaluate(()=>['maze-2','maze-3'].every(id=>{const ex=window.AssessmentApp.getState().exercises[id];return !Object.keys(ex.drafts.blocks.markings).length&&!Object.keys(ex.drafts.code.blockMarking?.markings||{}).length;})),'unassigned mazes remain unmarked');
     await page.screenshot({path:path.join(output,'marking-blocks.png'),fullPage:true});
     await page.locator('.nav-button[data-group="q6"]').click();for(let i=0;i<3;i++)await page.locator(`[data-answer="q6"][data-index="${i}"]`).fill(`Uitleg ${i}: een algoritme gebruikt duidelijke stappen.\n`+'Lange open uitleg met accenten: efficiënt, ideeën, café. '.repeat(i===0?120:2));
     await page.locator('.nav-button[data-group="q7"]').click();for(let i=0;i<5;i++)await page.locator(`[data-answer="q7"][data-index="${i}"]`).selectOption(String([2,5,3,4,1][i]));
     await page.locator('[data-answer="q7"][data-index="0"]').selectOption('5');check((await page.locator('#ordering-error').textContent()).length>0,'duplicate ordering warning');await page.locator('[data-answer="q7"][data-index="0"]').selectOption('2');
     await page.locator('.nav-button[data-group="q8"]').click();check((await page.locator('.reference-code').textContent()).includes('while (notDone())'),'infinite-loop source rendered');for(let i=0;i<3;i++)await page.locator(`[data-answer="q8"][data-index="${i}"]`).fill(`LOOP_ANSWER_${i}: mijn uitleg en verbetering.`);await page.screenshot({path:path.join(output,'infinite-loop.png'),fullPage:true});
     if(version==='A'){check((await page.locator('.reference-code').textContent()).includes('turnLeft();'),'A uses turning-only infinite loop');check(await page.locator('.reference-program').evaluate(image=>image.complete&&image.naturalWidth>0),'Pegman level 3 reference loads');}
-    await page.locator('.nav-button[data-group="q9"]').click();
-    await page.evaluate(version=>{const w=Blockly.getMainWorkspace();const make=type=>{const b=w.newBlock(type);b.initSvg();b.render();return b;};const once=['assessment_maze_move_forward','assessment_maze_move_forward',version==='B'?'assessment_maze_turn_right':'assessment_maze_turn_left'].map(make),loop=make('controls_whileUntil'),condition=make('assessment_maze_not_done'),body=make('assessment_maze_move_forward');loop.getInput('BOOL').connection.connect(condition.outputConnection);loop.getInput('DO').connection.connect(body.previousConnection);for(let i=1;i<once.length;i++)once[i-1].nextConnection.connect(once[i].previousConnection);once[2].nextConnection.connect(loop.previousConnection);window.__boundaryBlocks={once:once.map(b=>b.id),body:body.id};},version);
-    await page.waitForTimeout(150);await page.locator('[data-run]').click();await page.waitForFunction(()=>window.AssessmentApp.getState().boundaries.q9.result?.status==='reached');await page.locator('[data-stop]').click();
-    await page.locator('[data-boundary-tool="once"]').click();await page.evaluate(()=>{const w=Blockly.getMainWorkspace();for(const id of [...window.__boundaryBlocks.once,window.__boundaryBlocks.body])Blockly.Events.fire(new Blockly.Events.Selected(null,id,w.id));});await page.waitForTimeout(100);
-    check(await page.evaluate(()=>window.AssessmentApp.getState().boundaries.q9.markings[window.__boundaryBlocks.body]?.kind==='once'),'student classification accepted without revealing correctness');
-    await page.locator('[data-boundary-tool="repeated"]').click();await page.evaluate(()=>{const w=Blockly.getMainWorkspace();Blockly.Events.fire(new Blockly.Events.Selected(null,window.__boundaryBlocks.body,w.id));});await page.waitForTimeout(100);check((await page.locator('#boundary-marks').textContent()).includes('4 van 4'),'all action blocks marked');await page.screenshot({path:path.join(output,'loop-boundary.png'),fullPage:true});
     await page.evaluate(()=>window.AssessmentApp.flush());const before=await page.evaluate(()=>window.AssessmentApp.getState());
     await page.reload();check(await page.locator('#gate').isVisible(),'reload requires unlock');
     check(await page.locator('#new-attempt').isChecked(),'new attempt is selected by default');await page.locator('#new-attempt').uncheck();
     await page.locator('#student-name').fill('Zoë Testleerling');await page.locator('#student-class').fill('1steam1');await page.locator('#student-number').fill('7');await page.locator('#start-password').fill('Charles');await page.locator('#start-form button').click();
     const restored=await page.evaluate(()=>window.AssessmentApp.getState());assert.equal(restored.attemptId,before.attemptId);assert.deepEqual(restored.answers,before.answers);assert.deepEqual(restored.exercises,before.exercises);
-    assert.deepEqual(restored.boundaries,before.boundaries,'question 9 workspace/markings/result resume');
+    assert.equal(restored.markingExerciseId,before.markingExerciseId,'random q5 assignment survives reload');
     assert.equal(restored.deadlineAt,before.deadlineAt,'resume keeps the original timer deadline');
     await page.evaluate(()=>{
       const create=window.AssessmentPDF.create;window.__pdfBuilds=0;window.__downloadActivations=[];
@@ -159,20 +176,20 @@ async function main() {
     assert.equal(await page.evaluate(()=>window.AssessmentApp.getState().attemptId),before.attemptId,'answers persist after leaving for Smartschool');
     // Last edit invalidates export status and classifications.
     await page.locator('.nav-button[data-group="q4"]').click();await page.locator('#code-answer').fill(correct+'\n// Gewijzigd');
-    const edited=await page.evaluate(()=>{window.AssessmentApp.flush();return window.AssessmentApp.getState();});check(!edited.lastExport,'edit invalidates exported status');check(edited.exercises['maze-1'].needsReview,'code edit asks marking review');check(edited.exercises['maze-1'].drafts.code.markings.length===0,'stale text ranges cleared');
-    await page.locator('.nav-button[data-group="q9"]').click();await page.evaluate(()=>{const w=Blockly.getMainWorkspace(),b=w.newBlock('assessment_maze_turn_left');b.initSvg();b.render();});await page.waitForTimeout(150);check(await page.evaluate(()=>Object.keys(window.AssessmentApp.getState().boundaries.q9.markings).length===0),'changed boundary algorithm clears stale markings');
+    const edited=await page.evaluate(()=>{window.AssessmentApp.flush();return window.AssessmentApp.getState();});check(!edited.lastExport,'edit invalidates exported status');check(edited.exercises['maze-1'].needsReview,'code edit asks marking review');check(edited.exercises['maze-1'].drafts.code.blockMarking===undefined,'stale converted-block classifications are cleared');
     await page.evaluate(()=>{window.__originalSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(){throw new DOMException('Quota exceeded','QuotaExceededError');};window.AssessmentApp.flush();});
     check((await page.locator('#save-status').textContent()).includes('mislukt'),'storage failure visible');
     await page.evaluate(()=>{Storage.prototype.setItem=window.__originalSetItem;window.AssessmentApp.flush();});
     for(const viewport of [{width:1280,height:720},{width:768,height:1024},{width:390,height:844}]){await page.setViewportSize(viewport);check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'no page-wide horizontal overflow');}
-    const otherVersion=version==='B'?'C':'B',isolationPage=await context.newPage();isolationPage.on('pageerror',e=>errors.push(e.message));
+    const otherVersion=version==='B'?'C':'B',isolationPage=await context.newPage();isolationPage.on('pageerror',e=>errors.push(e.message));await isolationPage.addInitScript(()=>{window.__markingDraw=1;const native=crypto.getRandomValues.bind(crypto);Object.defineProperty(crypto,'getRandomValues',{configurable:true,value(array){if(array instanceof Uint32Array&&array.length===1){array[0]=window.__markingDraw;return array;}return native(array);}});});
     await isolationPage.goto(address.replace(entry,`test_maze_version_${otherVersion}.html`));await isolationPage.locator('#new-attempt').uncheck();await isolationPage.locator('#student-name').fill('Zoë Testleerling');await isolationPage.locator('#student-class').fill('1steam1');await isolationPage.locator('#student-number').fill('7');await isolationPage.locator('#start-password').fill('Charles');await isolationPage.locator('#start-form button').click();
-    const isolated=await isolationPage.evaluate(()=>window.AssessmentApp.getState());assert.equal(isolated.version,otherVersion);assert.notEqual(isolated.attemptId,before.attemptId);assert.ok(isolated.answers.q1.every(answer=>answer===''));assert.equal(isolated.exercises['maze-1'].choice,null);await isolationPage.close();
+    const isolated=await isolationPage.evaluate(()=>window.AssessmentApp.getState());assert.equal(isolated.version,otherVersion);assert.notEqual(isolated.attemptId,before.attemptId);assert.ok(isolated.answers.q1.every(answer=>answer===''));assert.equal(isolated.exercises['maze-1'].choice,null);assert.equal(isolated.markingExerciseId,'maze-2','random assignment can select a different maze');await isolationPage.close();
     await context.close();
     check(errors.length===0,'browser errors: '+errors.join('\n'));
     check(externalRequests.length===0,'unexpected external dependencies: '+externalRequests.join('\n'));
     const fileContext=await browser.newContext({viewport:{width:1366,height:768},acceptDownloads:true});
     const filePage=await fileContext.newPage(),fileErrors=[];
+    await filePage.addInitScript(()=>{window.__markingDraw=Number(sessionStorage.getItem('marking-draw')||2);const native=crypto.getRandomValues.bind(crypto);Object.defineProperty(crypto,'getRandomValues',{configurable:true,value(array){if(array instanceof Uint32Array&&array.length===1){array[0]=window.__markingDraw;return array;}return native(array);}});});
     await filePage.clock.install({time:new Date('2026-10-07T10:00:00Z')});
     filePage.on('pageerror',e=>fileErrors.push(e.message));filePage.on('console',message=>{if(message.type()==='error')fileErrors.push(message.text());});
     await filePage.goto(pathToFileURL(path.join(root,entry)).href);
@@ -185,9 +202,9 @@ async function main() {
     const fileDownloadPromise=filePage.waitForEvent('download',{timeout:60000});await filePage.locator('#export-pdf').click();const fileDownload=await fileDownloadPromise;await fileDownload.saveAs(path.join(output,'exam-file-sample.pdf'));
     check(fileErrors.length===0,'direct-file errors: '+fileErrors.join('\n'));
     const legacyAttempt=await filePage.evaluate(()=>window.AssessmentApp.getState().attemptId);
-    await filePage.addInitScript(({attempt,version})=>{const key=`blockly-assessment:maze-deel-1:${version}:${attempt}`,s=JSON.parse(localStorage.getItem(key));delete s.answers.q8;s.answers.q9=['Oud antwoord'];delete s.boundaries;for(const branch of ['blocks','code'])delete s.exercises['maze-4'].drafts[branch].explanation;localStorage.setItem(key,JSON.stringify(s));},{attempt:legacyAttempt,version});
+    await filePage.addInitScript(({attempt,version})=>{if(sessionStorage.getItem('legacy-fixture-applied'))return;const key=`blockly-assessment:maze-deel-1:${version}:${attempt}`,s=JSON.parse(localStorage.getItem(key));delete s.answers.q8;s.answers.q9=['Stale answer from removed question'];s.boundaries.q9={workspace:{blocks:{blocks:[]}},markings:{},result:null};s.exercises['maze-4']=JSON.parse(JSON.stringify(s.exercises['maze-3']));delete s.markingExerciseId;s.lastExport={filename:'stale.pdf'};localStorage.setItem(key,JSON.stringify(s));sessionStorage.setItem('legacy-fixture-applied','true');},{attempt:legacyAttempt,version});
     await filePage.reload();await filePage.locator('#new-attempt').uncheck();await filePage.locator('#student-name').fill('Lokale Test');await filePage.locator('#student-class').fill('1steam1');await filePage.locator('#student-number').fill('9');await filePage.locator('#start-password').fill('Charles');await filePage.locator('#start-form button').click();
-    const migrated=await filePage.evaluate(()=>window.AssessmentApp.getState());assert.equal(migrated.attemptId,legacyAttempt);assert.deepEqual(migrated.answers.q8,['','','']);assert.deepEqual(migrated.answers.q9,['Oud antwoord']);assert.equal(migrated.boundaries.q9.workspace,null);assert.equal(migrated.exercises['maze-4'].drafts.code.explanation,'');assert.equal(migrated.lastExport,null);check(migrated.exercises['maze-1'].drafts.blocks.workspace.blocks.blocks.length>0,'older saved attempt keeps coding answer');
+    const migrated=await filePage.evaluate(()=>window.AssessmentApp.getState());assert.equal(migrated.attemptId,legacyAttempt);assert.deepEqual(migrated.answers.q8,['','','']);assert.equal(migrated.answers.q9[0],'Stale answer from removed question');assert.ok(['maze-1','maze-2','maze-3'].includes(migrated.markingExerciseId),'legacy attempt receives a valid assignment');assert.equal(migrated.lastExport,null);check(migrated.exercises['maze-1'].drafts.blocks.workspace.blocks.blocks.length>0,'older saved attempt keeps coding answer');await filePage.evaluate(()=>sessionStorage.setItem('marking-draw','0'));await filePage.reload();await filePage.locator('#new-attempt').uncheck();await filePage.locator('#student-name').fill('Lokale Test');await filePage.locator('#student-class').fill('1steam1');await filePage.locator('#student-number').fill('9');await filePage.locator('#start-password').fill('Charles');await filePage.locator('#start-form button').click();assert.equal((await filePage.evaluate(()=>window.AssessmentApp.getState())).markingExerciseId,migrated.markingExerciseId,'migrated selection persists even when random draw changes');
     await filePage.clock.fastForward(40*60*1000);check(await filePage.locator('#timer-warning').isVisible(),'five-minute warning appears');check((await filePage.locator('#timer-warning-message').textContent()).includes('upload'),'five-minute warning asks for upload');
     const warningPulse=await filePage.locator('#exam-timer').evaluate(el=>parseFloat(getComputedStyle(el).animationDuration));await filePage.screenshot({path:path.join(output,'timer-warning.png')});
     await filePage.locator('#dismiss-timer-warning').click();await filePage.clock.fastForward(4*60*1000);check(await filePage.locator('#timer-warning').isHidden(),'warning can be dismissed');const finalPulse=await filePage.locator('#exam-timer').evaluate(el=>parseFloat(getComputedStyle(el).animationDuration));check(finalPulse<warningPulse,'pulse gets faster near zero');

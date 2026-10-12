@@ -14,7 +14,7 @@ window.ASSESSMENT_CONFIG = {
   "smartschoolUrl": "https://sintlievenscollege.smartschool.be/",
   "smartschoolFallbackUrl": "",
   "teacher": "Robbe Wulgaert",
-  "totalPoints": 25,
+  "totalPoints": 21,
   "durationMinutes": 45,
   "source": "Toets Blockly Deel 1 - Maze - Permutatie B (2025-2026)",
   "groups": [
@@ -116,8 +116,8 @@ window.ASSESSMENT_CONFIG = {
     },
     {
       "id": "q4",
-      "title": "Programmeer de vier mazes",
-      "points": 9,
+      "title": "Programmeer de drie mazes",
+      "points": 6,
       "type": "coding",
       "prompt": "Los elke maze op. Kies per oefening blokken of JavaScript. Volg de vereisten bij elke maze. Je leerkracht beoordeelt de werking, de gevraagde concepten en een duidelijke structuur. Schrijf JavaScript met correcte syntax en inspringingen."
     },
@@ -126,7 +126,7 @@ window.ASSESSMENT_CONFIG = {
       "title": "Acties en voorwaarden",
       "points": 2,
       "type": "marking",
-      "prompt": "Duid in jouw definitieve antwoorden uit vraag 4 de acties aan met GEEL en de voorwaarden met GROEN. Kies een onderdeel hieronder om het te markeren."
+      "prompt": "Duid in de blokken van één willekeurig toegewezen maze uit vraag 4 de acties aan met GEEL en de voorwaarden met GROEN. Je JavaScript-antwoord wordt hier automatisch als blokken getoond."
     },
     {
       "id": "q6",
@@ -222,36 +222,6 @@ window.ASSESSMENT_CONFIG = {
           "Verbeter het programma zodat het mannetje het doel bereikt en stopt. Schrijf JavaScript of beschrijf precies welke blokken je zou gebruiken. (1 punt)"
         ]
       ]
-    },
-    {
-      "id": "q9",
-      "title": "Binnen en buiten de lus",
-      "points": 1,
-      "type": "loop-boundary",
-      "prompt": "Bouw met blokken een algoritme voor deze maze, gebaseerd op level 5. Gebruik een while-lus (herhaal zolang) en test je oplossing. Markeer daarna elk actieblok: wordt het één keer uitgevoerd buiten de lus, of herhaald in de lus?",
-      "asset": "assessment/assets/loop-boundary-a.png",
-      "assetAlt": "Pegman-maze met een aanloop, een bocht en een rechte gang naar het doel.",
-      "referenceMaze": {
-        "map": [
-          "########",
-          "#####.##",
-          "#####.##",
-          "#####.##",
-          "#####.##",
-          "#####.##",
-          "###...##",
-          "########"
-        ],
-        "start": {
-          "x": 3,
-          "y": 6,
-          "dir": 1
-        },
-        "goal": {
-          "x": 5,
-          "y": 1
-        }
-      }
     }
   ],
   "exercises": [
@@ -323,31 +293,6 @@ window.ASSESSMENT_CONFIG = {
       "goal": {
         "x": 0,
         "y": 3
-      },
-      "map": [
-        "#######",
-        "#.....#",
-        "##.####",
-        ".......",
-        "#.#.#..",
-        ".....#.",
-        "#.#.#.."
-      ]
-    },
-    {
-      "id": "maze-4",
-      "title": "Maze 4",
-      "points": 3,
-      "explanationPrompt": "Waarom werkt jouw algoritme? Leg uit welk patroon je herkent, welke keuzes of herhalingen je gebruikt en waarom je oplossing bij het doel stopt.",
-      "asset": "assessment/assets/maze-4.png",
-      "start": {
-        "x": 5,
-        "y": 6,
-        "dir": 1
-      },
-      "goal": {
-        "x": 2,
-        "y": 1
       },
       "map": [
         "#######",
