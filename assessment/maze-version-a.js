@@ -8,7 +8,7 @@ window.ASSESSMENT_CONFIG = {
   "id": "maze-deel-1",
   "version": "A",
   "schemaVersion": 1,
-  "revision": "20261013-no-reading",
+  "revision": "20261013-coding-nine",
   "title": "Toets Blockly · Maze",
   "subtitle": "Sequentie, selectie en voorwaardelijke herhaling",
   "startPassword": "Charles",
@@ -81,30 +81,9 @@ window.ASSESSMENT_CONFIG = {
       ]
     },
     {
-      "id": "q2",
-      "title": "Debugging",
-      "points": 3,
-      "type": "correction",
-      "prompt": "Schrijf de correcte versie van elk codefragment. Elk antwoord is 1 punt waard.",
-      "rows": [
-        [
-          "Codefragment",
-          "moveForward()"
-        ],
-        [
-          "Codefragment",
-          "if (pathRight) {turnRight()}"
-        ],
-        [
-          "Codefragment",
-          "While notDone() {if (pathleft) {turnleft();}"
-        ]
-      ]
-    },
-    {
       "id": "q4",
       "title": "Programmeer de drie mazes",
-      "points": 6,
+      "points": 9,
       "type": "coding",
       "prompt": "Los elke maze op. Kies per oefening blokken of JavaScript. Volg de vereisten bij elke maze. Je leerkracht beoordeelt de werking, de gevraagde concepten en een duidelijke structuur. Schrijf JavaScript met correcte syntax en inspringingen."
     },
@@ -113,7 +92,7 @@ window.ASSESSMENT_CONFIG = {
       "title": "Acties en voorwaarden",
       "points": 2,
       "type": "marking",
-      "prompt": "Duid in de blokken van één willekeurig toegewezen maze uit vraag 3 de acties aan met GEEL en de voorwaarden met GROEN. Je JavaScript-antwoord wordt hier automatisch als blokken getoond."
+      "prompt": "Duid in de blokken van één willekeurig toegewezen maze uit vraag 2 de acties aan met GEEL en de voorwaarden met GROEN. Je JavaScript-antwoord wordt hier automatisch als blokken getoond."
     },
     {
       "id": "q6",
@@ -215,7 +194,7 @@ window.ASSESSMENT_CONFIG = {
     {
       "id": "maze-1",
       "title": "Maze 1",
-      "points": 2,
+      "points": 3,
       "requirements": [
         "Gebruik een while-lus (herhaal zolang) om het terugkerende patroon te herhalen."
       ],
@@ -243,7 +222,7 @@ window.ASSESSMENT_CONFIG = {
     {
       "id": "maze-2",
       "title": "Maze 2",
-      "points": 2,
+      "points": 3,
       "asset": "assessment/assets/maze-2.png",
       "start": {
         "x": 1,
@@ -267,7 +246,7 @@ window.ASSESSMENT_CONFIG = {
     {
       "id": "maze-3",
       "title": "Maze 3",
-      "points": 2,
+      "points": 3,
       "requirements": [
         "Gebruik een while-lus (herhaal zolang) met een if/else (als/anders) om keuzes te maken op basis van een padvoorwaarde."
       ],
