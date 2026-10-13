@@ -8,13 +8,14 @@ window.ASSESSMENT_CONFIG = {
   "id": "maze-deel-1",
   "version": "A",
   "schemaVersion": 1,
+  "revision": "20261013-no-reading",
   "title": "Toets Blockly · Maze",
   "subtitle": "Sequentie, selectie en voorwaardelijke herhaling",
   "startPassword": "Charles",
   "smartschoolUrl": "https://sintlievenscollege.smartschool.be/",
   "smartschoolFallbackUrl": "",
   "teacher": "Robbe Wulgaert",
-  "totalPoints": 21,
+  "totalPoints": 20,
   "durationMinutes": 45,
   "source": "Toets Blockly Deel 1 - Maze - Permutatie B (2025-2026)",
   "groups": [
@@ -101,20 +102,6 @@ window.ASSESSMENT_CONFIG = {
       ]
     },
     {
-      "id": "q3",
-      "title": "Lees het algoritme",
-      "points": 1,
-      "type": "open",
-      "asset": "assessment/assets/program.png",
-      "prompt": "Schrijf in Nederlandse volzinnen wat het mannetje zal doen.",
-      "rows": [
-        [
-          "Uitleg",
-          "Jouw uitleg"
-        ]
-      ]
-    },
-    {
       "id": "q4",
       "title": "Programmeer de drie mazes",
       "points": 6,
@@ -126,7 +113,7 @@ window.ASSESSMENT_CONFIG = {
       "title": "Acties en voorwaarden",
       "points": 2,
       "type": "marking",
-      "prompt": "Duid in de blokken van één willekeurig toegewezen maze uit vraag 4 de acties aan met GEEL en de voorwaarden met GROEN. Je JavaScript-antwoord wordt hier automatisch als blokken getoond."
+      "prompt": "Duid in de blokken van één willekeurig toegewezen maze uit vraag 3 de acties aan met GEEL en de voorwaarden met GROEN. Je JavaScript-antwoord wordt hier automatisch als blokken getoond."
     },
     {
       "id": "q6",

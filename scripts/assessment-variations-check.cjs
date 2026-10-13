@@ -8,9 +8,9 @@ const level3=JSON.parse(JSON.stringify(levelContext.window.AIK_GENERATED.maze.le
 assert.deepEqual(infinite.referenceMaze.map,level3.grid.map(row=>row.map(cell=>cell?'.':'#').join('')));assert.deepEqual(infinite.referenceMaze.start,{...level3.start,dir:1});assert.deepEqual(infinite.referenceMaze.goal,level3.goal);assert.ok(infinite.codeSample.includes('turnLeft();'));assert.ok(fs.existsSync(path.join(root,infinite.asset)));
 function distances(exercise){const queue=[[exercise.start.x,exercise.start.y,0]],seen=new Set();while(queue.length){const [x,y,d]=queue.shift(),key=x+','+y;if(seen.has(key))continue;seen.add(key);if(x===exercise.goal.x&&y===exercise.goal.y)return d;for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]])if(exercise.map[y+dy]?.[x+dx]==='.')queue.push([x+dx,y+dy,d+1]);}throw new Error('Unreachable goal: '+exercise.id);}
 for(const version of ['A','B','C']){
-  const variant=version==='A'?a:read(version);assert.equal(variant.version,version);assert.equal(variant.id,a.id);assert.equal(variant.totalPoints,21);assert.equal(variant.durationMinutes,45);assert.equal(variant.startPassword,'Charles');
-  assert.equal(variant.groups.length,8);assert.equal(variant.groups.find(g=>g.id==='q4').points,6);assert.equal(variant.groups.find(g=>g.id==='q4').title,'Programmeer de drie mazes');assert.equal(variant.groups.find(g=>g.id==='q5').points,2);assert.ok(variant.groups.find(g=>g.id==='q5').prompt.includes('de blokken van één willekeurig toegewezen maze'));assert.ok(!variant.groups.some(g=>g.id==='q9'));
-  assert.equal(variant.groups.reduce((s,g)=>s+g.points,0),21);assert.equal(variant.exercises.length,3);assert.equal(variant.exercises.reduce((s,e)=>s+e.points,0),6);
+  const variant=version==='A'?a:read(version);assert.equal(variant.version,version);assert.equal(variant.id,a.id);assert.equal(variant.totalPoints,20);assert.equal(variant.durationMinutes,45);assert.equal(variant.startPassword,'Charles');
+  assert.equal(variant.groups.length,7);assert.equal(variant.groups.find(g=>g.id==='q4').points,6);assert.equal(variant.groups.find(g=>g.id==='q4').title,'Programmeer de drie mazes');assert.equal(variant.groups.find(g=>g.id==='q5').points,2);assert.ok(variant.groups.find(g=>g.id==='q5').prompt.includes('de blokken van één willekeurig toegewezen maze'));assert.ok(!variant.groups.some(g=>g.id==='q9'));
+  assert.equal(variant.groups.reduce((s,g)=>s+g.points,0),20);assert.equal(variant.exercises.length,3);assert.equal(variant.exercises.reduce((s,e)=>s+e.points,0),6);
   if(version!=='A'){
     assert.deepEqual(variant.groups.map(g=>[g.id,g.type,g.points]),a.groups.map(g=>[g.id,g.type,g.points]));
     for(const id of ['q1','q2','q6','q7','q8'])assert.notDeepEqual(variant.groups.find(g=>g.id===id),a.groups.find(g=>g.id===id),'Question must vary: '+id);
@@ -26,7 +26,11 @@ for(const version of ['A','B','C']){
     }
     assert.equal(exercise.points,2);assert.ok(fs.existsSync(path.join(root,exercise.asset)),'Missing image '+exercise.asset);
   }
-  const html=fs.readFileSync(path.join(root,`test_maze_version_${version}.html`),'utf8');assert.ok(html.includes(`maze-version-${version.toLowerCase()}.js`));if(version!=='A')assert.ok(!html.includes('maze-version-a.js'));assert.ok(html.includes('0 / 8 onderdelen'));
-  assert.ok(fs.existsSync(path.join(root,variant.groups.find(g=>g.id==='q3').asset)));
-  console.log(`PASS ${version}: 21 points, three coding mazes, no question 9, distinct questions and matching maze assets.`);
+  const html=fs.readFileSync(path.join(root,`test_maze_version_${version}.html`),'utf8');assert.ok(html.includes(`maze-version-${version.toLowerCase()}.js`));if(version!=='A')assert.ok(!html.includes('maze-version-a.js'));assert.ok(html.includes('0 / 7 onderdelen'));
+  assert.ok(!variant.groups.some(g=>g.id==='q3'),'reading question removed');
+  assert.equal(variant.groups.findIndex(g=>g.type==='coding')+1,3);
+  assert.equal(variant.groups.findIndex(g=>g.type==='marking')+1,4);
+  assert.ok(variant.groups.find(g=>g.type==='marking').prompt.includes('vraag 3'));
+  assert.equal(variant.revision,'20261013-no-reading');
+  console.log(`PASS ${version}: 20 points, three coding mazes, no question 9, distinct questions and matching maze assets.`);
 }

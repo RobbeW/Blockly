@@ -18,6 +18,7 @@
   const pointText=n=>`${label(n)} ${Number(n)===1?'punt':'punten'}`;
   const safeName=value=>String(value).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,90)||'leerling';
   async function exportAssessment(config,state,{download=false}={}) {
+    const codingQuestionNumber=config.groups.findIndex(group=>group.type==='coding')+1;
     const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4',compress:true});
     const [regular,bold,mono]=await Promise.all([
       fontData('assessment/vendor/fonts/NotoSans-Regular.ttf'),fontData('assessment/vendor/fonts/NotoSans-Bold.ttf'),fontData('assessment/vendor/fonts/NotoSansMono-Regular.ttf')]);
@@ -114,8 +115,8 @@
         } else if(group.type==='coding') {
           for(const exercise of config.exercises){
             page();const ex=state.exercises[exercise.id],branch=ex.choice;
-            heading(`4.${config.exercises.indexOf(exercise)+1}. ${exercise.title} — ${pointText(exercise.points)}`);
-            if(config.exercises.indexOf(exercise)===0){text(`Vraag 4: ${group.title} · totaal ${label(group.points)} punten`,{size:8,color:muted});text(group.prompt,{size:8,color:muted});}
+            heading(`${index+1}.${config.exercises.indexOf(exercise)+1}. ${exercise.title} — ${pointText(exercise.points)}`);
+            if(config.exercises.indexOf(exercise)===0){text(`Vraag ${index+1}: ${group.title} · totaal ${label(group.points)} punten`,{size:8,color:muted});text(group.prompt,{size:8,color:muted});}
             text(`Gekozen antwoordtype: ${branch==='blocks'?'Blokken':branch==='code'?'JavaScript':'Geen keuze'} · maximum: ${label(branch==='blocks'?exercise.points/2:exercise.points)} / ${label(exercise.points)}`,{bold:true});
             for(const requirement of exercise.requirements||[])text(`Vereiste voor beide antwoordtypes: ${requirement}`,{bold:true,size:9});
             text('Beoordeling: werking, gevraagde concepten en duidelijke structuur. Bij JavaScript ook correcte syntax, één instructie per regel en passende inspringingen.',{size:9,color:muted});
@@ -150,12 +151,12 @@
             const marks=Object.values(draft?.markings||{});
             if(!marks.length)text('[Geen markeringen]',{color:muted});
             if(draft?.workspace?.blocks?.blocks?.length){
-              if(ex.choice==='code')text('Je JavaScript-antwoord uit vraag 4, weergegeven als blokken.',{size:9,color:muted});
+              if(ex.choice==='code')text(`Je JavaScript-antwoord uit vraag ${codingQuestionNumber}, weergegeven als blokken.`,{size:9,color:muted});
               host=document.createElement('div');host.style.cssText='position:fixed;left:-12000px;top:0;width:900px;height:650px;';
               const blockly=document.createElement('div');blockly.style.cssText='width:900px;height:650px;';host.appendChild(blockly);
               const canvas=document.createElement('canvas');canvas.width=420;canvas.height=420;host.appendChild(canvas);document.body.appendChild(host);
               runtime=new window.AssessmentMaze({blocklyElement:blockly,canvas});runtime.mount({...exercise,mode:'blocks',workspace:draft.workspace,markings:draft.markings,markingOnly:true});await runtime.ready();
-              const evidence=await runtime.getBlockEvidence();if(!evidence)throw new Error('De blokmarkeringen van vraag 5 konden niet worden afgebeeld.');await picture(evidence,width,3);
+              const evidence=await runtime.getBlockEvidence();if(!evidence)throw new Error(`De blokmarkeringen van vraag ${index+1} konden niet worden afgebeeld.`);await picture(evidence,width,3);
               text(`${marks.filter(m=>m.kind==='action').length} blokken gemarkeerd als actie; ${marks.filter(m=>m.kind==='condition').length} als voorwaarde.`);
               runtime.dispose();runtime=null;host.remove();host=null;
             }

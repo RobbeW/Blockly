@@ -2,6 +2,8 @@
 (function () {
   'use strict';
   const config = window.ASSESSMENT_CONFIG;
+  const codingQuestionNumber=config.groups.findIndex(group=>group.type==='coding')+1;
+  const markingQuestionNumber=config.groups.findIndex(group=>group.type==='marking')+1;
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const points = n => Number(n).toLocaleString('nl-BE', {maximumFractionDigits:2});
@@ -23,7 +25,7 @@
     return config.exercises[index].id;
   }
   function fresh(identity) {
-    return {schemaVersion:config.schemaVersion, examId:config.id, version:config.version,
+    return {schemaVersion:config.schemaVersion, revision:config.revision, examId:config.id, version:config.version,
       attemptId:crypto.randomUUID(), identity, startedAt:new Date().toISOString(), updatedAt:null,
       markingExerciseId:randomMarkingExerciseId(), markingFormat:'blocks',
       answers:Object.fromEntries(config.groups.filter(g=>g.rows).map(g=>[g.id,g.rows.map(()=> '')])),
@@ -40,6 +42,7 @@
       const saved = JSON.parse(localStorage.getItem(prefix+active));
       if (!validState(saved)) { $('gate-error').textContent = 'De opgeslagen poging heeft een onbekend formaat. Start een nieuwe poging of vraag je leerkracht om hulp.'; return null; }
       if (JSON.stringify(saved.identity) !== JSON.stringify(identity)) return null;
+      if(saved.revision!==config.revision){saved.revision=config.revision;saved.lastExport=null;}
       if(!saved.boundaries){saved.boundaries={};saved.lastExport=null;}
       if(saved.markingFormat!=='blocks'){saved.markingFormat='blocks';saved.lastExport=null;}
       if(!config.exercises.some(e=>e.id===saved.markingExerciseId)) {saved.markingExerciseId=randomMarkingExerciseId();saved.lastExport=null;}
@@ -210,7 +213,7 @@
     if(!unfinished.length)return false;
     let dialog=$('coding-review-dialog');if(!dialog){dialog=document.createElement('dialog');dialog.id='coding-review-dialog';dialog.className='coding-review-dialog';document.body.appendChild(dialog);}
     dialog.setAttribute('aria-labelledby','coding-review-title');
-    dialog.innerHTML=`<h2 id="coding-review-title">Controleer de ${config.exercises.length} mazes</h2><p>Deze oefeningen zijn nog niet afgewerkt. Je kunt eraan verder werken of bewust met een gedeeltelijk antwoord doorgaan.</p><div class="unfinished-list">${unfinished.map(e=>`<button type="button" data-resume-maze="${config.exercises.indexOf(e)}"><strong>${e.title}</strong><span>${exerciseStatus(e).label}</span></button>`).join('')}</div><div class="completion-actions"><button type="button" class="primary" data-close-coding>Verder werken</button><button type="button" data-continue-coding>Toch naar vraag 5</button></div>`;
+    dialog.innerHTML=`<h2 id="coding-review-title">Controleer de ${config.exercises.length} mazes</h2><p>Deze oefeningen zijn nog niet afgewerkt. Je kunt eraan verder werken of bewust met een gedeeltelijk antwoord doorgaan.</p><div class="unfinished-list">${unfinished.map(e=>`<button type="button" data-resume-maze="${config.exercises.indexOf(e)}"><strong>${e.title}</strong><span>${exerciseStatus(e).label}</span></button>`).join('')}</div><div class="completion-actions"><button type="button" class="primary" data-close-coding>Verder werken</button><button type="button" data-continue-coding>Toch naar vraag ${markingQuestionNumber}</button></div>`;
     dialog.showModal();return true;
   }
   function choiceHtml(exercise,ex) {
@@ -275,16 +278,16 @@
     if(!exercise){$('question-panel').innerHTML=heading(group)+'<section class="card"><p>Er werd geen toegewezen maze gevonden. Vraag je leerkracht om hulp.</p></section>'+footer(group);return;}
     const ex=state.exercises[exercise.id];
     let html=heading(group)+mazeTabs(markIndex,true)+`<p class="instructions">Markeer alleen de blokken van deze willekeurig toegewezen maze: <strong>${exercise.title}</strong>.</p>`;
-    const returnButton=`<button type="button" data-open-coding="${markIndex}">Ga naar ${exercise.title} in vraag 4</button>`;
+    const returnButton=`<button type="button" data-open-coding="${markIndex}">Ga naar ${exercise.title} in vraag ${codingQuestionNumber}</button>`;
     if(!ex.choice) {
-      $('question-panel').innerHTML=html+`<section class="card"><p>Werk eerst jouw toegewezen maze (${exercise.title}) af in vraag 4.</p>${returnButton}</section>`+footer(group);return;
+      $('question-panel').innerHTML=html+`<section class="card"><p>Werk eerst jouw toegewezen maze (${exercise.title}) af in vraag ${codingQuestionNumber}.</p>${returnButton}</section>`+footer(group);return;
     }
     let draft;
     try {draft=prepareMarkingDraft(ex);} catch(error) {
-      $('question-panel').innerHTML=html+`<section class="card"><p class="error" role="alert">Je JavaScript kan nog niet volledig als blokken worden getoond. ${esc(error.message)}</p><p>Gebruik de maze-acties, padvoorwaarden, while en if/else. Controleer je antwoord in vraag 4 of vraag je leerkracht om hulp.</p>${returnButton}</section>`+footer(group);return;
+      $('question-panel').innerHTML=html+`<section class="card"><p class="error" role="alert">Je JavaScript kan nog niet volledig als blokken worden getoond. ${esc(error.message)}</p><p>Gebruik de maze-acties, padvoorwaarden, while en if/else. Controleer je antwoord in vraag ${codingQuestionNumber} of vraag je leerkracht om hulp.</p>${returnButton}</section>`+footer(group);return;
     }
     if(!hasBlocks(draft.workspace)) {
-      $('question-panel').innerHTML=html+`<section class="card"><p>Je antwoord bevat nog geen blokken om te markeren. Werk jouw toegewezen maze eerst af in vraag 4.</p>${returnButton}</section>`+footer(group);return;
+      $('question-panel').innerHTML=html+`<section class="card"><p>Je antwoord bevat nog geen blokken om te markeren. Werk jouw toegewezen maze eerst af in vraag ${codingQuestionNumber}.</p>${returnButton}</section>`+footer(group);return;
     }
     html+=`<section class="card"><h2>${exercise.title} · Blokken markeren</h2>${ex.choice==='code'?'<p>Je JavaScript-antwoord wordt hier als blokken getoond.</p>':''}<p>Kies Actie of Voorwaarde en klik daarna op een blok. Je kunt hier alleen markeren.</p><div class="mark-tools"><button type="button" data-tool="action" aria-pressed="false">Geel · Actie</button><button type="button" data-tool="condition" aria-pressed="false">Groen · Voorwaarde</button><button type="button" data-clear-marks>Alle markeringen wissen</button></div>${ex.needsReview?'<p class="error" id="mark-warning">Je antwoord of antwoordtype is gewijzigd. Controleer je markeringen opnieuw.</p><button type="button" data-mark-reviewed>Markeringen gecontroleerd</button>':''}<div id="blockly-host" class="blockly-host"></div><canvas id="maze-canvas" hidden width="420" height="420"></canvas><p id="runtime-status" role="status"></p><div id="mark-list" class="mark-list"></div></section>`;
     $('question-panel').innerHTML=html+footer(group);
