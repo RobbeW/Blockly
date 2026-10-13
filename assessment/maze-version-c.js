@@ -6,7 +6,7 @@ window.ASSESSMENT_CONFIG = {
   "id": "maze-deel-1",
   "version": "C",
   "schemaVersion": 1,
-  "revision": "20261013-coding-nine",
+  "revision": "20261013-common-q6",
   "title": "Toets Blockly · Maze",
   "subtitle": "Sequentie, selectie en voorwaardelijke herhaling",
   "startPassword": "Charles",
@@ -147,8 +147,31 @@ window.ASSESSMENT_CONFIG = {
       "title": "Analyseer het programma",
       "points": 2,
       "type": "open",
-      "prompt": "In een klein raster is S de start, G het doel en # een muur: ### / #SG / ###. Het mannetje kijkt naar boven (noord); het vak vóór hem is een muur. Het doel ligt één vrij vak rechts van hem. Analyseer dit programma zonder het uit te voeren.",
-      "codeSample": "while (notDone()) {\n  moveForward();\n}",
+      "prompt": "Bekijk de Pegman-maze uit level 3 en het programma hieronder. Analyseer het programma zonder het uit te voeren.",
+      "asset": "assessment/assets/infinite-loop-a.png",
+      "assetAlt": "Pegman level 3: het mannetje kijkt naar rechts in een rechte gang; het doel ligt vijf vakken verder naar rechts.",
+      "referenceMaze": {
+        "start": {
+          "x": 1,
+          "y": 4,
+          "dir": 1
+        },
+        "goal": {
+          "x": 6,
+          "y": 4
+        },
+        "map": [
+          "########",
+          "########",
+          "########",
+          "########",
+          "#......#",
+          "########",
+          "########",
+          "########"
+        ]
+      },
+      "codeSample": "while (notDone()) {\n  turnLeft();\n}",
       "rows": [
         [
           "Vraag",

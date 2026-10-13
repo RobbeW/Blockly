@@ -8,7 +8,7 @@ window.ASSESSMENT_CONFIG = {
   "id": "maze-deel-1",
   "version": "A",
   "schemaVersion": 1,
-  "revision": "20261013-coding-nine",
+  "revision": "20261013-common-q6",
   "title": "Toets Blockly · Maze",
   "subtitle": "Sequentie, selectie en voorwaardelijke herhaling",
   "startPassword": "Charles",
