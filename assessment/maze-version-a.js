@@ -8,7 +8,7 @@ window.ASSESSMENT_CONFIG = {
   "id": "maze-deel-1",
   "version": "A",
   "schemaVersion": 1,
-  "revision": "20261013-common-q6",
+  "revision": "20261014-clearer-questions",
   "title": "Toets Blockly · Maze",
   "subtitle": "Sequentie, selectie en voorwaardelijke herhaling",
   "startPassword": "Charles",
@@ -103,15 +103,15 @@ window.ASSESSMENT_CONFIG = {
       "rows": [
         [
           "Begrip",
-          "Algoritme"
+          "Leg uit wat een algoritme is."
         ],
         [
           "Begrip",
-          "Syntax"
+          "Leg uit wat syntax betekent. Kan je een voorbeeld geven?"
         ],
         [
           "Begrip",
-          "Computationeel denken"
+          "Leg uit wat computationeel denken betekent en wat we daarmee willen bereiken."
         ]
       ]
     },
@@ -177,7 +177,7 @@ window.ASSESSMENT_CONFIG = {
       "rows": [
         [
           "Vraag",
-          "Wat gebeurt er wanneer de computer dit programma uitvoert? Beschrijf het gedrag van het mannetje en leg uit welk probleem je vaststelt. (0,5 punt)"
+          "Wat gebeurt er wanneer de computer dit programma uitvoert?"
         ],
         [
           "Vraag",

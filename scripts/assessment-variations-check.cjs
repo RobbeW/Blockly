@@ -13,7 +13,7 @@ for(const version of ['A','B','C']){
   assert.equal(variant.groups.reduce((s,g)=>s+g.points,0),20);assert.equal(variant.exercises.length,3);assert.equal(variant.exercises.reduce((s,e)=>s+e.points,0),9);
   if(version!=='A'){
     assert.deepEqual(variant.groups.map(g=>[g.id,g.type,g.points]),a.groups.map(g=>[g.id,g.type,g.points]));
-    for(const id of ['q1','q6','q7'])assert.notDeepEqual(variant.groups.find(g=>g.id===id),a.groups.find(g=>g.id===id),'Question must vary: '+id);
+    for(const id of ['q1','q7'])assert.notDeepEqual(variant.groups.find(g=>g.id===id),a.groups.find(g=>g.id===id),'Question must vary: '+id);
   }
   for(const [i,exercise] of variant.exercises.entries()){
     const original=a.exercises[i],width=original.map[0].length,height=original.map.length;
@@ -32,8 +32,10 @@ for(const version of ['A','B','C']){
   assert.equal(variant.groups.findIndex(g=>g.type==='coding')+1,2);
   assert.equal(variant.groups.findIndex(g=>g.type==='marking')+1,3);
   assert.ok(variant.groups.find(g=>g.type==='marking').prompt.includes('vraag 2'));
+  assert.deepEqual(variant.groups[3],a.groups[3],'concept questions must match across versions');
+  assert.equal(variant.groups[3].id,'q6');
   assert.deepEqual(variant.groups[5],a.groups[5],'visible question 6 must exactly match version A');
   assert.equal(variant.groups[5].id,'q8');
-  assert.equal(variant.revision,'20261013-common-q6');
+  assert.equal(variant.revision,'20261014-clearer-questions');
   console.log(`PASS ${version}: 20 points, coding worth nine points across three mazes, no question 9, shared question 6, distinct remaining questions and matching maze assets.`);
 }

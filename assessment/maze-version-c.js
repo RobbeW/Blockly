@@ -6,7 +6,7 @@ window.ASSESSMENT_CONFIG = {
   "id": "maze-deel-1",
   "version": "C",
   "schemaVersion": 1,
-  "revision": "20261013-common-q6",
+  "revision": "20261014-clearer-questions",
   "title": "Toets Blockly · Maze",
   "subtitle": "Sequentie, selectie en voorwaardelijke herhaling",
   "startPassword": "Charles",
@@ -97,19 +97,19 @@ window.ASSESSMENT_CONFIG = {
       "title": "Leg uit in eigen woorden",
       "points": 3,
       "type": "open",
-      "prompt": "Leg elk begrip uit met een eigen voorbeeld of toepassing.",
+      "prompt": "Leg de volgende begrippen uit in je eigen woorden.",
       "rows": [
         [
           "Begrip",
-          "Leg uit wat een algoritme is. Beschrijf kort een stappenplan om een nieuw computerspel te starten."
+          "Leg uit wat een algoritme is."
         ],
         [
           "Begrip",
-          "Leg uit wat syntax betekent. Geef een voorbeeld van hoe hoofdletters, haakjes of leestekens code geldig maken."
+          "Leg uit wat syntax betekent. Kan je een voorbeeld geven?"
         ],
         [
           "Begrip",
-          "Leg uit wat computationeel denken betekent. Geef een voorbeeld van hoe je de belangrijke informatie uit een probleem kiest."
+          "Leg uit wat computationeel denken betekent en wat we daarmee willen bereiken."
         ]
       ]
     },
@@ -175,7 +175,7 @@ window.ASSESSMENT_CONFIG = {
       "rows": [
         [
           "Vraag",
-          "Wat gebeurt er wanneer de computer dit programma uitvoert? Beschrijf het gedrag van het mannetje en leg uit welk probleem je vaststelt. (0,5 punt)"
+          "Wat gebeurt er wanneer de computer dit programma uitvoert?"
         ],
         [
           "Vraag",
