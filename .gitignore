@@ -1,0 +1,56 @@
+# Local workspaces, teacher tools and records — never publish these.
+/grading/
+/output/
+/tmp/
+/.archive/
+/docs/
+/.harness/
+/.codex/
+/.agents/
+/AGENTS.md
+/HARNESS_START_HERE.md
+/brand_motion.md
+
+# Original assessments and teacher-only chapter documentation.
+/evaluations/**/source/
+/evaluations/**/grading/
+/evaluations/**/*.md
+/evaluations/**/manifest.json
+/evaluations/catalog.json
+/Vakantiecursus/
+/media/
+/syllabus/brand_motion_notes.md
+
+# Personal exports and local documents. The linked teaching syllabus is public.
+*.pdf
+!/syllabus/syllabus_blockly_in_de_klas.pdf
+*.csv
+*.tsv
+*.xls
+*.xlsx
+*.docx
+*.blockly.json
+*.xml
+!/sitemap.xml
+.blockly-feedback.json
+
+# Local credentials and runtimes.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.py[cod]
+
+# Finder/editor/temporary files.
+.DS_Store
+._*
+Thumbs.db
+*.swp
+*.swo
+*~
