@@ -38,7 +38,7 @@ assessment/             # bestaande Maze-configuraties en gedeelde toetsruntime
 
 Hoofdstuk 1 bevat drie Maze-toetsen op 20 punten: [A](test_maze_version_A.html), [B](test_maze_version_B.html) en [C](test_maze_version_C.html). Hun URL's en lokaal bewaarde antwoorden blijven behouden.
 
-Hoofdstuk 2 bevat drie Turtle/for-toetsen op 25 punten met een limiet van 45 minuten: [A](evaluations/chapter-2/versions/A/index.html), [B](evaluations/chapter-2/versions/B/index.html) en [C](evaluations/chapter-2/versions/C/index.html).
+Hoofdstuk 2 bevat drie Turtle/for-toetsen op 23 punten met een limiet van 45 minuten: [A](evaluations/chapter-2/versions/A/index.html), [B](evaluations/chapter-2/versions/B/index.html) en [C](evaluations/chapter-2/versions/C/index.html).
 
 ## Publiceren
 

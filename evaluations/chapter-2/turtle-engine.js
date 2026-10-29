@@ -139,7 +139,7 @@
     const xs=[0],ys=[0];for(const s of result.segments||[]){xs.push(s.x1,s.x2);ys.push(s.y1,s.y2);}if(cursor&&result.turtle){xs.push(result.turtle.x);ys.push(result.turtle.y);}
     const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),scale=Math.min((w-65)/Math.max(100,maxX-minX),(h-65)/Math.max(100,maxY-minY));
     const point=(x,y)=>({x:w/2+(x-(minX+maxX)/2)*scale,y:h/2-(y-(minY+maxY)/2)*scale});
-    ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=Math.max(1,scale);
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=Math.max(2.5,Math.min(4,scale*1.5));
     for(const s of result.segments||[]){const a=point(s.x1,s.y1),b=point(s.x2,s.y2);ctx.strokeStyle=s.color;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
     if(start){const origin=point(0,0);startMarker(ctx,origin.x,origin.y,{dark:background==='#111111'});}
     if(cursor&&result.turtle){const p=point(result.turtle.x,result.turtle.y);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(-result.turtle.heading*Math.PI/180);ctx.fillStyle=background==='#111111'?'#ffffff':'#5200ff';ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-6,-5);ctx.lineTo(-6,5);ctx.closePath();ctx.fill();ctx.restore();}

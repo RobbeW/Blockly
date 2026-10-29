@@ -39,19 +39,12 @@
       const image=new Image();image.src=window.CHAPTER2_ASSETS?.[src]||src;await image.decode();
       let h=w*image.naturalHeight/image.naturalWidth;if(h>190){w*=190/h;h=190;}space(h+8);pdf.addImage(image,'PNG',margin,y,w,h);box(id,y,h);y+=h+6;
     }
-    function drawing(answerValue,id){
-      const canvas=document.createElement('canvas');canvas.width=900;canvas.height=570;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,900,570);ctx.strokeStyle='#160033';ctx.lineWidth=3.5;ctx.lineCap='round';
-      const origin=Chapter2Turtle.drawingStart(config.parameters.direction);Chapter2Turtle.startMarker(ctx,origin.x*900,origin.y*570,{scale:1.5});
-      for(const stroke of answerValue.strokes||[]){if(!stroke.length)continue;ctx.beginPath();ctx.moveTo(stroke[0].x*900,stroke[0].y*570);for(const p of stroke.slice(1))ctx.lineTo(p.x*900,p.y*570);ctx.stroke();}
-      space(115);pdf.setDrawColor(190,180,210);pdf.rect(margin,y,width,110);pdf.addImage(canvas.toDataURL('image/png'),'PNG',margin+.5,y+.5,width-1,109);box(id,y,110);y+=116;
-      if(!(answerValue.strokes||[]).some(stroke=>stroke.length>1))text('[Geen tekening]',{id,color:[98,91,112]});
-    }
     const algorithmLines=(items,depth=0)=>items.flatMap(item=>typeof item==='string'?['  '.repeat(depth)+item]:['  '.repeat(depth)+`herhaal ${item.repeat} keer {`,...algorithmLines(item.body,depth+1),'  '.repeat(depth)+'}']);
     pdf.setProperties({title:`${config.title} - Hoofdstuk 2 - Versie ${config.version} - ${state.identity.name}`,author:'Robbe Wulgaert · AI in de Klas'});
     heading(config.title);text(config.subtitle,{size:11});text(`Hoofdstuk 2 · versie ${config.version} · ${config.totalPoints} punten · maximaal 45 minuten`,{bold:true});
     text(`Naam: ${state.identity.name}\nKlas: ${state.identity.className} · klasnummer: ${state.identity.number}\nLeerkracht: ${config.teacher}\nGestart: ${new Date(state.startedAt).toLocaleString('nl-BE',{timeZone:'Europe/Brussels'})}\nPDF gemaakt: ${new Date().toLocaleString('nl-BE',{timeZone:'Europe/Brussels'})}`);
     text(`Toets: ${config.id} · revisie ${config.revision}\nPoging: ${state.attemptId}`,{size:8,color:[98,91,112]});
-    text('Dit bestand bevat de leerlingantwoorden. De leerkracht beoordeelt de toets. De tekenpreview is geen score. Er geldt geen blokkenfactor.',{size:9});
+    text('Dit bestand bevat de leerlingantwoorden. De leerkracht beoordeelt de toets. De codepreview is geen score. Er geldt geen blokkenfactor.',{size:9});
     for(const [index,group] of config.groups.entries()){
       if(index===0){y+=6;section='1. '+group.title;}else page(`${index+1}. ${group.title}`);
       heading(`${index+1}. ${group.title} · ${label(group.points)} punten`);text(Chapter2Turtle.instructions(group));
@@ -59,11 +52,19 @@
       if(group.id==='q1')answer(a.q1,'q1',true);
       else if(group.id==='q2'){
         for(const [i,trace] of group.traces.entries()){
-          if(i){page(`${trace.label}. Tekening`);heading(`${trace.label} · 1 punt`);}
+          if(i){page(`${trace.label}. Figuur kiezen`);heading(`${trace.label} · 1 punt`);}
           else text(`${trace.label} · 1 punt`,{bold:true});
-          text('Gegeven algoritme · begin bij Start (0, 0) en volg de pijl',{bold:true,size:9});code(algorithmLines(trace.instructions).join('\n'));
-          text('Jouw tekening',{bold:true});drawing(a[trace.id],trace.id);
-          text('Jouw extra uitleg (optioneel)',{size:9});answer(a[trace.id].description,trace.id+'-description');
+          text('Gegeven algoritme · begin bij Start (0, 0), richting omhoog',{bold:true,size:9});code(algorithmLines(trace.instructions).join('\n'));
+          space(118);const gridTop=y;
+          for(const [j,option] of trace.options.entries()){
+            const x=j%2?110:margin,top=gridTop+Math.floor(j/2)*56;
+            font(false,true,9);pdf.text(`Optie ${option.id}${a[trace.id].choice===option.id?' · jouw keuze':''}`,x,top);
+            const canvas=document.createElement('canvas');canvas.width=400;canvas.height=260;Chapter2Turtle.draw(canvas,option.figure,{cursor:false});
+            pdf.addImage(canvas.toDataURL('image/png'),'PNG',x,top+3,76,49.4);
+          }
+          box(trace.id,gridTop,112);y=gridTop+117;
+          text('Jouw figuurkeuze · 0,5 punt',{bold:true,size:9});answer(a[trace.id].choice,trace.id+'.choice');
+          text(trace.countPrompt+' · 0,5 punt',{bold:true,size:9});answer(a[trace.id].count,trace.id+'.count');
         }
       }else if(group.id==='q3'){
         text('Per figuur: 0,5 punt werking, 0,5 punt leesbaarheid, 1,5 punt for-concepten en parameters.',{size:9});
@@ -71,32 +72,25 @@
           if(i){page(task.label);heading(`${task.label} · ${label(task.points)} punten`);}else text(`${task.label} · ${label(task.points)} punten`,{bold:true});
           text(task.prompt);
           const result=a[task.id].trim()?Chapter2Turtle.run(a[task.id]):null;
-          space(83);const figureTop=y;
+          space(65);const figureTop=y;
           text('Gegeven figuur',{bold:true,size:9});y=figureTop;
           font(false,true,9);pdf.text('Jouw definitieve code · uitvoer',110,y);y+=4;
-          const image=new Image();image.src=window.CHAPTER2_ASSETS[task.asset];await image.decode();const reference=document.createElement('canvas');reference.width=500;reference.height=430;const referenceContext=reference.getContext('2d');referenceContext.drawImage(image,0,0);const referenceOrigin=Chapter2Turtle.referenceStart(task.id,config.parameters);Chapter2Turtle.startMarker(referenceContext,referenceOrigin.x,referenceOrigin.y,{dark:true,scale:1.5,labelSide:referenceOrigin.labelSide});pdf.addImage(reference.toDataURL('image/png'),'PNG',margin,y,80,68.8);
-          if(result){const canvas=document.createElement('canvas');canvas.width=800;canvas.height=650;Chapter2Turtle.draw(canvas,result,{cursor:false,background:'#111111'});pdf.addImage(canvas.toDataURL('image/png'),'PNG',110,y,80,65);box(task.id+'-output',y,65);}
+          const reference=document.createElement('canvas');reference.width=500;reference.height=320;Chapter2Turtle.draw(reference,task.figure,{cursor:false});pdf.addImage(reference.toDataURL('image/png'),'PNG',margin,y,80,51.2);
+          if(result){const canvas=document.createElement('canvas');canvas.width=500;canvas.height=320;Chapter2Turtle.draw(canvas,result,{cursor:false});pdf.addImage(canvas.toDataURL('image/png'),'PNG',110,y,80,51.2);box(task.id+'-output',y,51.2);}
           else {font(false,false,9);pdf.text('[Geen code]',110,y+12);}
-          y+=74;
+          y+=59;
           if(result)text(result.status==='ok'?`Uitvoering gestopt na ${result.actions.length} acties. Vergelijking en score door de leerkracht.`:`Uitvoering vraagt controle: ${result.message}`,{id:task.id+'-execution',size:8,gap:3});
           text('Jouw definitieve JavaScript',{bold:true});answer(a[task.id],task.id,true);
         }
       }else if(['q4','q6','q7'].includes(group.id)){
         const rows=group.terms||group.rows;for(const [i,row] of rows.entries()){space(23);text(`${index+1}${String.fromCharCode(97+i)}. ${row}`,{bold:true});answer(a[group.id][i],`${group.id}-${i}`,group.id==='q6');}
-      }else if(group.id==='q5'){
-        text('Gegeven foutieve code (de gekleurde selecties zijn door de leerling aangeduid)',{bold:true,size:9});code(group.codeSample,null,a.q5.marks);
-        heading('Jouw foutaanduidingen');
-        if(!a.q5.marks.length)text('[Geen fouten aangeduid]',{id:'q5',color:[98,91,112]});
-        for(const [i,mark] of a.q5.marks.entries()){
-          space(20);text(`Fout ${i+1} · regel ${group.codeSample.slice(0,mark.start).split('\n').length} · selectie: ${group.codeSample.slice(mark.start,mark.end)}`,{bold:true,size:9,id:'q5',gap:1});answer(mark.note,'q5');
-        }
       }else if(group.id==='q8'){
         for(const [i,row] of group.rows.entries()){
           space(35);text(`Rij ${i+1} · volgorde: ${a.q8[i].order||'[Geen antwoord]'}`,{bold:true,id:`q8-${i}-order`});
           text(`${row.name?'Gegeven naam':'Jouw naam'}: ${row.name||a.q8[i].name||'[Geen antwoord]'}`,{id:row.name?null:`q8-${i}-name`});
           text(`${row.description?'Gegeven uitleg':'Jouw uitleg'}: ${row.description||a.q8[i].description||'[Geen antwoord]'}`,{id:row.description?null:`q8-${i}-description`});y+=3;
         }
-        space(45);heading('Terugblik · geen punten');answer(a.reflection,'reflection');text('Verwachte score op 25',{bold:true});answer(a.estimate,'estimate');
+        space(45);heading('Terugblik · geen punten');answer(a.reflection,'reflection');text(`Verwachte score op ${label(config.totalPoints)}`,{bold:true});answer(a.estimate,'estimate');
       }
     }
     const count=pdf.getNumberOfPages();for(let i=1;i<=count;i++){

@@ -1,13 +1,12 @@
-/* Chapter 2 student configuration. No answer key. */
 window.ASSESSMENT_CONFIG = {
   "schemaVersion": 1,
   "id": "chapter-2",
   "chapter": 2,
   "version": "A",
-  "revision": "20261021-turtle-v1",
+  "revision": "20261029-turtle-v3",
   "title": "Toets Blockly · Turtle",
   "subtitle": "Begrensde herhaling · start, eindgrens en interval",
-  "totalPoints": 25,
+  "totalPoints": 23,
   "durationMinutes": 45,
   "teacher": "Robbe Wulgaert",
   "startPassword": "Charles",
@@ -23,13 +22,17 @@ window.ASSESSMENT_CONFIG = {
     "side": 50,
     "jump": 100,
     "direction": "right",
-    "color": "#ffff00",
+    "color": "#c2410c",
     "radius": 50,
     "distance": 20,
     "colors": [
       "#ff0000",
       "#0177a7"
-    ]
+    ],
+    "gap": 25,
+    "stairStart": 20,
+    "stairEnd": 80,
+    "stairStep": 20
   },
   "groups": [
     {
@@ -42,10 +45,10 @@ window.ASSESSMENT_CONFIG = {
     },
     {
       "id": "q2",
-      "title": "Van blokken naar een tekening",
+      "title": "Lees de blokken en kies de figuur",
       "points": 3,
-      "type": "drawing",
-      "prompt": "Bekijk de drie algoritmes. Teken telkens het resultaat zonder het algoritme uit te voeren. De turtle start met de pen omlaag en kijkt omhoog. De startplaats op je blad is vrij. Verhoudingen, aantal figuren en penbewegingen tellen mee.",
+      "type": "trace-choice",
+      "prompt": "Lees elk algoritme zonder het uit te voeren. Kies de passende figuur en tel hoeveel rechte lijnstukken met de pen omlaag worden getekend. Het paarse punt is Start (0, 0); de pijl wijst omhoog. Je hoeft niet zelf te tekenen.",
       "traces": [
         {
           "id": "q2a",
@@ -60,6 +63,167 @@ window.ASSESSMENT_CONFIG = {
                 "draai rechts 90°"
               ]
             }
+          ],
+          "countPrompt": "Hoeveel rechte lijnstukken worden in totaal met de pen omlaag getekend?",
+          "options": [
+            {
+              "id": "A",
+              "alt": "Een open figuur met vier schuin aansluitende lijnstukken.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 43.30127,
+                    "y2": 125,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 43.30127,
+                    "y1": 125,
+                    "x2": 129.903811,
+                    "y2": 75,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 129.903811,
+                    "y1": 75,
+                    "x2": 129.903811,
+                    "y2": 25,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": 129.90381056766583,
+                  "y": 25,
+                  "heading": -150,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            },
+            {
+              "id": "B",
+              "alt": "Een gesloten rechthoek met twee lange en twee korte zijden.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 50,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 50,
+                    "y1": 100,
+                    "x2": 50,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 50,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": 1.4210854715202004e-14,
+                  "y": -6.123233995736766e-15,
+                  "heading": -270,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            },
+            {
+              "id": "C",
+              "alt": "Een gesloten vierkant met vier even lange zijden.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 100,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 100,
+                    "y1": 100,
+                    "x2": 100,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 100,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": 0,
+                  "y": -1.2246467991473532e-14,
+                  "heading": -270,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            },
+            {
+              "id": "D",
+              "alt": "Een open figuur met twee loodrechte lijnstukken.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 50,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": 50.00000000000001,
+                  "y": 100,
+                  "heading": 0,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            }
           ]
         },
         {
@@ -72,6 +236,195 @@ window.ASSESSMENT_CONFIG = {
                 "vooruit 100 pixels",
                 "draai rechts 72°"
               ]
+            }
+          ],
+          "countPrompt": "Hoeveel rechte lijnstukken worden in totaal met de pen omlaag getekend?",
+          "options": [
+            {
+              "id": "A",
+              "alt": "Een gesloten gelijkzijdige driehoek.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 86.60254,
+                    "y2": 50,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 86.60254,
+                    "y1": 50,
+                    "x2": 0,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": 0,
+                  "y": 1.4210854715202004e-14,
+                  "heading": -270,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            },
+            {
+              "id": "B",
+              "alt": "Vier zijden van een nog niet gesloten vijfhoek.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 95.105652,
+                    "y2": 130.901699,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 95.105652,
+                    "y1": 130.901699,
+                    "x2": 153.884177,
+                    "y2": 50,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 153.884177,
+                    "y1": 50,
+                    "x2": 95.105652,
+                    "y2": -30.901699,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": 95.10565162951536,
+                  "y": -30.901699437494756,
+                  "heading": -198,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            },
+            {
+              "id": "C",
+              "alt": "Een gesloten regelmatige zeshoek.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 86.60254,
+                    "y2": 150,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 86.60254,
+                    "y1": 150,
+                    "x2": 173.205081,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 173.205081,
+                    "y1": 100,
+                    "x2": 173.205081,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 173.205081,
+                    "y1": 0,
+                    "x2": 86.60254,
+                    "y2": -50,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 86.60254,
+                    "y1": -50,
+                    "x2": 0,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": 1.4210854715202004e-14,
+                  "y": 2.1316282072803006e-14,
+                  "heading": -270,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            },
+            {
+              "id": "D",
+              "alt": "Een gesloten regelmatige vijfhoek.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 95.105652,
+                    "y2": 130.901699,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 95.105652,
+                    "y1": 130.901699,
+                    "x2": 153.884177,
+                    "y2": 50,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 153.884177,
+                    "y1": 50,
+                    "x2": 95.105652,
+                    "y2": -30.901699,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 95.105652,
+                    "y1": -30.901699,
+                    "x2": 0,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": 1.4210854715202004e-14,
+                  "y": 1.7763568394002505e-14,
+                  "heading": -270,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
             }
           ]
         },
@@ -94,6 +447,454 @@ window.ASSESSMENT_CONFIG = {
                 "pen omlaag"
               ]
             }
+          ],
+          "countPrompt": "Hoeveel rechte lijnstukken worden in totaal met de pen omlaag getekend?",
+          "options": [
+            {
+              "id": "A",
+              "alt": "Drie losse vijfhoeken boven elkaar, zonder verbindingslijnen.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 50,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 50,
+                    "x2": 47.552826,
+                    "y2": 65.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 65.45085,
+                    "x2": 76.942088,
+                    "y2": 25,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 76.942088,
+                    "y1": 25,
+                    "x2": 47.552826,
+                    "y2": -15.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": -15.45085,
+                    "x2": 0,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 0,
+                    "y2": 150,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 150,
+                    "x2": 47.552826,
+                    "y2": 165.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 165.45085,
+                    "x2": 76.942088,
+                    "y2": 125,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 76.942088,
+                    "y1": 125,
+                    "x2": 47.552826,
+                    "y2": 84.54915,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 84.54915,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 200,
+                    "x2": 0,
+                    "y2": 250,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 250,
+                    "x2": 47.552826,
+                    "y2": 265.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 265.45085,
+                    "x2": 76.942088,
+                    "y2": 225,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 76.942088,
+                    "y1": 225,
+                    "x2": 47.552826,
+                    "y2": 184.54915,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 184.54915,
+                    "x2": 0,
+                    "y2": 200,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": -3.96859840600133e-14,
+                  "y": 300,
+                  "heading": -270,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            },
+            {
+              "id": "B",
+              "alt": "Twee losse vijfhoeken boven elkaar.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 50,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 50,
+                    "x2": 47.552826,
+                    "y2": 65.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 65.45085,
+                    "x2": 76.942088,
+                    "y2": 25,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 76.942088,
+                    "y1": 25,
+                    "x2": 47.552826,
+                    "y2": -15.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": -15.45085,
+                    "x2": 0,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 0,
+                    "y2": 150,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 150,
+                    "x2": 47.552826,
+                    "y2": 165.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 165.45085,
+                    "x2": 76.942088,
+                    "y2": 125,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 76.942088,
+                    "y1": 125,
+                    "x2": 47.552826,
+                    "y2": 84.54915,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 84.54915,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": -2.54751293448113e-14,
+                  "y": 200,
+                  "heading": -270,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            },
+            {
+              "id": "C",
+              "alt": "Drie losse vierkanten boven elkaar.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 50,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 50,
+                    "x2": 50,
+                    "y2": 50,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 50,
+                    "y1": 50,
+                    "x2": 50,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 50,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 0,
+                    "y2": 150,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 150,
+                    "x2": 50,
+                    "y2": 150,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 50,
+                    "y1": 150,
+                    "x2": 50,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 50,
+                    "y1": 100,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 200,
+                    "x2": 0,
+                    "y2": 250,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 250,
+                    "x2": 50,
+                    "y2": 250,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 50,
+                    "y1": 250,
+                    "x2": 50,
+                    "y2": 200,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 50,
+                    "y1": 200,
+                    "x2": 0,
+                    "y2": 200,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": -7.521312084801831e-14,
+                  "y": 300,
+                  "heading": -270,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            },
+            {
+              "id": "D",
+              "alt": "Drie vijfhoeken boven elkaar met verbindingslijnen.",
+              "figure": {
+                "segments": [
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 50,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 50,
+                    "x2": 47.552826,
+                    "y2": 65.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 65.45085,
+                    "x2": 76.942088,
+                    "y2": 25,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 76.942088,
+                    "y1": 25,
+                    "x2": 47.552826,
+                    "y2": -15.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": -15.45085,
+                    "x2": 0,
+                    "y2": 0,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 0,
+                    "y2": 150,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 150,
+                    "x2": 47.552826,
+                    "y2": 165.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 165.45085,
+                    "x2": 76.942088,
+                    "y2": 125,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 76.942088,
+                    "y1": 125,
+                    "x2": 47.552826,
+                    "y2": 84.54915,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 84.54915,
+                    "x2": 0,
+                    "y2": 100,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 100,
+                    "x2": 0,
+                    "y2": 200,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 200,
+                    "x2": 0,
+                    "y2": 250,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 250,
+                    "x2": 47.552826,
+                    "y2": 265.45085,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 265.45085,
+                    "x2": 76.942088,
+                    "y2": 225,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 76.942088,
+                    "y1": 225,
+                    "x2": 47.552826,
+                    "y2": 184.54915,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 47.552826,
+                    "y1": 184.54915,
+                    "x2": 0,
+                    "y2": 200,
+                    "color": "#5200ff"
+                  },
+                  {
+                    "x1": 0,
+                    "y1": 200,
+                    "x2": 0,
+                    "y2": 300,
+                    "color": "#5200ff"
+                  }
+                ],
+                "turtle": {
+                  "x": -3.96859840600133e-14,
+                  "y": 300,
+                  "heading": -270,
+                  "pen": true,
+                  "color": "#5200ff"
+                }
+              }
+            }
           ]
         }
       ]
@@ -103,23 +904,157 @@ window.ASSESSMENT_CONFIG = {
       "title": "Van figuur naar JavaScript",
       "points": 5,
       "type": "turtle-code",
-      "prompt": "Schrijf JavaScript voor beide figuren. Gebruik begrensde herhaling met een for-lus: kies start, eindgrens en interval zelf. Je turtle start omhoog. Je leerkracht beoordeelt de volledige werking, leesbaarheid en het gebruik van de geleerde concepten en parameters.",
+      "prompt": "Programmeer beide figuren met JavaScript en for-lussen. Start bij (0, 0) en volg de pijl omhoog. Kies passende startwaarden, eindgrenzen en intervallen. Voer je code uit en vergelijk jouw tekening met het doel. De preview geeft geen punten.",
       "tasks": [
         {
           "id": "q3a",
-          "label": "3a · Vijfhoek en losse lijn",
+          "label": "3a · Twee losse vierkanten",
           "points": 2.5,
-          "asset": "../../assets/target-a-polygon.png",
-          "alt": "Een regelmatige vijfhoek met daarboven een losse verticale lijn; geen verbindingslijn.",
-          "prompt": "Kleur #ffff00. Alle vijf zijden en de losse lijn zijn 50 pixels lang. De losse lijn begint 50 pixels boven het bovenste linker hoekpunt. De vijfhoek wordt naar rechts getekend."
+          "alt": "Twee losse vierkanten naar rechts, met een startpijl omhoog.",
+          "prompt": "Teken twee vierkanten in kleur #c2410c. Elke zijde is 50 pixels. De ruimte tussen de vierkanten is 25 pixels. Teken ze naar rechts van het startpunt. Er mag geen verbindingslijn zijn. Gebruik for-lussen voor de zijden en pen omhoog/omlaag om te verplaatsen.",
+          "figure": {
+            "segments": [
+              {
+                "x1": 0,
+                "y1": 0,
+                "x2": 0,
+                "y2": 50,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 0,
+                "y1": 50,
+                "x2": 50,
+                "y2": 50,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 50,
+                "y1": 50,
+                "x2": 50,
+                "y2": 0,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 50,
+                "y1": 0,
+                "x2": 0,
+                "y2": 0,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 75,
+                "y1": 0,
+                "x2": 75,
+                "y2": 50,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 75,
+                "y1": 50,
+                "x2": 125,
+                "y2": 50,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 125,
+                "y1": 50,
+                "x2": 125,
+                "y2": 0,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 125,
+                "y1": 0,
+                "x2": 75,
+                "y2": 0,
+                "color": "#c2410c"
+              }
+            ],
+            "turtle": {
+              "x": 150,
+              "y": -1.3228661353337769e-14,
+              "heading": 90,
+              "pen": true,
+              "color": "#c2410c"
+            }
+          },
+          "inspiration": "Blockly Turtle: vierkant en meerdere vormen"
         },
         {
           "id": "q3b",
-          "label": "3b · Twee cirkels",
+          "label": "3b · Een groeiende trap",
           "points": 2.5,
-          "asset": "../../assets/target-a-circles.png",
-          "alt": "Twee overlappende gevulde cirkels: de tweede ligt schuin naar rechts onder de eerste.",
-          "prompt": "Straal 50 pixels; eerste kleur #ff0000, tweede kleur #0177a7. Afstand tussen de middelpunten: 20 pixels. De sprong gaat 20° schuin naar rechts omlaag ten opzichte van de horizontale lijn. Draai bij het vullen van elke cirkel telkens 1°. Gebruik de geleerde voorwaartse en achterwaartse bewegingen en for-lussen."
+          "alt": "Vier traptreden met steeds langere verticale en horizontale lijnstukken, naar rechts.",
+          "prompt": "Teken in kleur #c2410c een trap van vier treden naar rechts. Elke trede gaat eerst omhoog en dan opzij. De twee lijnstukken van een trede zijn even lang: achtereenvolgens 20, 40, 60, 80 pixels. Gebruik één for-lus met een teller die begint op 20 en telkens met 20 stijgt. Gebruik de teller voor beide afstanden.",
+          "figure": {
+            "segments": [
+              {
+                "x1": 0,
+                "y1": 0,
+                "x2": 0,
+                "y2": 20,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 0,
+                "y1": 20,
+                "x2": 20,
+                "y2": 20,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 20,
+                "y1": 20,
+                "x2": 20,
+                "y2": 60,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 20,
+                "y1": 60,
+                "x2": 60,
+                "y2": 60,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 60,
+                "y1": 60,
+                "x2": 60,
+                "y2": 120,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 60,
+                "y1": 120,
+                "x2": 120,
+                "y2": 120,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 120,
+                "y1": 120,
+                "x2": 120,
+                "y2": 200,
+                "color": "#c2410c"
+              },
+              {
+                "x1": 120,
+                "y1": 200,
+                "x2": 200,
+                "y2": 200,
+                "color": "#c2410c"
+              }
+            ],
+            "turtle": {
+              "x": 200,
+              "y": 200,
+              "heading": 90,
+              "pen": true,
+              "color": "#c2410c"
+            }
+          },
+          "inspiration": "Blockly Turtle: trap en parameters"
         }
       ]
     },
@@ -137,14 +1072,6 @@ window.ASSESSMENT_CONFIG = {
         "Draai naar rechts",
         "Zolang"
       ]
-    },
-    {
-      "id": "q5",
-      "title": "Vind zes fouten",
-      "points": 2,
-      "type": "debug",
-      "prompt": "Zoek zes verschillende fouten. Selecteer precies het foutieve stukje code en markeer je selectie; leg kort uit wat je zou veranderen. Je mag met Shift + pijltjestoetsen selecteren. Een ontbrekende optionele puntkomma is geen fout.",
-      "codeSample": "For (var teller = 0; teller < 3; teller+) {\n  penCoulor(#ffff00);\n  for (var inner = 0; inner < 5; teller++) {\n    moveForward(50);\n    turnright(72);\n  }\n  penUp();\n  moveForward(100);\n  penDown();\n}"
     },
     {
       "id": "q6",
@@ -209,5 +1136,5 @@ window.ASSESSMENT_CONFIG = {
       ]
     }
   ],
-  "configSha256": "683e4ae28d3b1033aa6652c69ff110a51d13c5860f3e2fb86e271e0ece65318a"
+  "configSha256": "909e01c863ae44a29209aa926a3ad249a38636c67aa2c4235c9a1f43c03620c1"
 };
