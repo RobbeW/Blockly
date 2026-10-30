@@ -53,8 +53,9 @@ function checkReferences(directory,files){
     assert.ok(!reference.includes('${'),`Unresolved template in static reference: ${from}`);
     const cleaned=decodeURIComponent(reference.split(/[?#]/)[0]);
     if(!cleaned)return;
-    const target=path.resolve(fromRoot?directory:path.dirname(path.join(directory,from)),cleaned);
-    assert.ok(target.startsWith(directory+path.sep),`Reference escapes public website: ${reference}`);
+    let target=path.resolve(fromRoot?directory:path.dirname(path.join(directory,from)),cleaned);
+    assert.ok(target===directory||target.startsWith(directory+path.sep),`Reference escapes public website: ${reference}`);
+    if(fs.existsSync(target)&&fs.statSync(target).isDirectory())target=path.join(target,'index.html');
     assert.ok(fs.existsSync(target)&&fs.statSync(target).isFile(),`Missing ${reference} in ${from}`);
     count++;
   }
