@@ -24,14 +24,15 @@ for(const version of ['A','B','C']){
   const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
   const content=Object.fromEntries(Object.entries(config).filter(([key])=>!['configSha256','startPassword','smartschoolUrl','teacher'].includes(key)));
   assert.equal(config.configSha256,createHash('sha256').update(JSON.stringify(canonical(content))).digest('hex'),'Question edits must update their content binding');
-  assert.equal(config.id,'chapter-2');assert.equal(config.version,version);assert.equal(config.durationMinutes,45);assert.equal(config.totalPoints,23);
+  assert.equal(config.id,'chapter-2');assert.equal(config.version,version);assert.equal(config.durationMinutes,40);assert.equal(config.totalPoints,23);
   assert.equal(config.groups.reduce((sum,g)=>sum+g.points,0),23);assert.equal(config.groups.length,7);
   const structure=config.groups.map(g=>[g.id,g.type,g.points]);if(skeleton)assert.deepEqual(structure,skeleton);else skeleton=structure;
   assert.equal(config.groups[1].traces.length,3);assert.equal(config.groups[2].tasks.length,2);assert.equal(config.groups.some(group=>group.id==='q5'),false);
   assert.equal(config.groups[6].rows.filter(row=>!row.name).length,2);assert.equal(config.groups[6].rows.filter(row=>!row.description).length,4);
-  assert.equal(config.revision,'20261029-turtle-v3');assert.equal(config.groups[1].type,'trace-choice');
+  assert.equal(config.revision,'20261105-turtle-v4');assert.equal(config.groups[1].type,'trace-choice');
   for(const trace of config.groups[1].traces){assert.deepEqual(trace.options.map(option=>option.id),['A','B','C','D']);assert.ok(trace.options.every(option=>option.figure.segments.length>0));}
+  const hex=config.groups[2].tasks[1]; assert.equal(hex.figure.segments.length,24); assert.ok(hex.figure.segments.every(s=>s.color==='#000000')); assert.ok(!config.groups[2].tasks.some(task=>/kleur|penColour/.test(task.prompt)));
   for(const task of config.groups[2].tasks){assert.ok(task.figure.segments.length>0);assert.ok(task.inspiration.includes('Blockly Turtle'));}
-  console.log(`PASS ${version}: 45 minutes, 7 questions, /23, 3 figure/count pairs and 2 platform-inspired for/Turtle code tasks.`);
+  console.log(`PASS ${version}: 40 minutes, 7 questions, /23, 3 figure/count pairs and 2 platform-inspired for/Turtle code tasks.`);
 }
 console.log('PASS safe Turtle interpreter: parameter variants, nesting, pen state, limits and disallowed JavaScript.');

@@ -1,0 +1,245 @@
+/* Fictional A/B worked examples. © 2026 Robbe Wulgaert · AI in de Klas. */
+(function () {
+  'use strict';
+
+  const sample = (answer, score, feedback) => ({ answer, score, feedback });
+  const fields = (labels, values) => labels.map((label, i) => [label, values[i]]);
+  const lines = entries => entries.join('\n');
+  const blockLines = (items, depth = 0) => items.flatMap(item => {
+    const indent = '  '.repeat(depth);
+    return typeof item === 'string' ? [indent + item] : [
+      `${indent}herhaal ${item.repeat} keer`, ...blockLines(item.body, depth + 1),
+    ];
+  });
+
+  function traceExamples(group, mirrored) {
+    const figures = mirrored ? [['C', 'C', 'B'], ['A', 'A', 'D'], ['C', 'C', 'B']]
+      : [['B', 'B', 'C'], ['D', 'D', 'B'], ['A', 'A', 'D']];
+    const counts = [[4, 2, 2], [5, 10, 4], [15, 18, 18]];
+    const feedback = [
+      [
+        'De rechthoek sluit. In elke herhaling teken je twee zijden, dus in totaal vier.',
+        'De figuur klopt. Elke herhaling bevat twee vooruitopdrachten met de pen omlaag.',
+        'De twee afstanden verschillen, dus het wordt geen vierkant. Tel twee zijden per herhaling.',
+      ],
+      [
+        'Vijf herhalingen geven vijf lijnstukken. De draai van 72° per hoek sluit de vijfhoek.',
+        'De vijfhoek klopt. Een draai verandert de richting en tekent geen extra lijnstuk.',
+        'De lus herhaalt vijf keer. Na vier zijden is de vijfhoek nog niet gesloten.',
+      ],
+      [
+        'Er zijn drie vijfhoeken met vijf zijden per figuur. De verplaatsingen met de pen omhoog tekenen niets.',
+        'De losse vijfhoeken kloppen. Tel de drie verplaatsingen met de pen omhoog niet mee.',
+        'Tijdens de verplaatsingen staat de pen omhoog. Daarom zie je geen verbindingslijnen en tel je er 15.',
+      ],
+    ];
+    return group.traces.map((trace, index) => ({
+      title: `Vraag 2${'abc'[index]} · Lees de blokken`,
+      prompt: 'Kies de figuur die bij de blokken hoort en tel de lijnstukken die de pen tekent.',
+      reference: lines(blockLines(trace.instructions)),
+      referenceLabel: 'Bekijk de blokken',
+      max: 1,
+      examples: figures[index].map((id, level) => {
+        const option = trace.options.find(entry => entry.id === id);
+        return {
+          ...sample([['Figuur uit de toets', `Optie ${id}`], ['Aantal lijnstukken', counts[index][level]]],
+            [1, 0.5, 0][level], feedback[index][level]),
+          figure: option.figure,
+          figureLabel: option.alt,
+        };
+      }),
+    }));
+  }
+
+  function coding(group, mirrored) {
+    const turn = mirrored ? 'turnLeft' : 'turnRight';
+    const back = mirrored ? 'turnRight' : 'turnLeft';
+    const side = mirrored ? 60 : 50;
+    const gap = mirrored ? 90 : 75;
+    const hexSide = mirrored ? 25 : 20;
+    const square = penUp => lines([
+      'for (let vierkant = 0; vierkant < 2; vierkant++) {',
+      '  for (let zijde = 0; zijde < 4; zijde++) {',
+      `    moveForward(${side});`, `    ${turn}(90);`, '  }',
+      ...(penUp ? ['  penUp();'] : []),
+      `  ${turn}(90);`, `  moveForward(${gap});`, `  ${back}(90);`,
+      ...(penUp ? ['  penDown();'] : []),
+      '}',
+    ]);
+    const hexagons = distance => lines([
+      'for (let rij = 0; rij < 2; rij++) {',
+      '  for (let kolom = 0; kolom < 2; kolom++) {',
+      '    for (let zijde = 0; zijde < 6; zijde++) {',
+      `      moveForward(${hexSide});`, '      turnRight(60);', '    }',
+      '    penUp();', '    turnRight(90);', `    moveForward(${distance});`, '    turnLeft(90);', '    penDown();', '  }',
+      '  penUp();', '  turnRight(90);', `  moveBackward(${2 * distance});`, '  turnLeft(90);',
+      `  moveForward(${distance});`, '  penDown();', '}',
+    ]);
+    const makeCode = (answer, scores, mathsLabel, comments) => AssessmentPractice.scored(answer, [
+      ['Functioneel', scores[0], 0.5, comments[0]],
+      ['Leesbaar', scores[1], 0.5, comments[1]],
+      ['Programmeerconcepten', scores[2], 1, comments[2]],
+      [mathsLabel, scores[3], 0.5, comments[3]],
+    ]);
+    const squareCode = (code, scores, ...comments) => makeCode(code, scores, 'Wiskundeconcepten', comments);
+    const hexCode = (code, scores, ...comments) => makeCode(code, scores, 'Wiskundeconcepten en verplaatsing', comments);
+
+    const examples = [
+      [
+        squareCode(square(true), [0.5, 0.5, 1, 0.5],
+          'De uitvoer toont twee losse vierkanten op de juiste afstand.',
+          'De tellers benoemen wat herhaalt. Inspringing scheidt de twee lussen.',
+          'De binnenste lus tekent vier zijden. Pen omhoog en omlaag maken de verplaatsing onzichtbaar.',
+          `Elke zijde is ${side} pixels en elke draai is 90°.`),
+        squareCode(square(false), [0, 0.5, 0.5, 0.5],
+          'Beide vierkanten verschijnen, maar er staan ook extra lijnen.',
+          'De lussen en de verplaatsing zijn goed te onderscheiden.',
+          'De for-lus tekent de zijden. Zet de pen omhoog tijdens het verplaatsen en omlaag vóór het tekenen.',
+          'De lengtes en rechte hoeken van de vierkanten kloppen.'),
+        squareCode(`moveForward(${side}); ${turn}(60); moveForward(${side});`, [0, 0.25, 0, 0],
+          'De turtle tekent twee zijden van één onvolledige figuur.',
+          'De commando’s zijn herkenbaar. Zet elke opdracht op een eigen regel.',
+          'Gebruik een for-lus voor vier zijden. Gebruik de penstand om zonder lijn te verplaatsen.',
+          'Een vierkant heeft rechte hoeken. Draai 90° na elke zijde.'),
+      ],
+      [
+        hexCode(hexagons(100), [0.5, 0.5, 1, 0.5],
+          'De vier zeshoeken staan los van elkaar in het gevraagde rooster.',
+          'Rij, kolom en zijde maken zichtbaar wat elke lus herhaalt.',
+          'De lussen herhalen de zes zijden en de zeshoeken zelf.',
+          'De zijlengte en 60°-draai kloppen. De startpunten staan 100 pixels uit elkaar en de verplaatsingen tekenen niets.'),
+        hexCode(hexagons(80), [0, 0.5, 1, 0],
+          'Er staan vier losse zeshoeken. Hun startpunten liggen te dicht bij elkaar.',
+          'De lusstructuur is duidelijk en consequent ingesprongen.',
+          'De lussen voor de zijden en voor de zeshoeken zijn bruikbaar.',
+          'De hoeken en zijden kloppen. Voor de plaatsing is 100 pixels nodig tussen de startpunten.'),
+        hexCode(`moveForward(${hexSide}); turnRight(90); moveForward(${hexSide});`, [0, 0.25, 0, 0],
+          'De uitvoer bevat maar twee lijnstukken.',
+          'Je herkent de opdrachten. Eén opdracht per regel is makkelijker te lezen.',
+          'Herhaal de zes zijden met for en gebruik een extra lus voor de zeshoeken.',
+          'Draai na elke zijde 60°. Verplaats met de pen omhoog tussen de startpunten.'),
+      ],
+    ];
+
+    return group.tasks.map((task, i) => ({
+      title: `Vraag ${task.label}`,
+      prompt: task.prompt,
+      figure: task.figure,
+      figureLabel: task.alt,
+      referenceLabel: 'Bekijk de doelfiguur',
+      max: task.points,
+      examples: examples[i],
+    }));
+  }
+
+  function thinkingSteps(group) {
+    const order = { decompose: 1, pattern: 2, abstract: 3, algorithm: 4, debug: 5 };
+    const name = { debug: 'Debuggen', decompose: 'Decompositie' };
+    const explanation = {
+      decompose: 'Een groot probleem in kleinere delen splitsen.',
+      pattern: 'Zoeken naar overeenkomsten of herhaling.',
+      abstract: 'De hoofdzaken kiezen en details weglaten.',
+      algorithm: 'Uitvoerbare stappen in een passende volgorde zetten.',
+    };
+    const table = (orders, names, explanations) => group.rows.map((row, i) => [
+      `Rij ${i + 1} · ${row.name || (row.id === 'debug' ? 'Uitleg gegeven' : 'Naam en uitleg ontbreken')}`,
+      [`Volgorde ${orders[row.id]}`, !row.name && names[row.id], !row.description && explanations[row.id]]
+        .filter(Boolean).join('\n'),
+    ]);
+    return {
+      title: 'Vraag 7 · De stappen van het computationeel denken',
+      prompt: group.prompt,
+      reference: lines(group.rows.map((row, i) =>
+        `Rij ${i + 1} · ${row.name || 'naam ontbreekt'} · ${row.description || 'uitleg ontbreekt'}`)),
+      referenceLabel: 'Bekijk de gegevens in de tabel',
+      max: 5,
+      examples: [
+        sample(table(order, name, explanation), 5, 'Alle posities, ontbrekende namen en beschrijvingen kloppen.'),
+        sample(table({ ...order, algorithm: 5, debug: 4 }, { ...name, decompose: 'Patroonherkenning' }, {
+          ...explanation, algorithm: 'Code mooier maken.', abstract: 'Alle details bewaren.',
+        }), 2.6, 'Drie posities, één ontbrekende naam en twee beschrijvingen kloppen. Opdelen heet decompositie. Bij abstraheren laat je details weg. Ontwerp het algoritme vóór je het debugt.'),
+        sample(table({ decompose: 2, pattern: 3, abstract: 4, algorithm: 5, debug: 1 },
+          { debug: 'Sequentie', decompose: 'Debuggen' }, {
+            decompose: 'Code openen.', pattern: 'Een kleur kiezen.', abstract: 'Elk detail opschrijven.',
+            algorithm: 'De eerste fout zoeken.',
+          }), 0, 'De namen en beschrijvingen verwisselen de begrippen. Begin bij opdelen. Fouten opsporen en verbeteren hoort bij de laatste stap.'),
+      ],
+    };
+  }
+
+  window.AssessmentPracticeExamples = config => {
+    const group = id => config.groups.find(entry => entry.id === id);
+    const mirrored = config.version === 'B';
+    const start = mirrored ? 4 : 5;
+    const end = mirrored ? 16 : 17;
+    const distance = mirrored ? 90 : 100;
+    const terms = group('q4').terms;
+    const translated = map => terms.map(term => [term, map[term.split(' (')[0]]]);
+    const translations = {
+      'In volgorde': 'Sequentie', Als: 'if', Anders: 'else', Zolang: 'while',
+      'Draai naar links': 'turnLeft()', 'Draai naar rechts': 'turnRight()',
+    };
+
+    return [
+      {
+        title: 'Vraag 1 · Schrijf een for-lus',
+        prompt: group('q1').prompt,
+        max: 2,
+        examples: [
+          sample(`for (let teller = ${start}; teller < ${end}; teller++) {\n}`, 2,
+            'De teller start juist, stopt vóór de eindgrens en gaat telkens één omhoog. De lege lus is geldig.'),
+          sample(`for (let teller = ${start}; teller <= ${end}; teller++) {\n}`, 1.5,
+            'De start, stap en schrijfwijze kloppen. Met <= loopt de teller ook op de eindgrens. Gebruik < om die waarde uit te sluiten.'),
+          sample(`for (let teller = 0; teller > ${end}; teller--) {\n}`, 0.5,
+            'De teller start verkeerd, de voorwaarde is meteen onwaar en de teller zou omlaag gaan. Controleer start, voorwaarde en verhoging apart.'),
+        ],
+      },
+      ...traceExamples(group('q2'), mirrored),
+      ...coding(group('q3'), mirrored),
+      {
+        title: 'Vraag 4 · Herhaling van termen',
+        prompt: group('q4').prompt,
+        max: 3,
+        examples: [
+          sample(translated(translations), 3, 'Alle vertalingen kloppen. De twee draaiopdrachten gebruiken een hoofdletter midden in de naam.'),
+          sample(translated({ ...translations, 'In volgorde': 'Algoritme', Anders: 'if' }), 2,
+            'Vier termen kloppen. Instructies in volgorde uitvoeren heet sequentie. Voor de alternatieve tak gebruik je else.'),
+          sample(translated({ 'In volgorde': 'JavaScript', Als: 'else', Anders: 'if', Zolang: 'while',
+            'Draai naar links': 'turnRight()', 'Draai naar rechts': 'turnLeft()' }), 0.5,
+          'Alleen while klopt. Onderscheid de twee takken van een keuze en controleer de richting in elke draaiopdracht.'),
+        ],
+      },
+      {
+        title: 'Vraag 5 · Verbeter de code',
+        prompt: group('q6').prompt,
+        max: 3,
+        examples: [
+          sample(fields(group('q6').rows, [`moveForward(${distance});`, 'turnRight(144);', 'for (var teller = 0; teller < 6; teller++)']),
+            3, 'De afstand is een getal, de functienaam klopt en de teller loopt van 0 tot en met 5.'),
+          sample(fields(group('q6').rows, [`moveForward(${distance});`, 'turnRight(144);', 'for (var teller = 0; teller < 5; teller++)']),
+            2, 'De twee Turtle-opdrachten kloppen. De lus met < 5 voert de herhaling voor teller 5 niet uit.'),
+          sample(fields(group('q6').rows, [`moveForward(${distance} pixels);`, 'turnright(144);', 'for (var teller 0; teller > 5; teller+)']),
+            0, 'Laat de eenheid uit het getalargument, schrijf turnRight met een hoofdletter R en verbeter de drie onderdelen van de for-lus.'),
+        ],
+      },
+      {
+        title: 'Vraag 6 · Leg de begrippen uit',
+        prompt: group('q7').prompt,
+        max: 2,
+        examples: [
+          sample(fields(group('q7').terms, [
+            'Je onderzoekt een probleem op een vaste manier. Je deelt het op, zoekt patronen en maakt en test zo een uitvoerbare oplossing.',
+            'Een algoritme is een reeks duidelijke stappen in een bepaalde volgorde om een probleem op te lossen.',
+          ]), 2, 'Beide definities leggen uit wat je doet en welk doel dat heeft.'),
+          sample(fields(group('q7').terms, [
+            'Dat is denken zoals een computer.',
+            'Een algoritme is een lijst van stappen die je in volgorde uitvoert om een doel te bereiken.',
+          ]), 1, 'Het algoritme is goed uitgelegd. Maak computationeel denken concreet met bijvoorbeeld opdelen, patronen zoeken of testen.'),
+          sample(fields(group('q7').terms, ['Dat is kunnen typen.', 'Een algoritme is een programmeertaal.']), 0,
+            'Typen helpt om code in te voeren. Leg uit hoe je een probleem aanpakt en hoe uitvoerbare stappen tot een oplossing leiden.'),
+        ],
+      },
+      thinkingSteps(group('q8')),
+    ];
+  };
+})();

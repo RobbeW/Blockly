@@ -7,8 +7,8 @@
   <meta name="theme-color" content="#5200ff">
   <meta name="author" content="Robbe Wulgaert, AI in de Klas, robbewulgaert.be">
   <title>Toets Blockly · Maze · Versie A</title>
-  <link rel="icon" type="image/png" sizes="64x64" href="./favicon.png?v=20260903-2">
-  <link rel="stylesheet" href="./assessment/assessment.css">
+  <link rel="icon" type="image/png" sizes="64x64" href="./favicon.png?v=ff7968036640">
+  <link rel="stylesheet" href="./assessment/assessment.css?v=20261105">
   <script defer src="./assessment/vendor/blockly/blockly_compressed.js"></script>
   <script defer src="./assessment/vendor/blockly/blocks_compressed.js"></script>
   <script defer src="./assessment/vendor/blockly/javascript_compressed.js"></script>
@@ -19,12 +19,14 @@
   <script defer src="./assessment/maze-runtime.js?v=20261014-clearer-questions"></script>
   <script defer src="./assessment/code-to-blocks.js?v=20261014-clearer-questions"></script>
   <script defer src="./assessment/pdf-export.js?v=20261014-clearer-questions"></script>
-  <script defer src="./assessment/assessment.js?v=20261014-clearer-questions"></script>
+  <script defer src="./assessment/practice-review.js?v=20261105"></script>
+  <script defer src="./assessment/maze-practice-examples.js?v=20261105"></script>
+  <script defer src="./assessment/assessment.js?v=20261105"></script>
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><span class="brand-icon" aria-hidden="true">B</span><div>Blockly in de Klas<small>Evaluatie · <span id="version-label">Versie A</span></small></div></div>
-    <div class="header-actions"><span id="identity-label"></span><div id="exam-timer" class="exam-timer" hidden><small>Resterende tijd</small><span id="timer-value" role="timer" aria-live="off">45:00</span></div><span class="save-status" id="save-status" role="status">Nog niet gestart</span><button id="review-top" type="button" hidden>Overzicht &amp; indienen</button></div>
+    <div class="header-actions"><span id="identity-label"></span><div id="exam-timer" class="exam-timer" hidden><small>Resterende tijd</small><span id="timer-value" role="timer" aria-live="off">40:00</span></div><span class="save-status" id="save-status" role="status">Nog niet gestart</span><button id="review-top" type="button" hidden>Overzicht &amp; indienen</button></div>
   </header>
   <aside id="timer-warning" class="timer-warning" hidden aria-label="Tijdwaarschuwing"><p id="timer-warning-message" role="alert"></p><div class="completion-actions"><button type="button" data-review>Overzicht &amp; indienen</button><button id="dismiss-timer-warning" type="button">Melding sluiten</button></div></aside>
   <main id="gate" class="gate-wrap">
@@ -32,7 +34,7 @@
       <span class="eyebrow">INFORMATICAWETENSCHAPPEN · JAAR 1</span>
       <h1 id="gate-title">Toets Blockly · Maze</h1>
       <p id="exam-subtitle">Sequentie, selectie en voorwaardelijke herhaling</p>
-      <div class="callout"><strong>Zo werk je</strong><ul><li>Je antwoorden worden op dit toestel bewaard.</li><li>Kies bij elke maze blokken (maximaal 50% van de punten) of JavaScript (maximaal 100%).</li><li>Download op het einde je volledige toets als PDF.</li><li>Dien je PDF in via Smartschool.</li></ul></div>
+      <div class="callout"><strong>Toetsafspraken</strong><ul><li>Je werkt 40 minuten aan deze test.</li><li>Je werkt alleen en kijkt niet af bij een klasgenoot.</li><li>Ben je klaar, dan steek je jouw hand in de lucht en wacht je op de docent.</li><li>Samen met de docent download je jouw toets en dien je deze in.</li></ul></div>
       <form id="start-form">
         <div class="identity-grid"><label>Voornaam en naam<input id="student-name" name="name" required autocomplete="name" maxlength="100"></label><label>Klas<input id="student-class" name="class" required placeholder="1STEAM1" pattern="(?:1STEAM)?[1-6]" title="Kies 1STEAM1 tot en met 1STEAM6. Je kunt ook alleen het klasnummer 1 tot en met 6 invullen." autocomplete="off" autocapitalize="characters" spellcheck="false"></label><label>Klasnummer<input id="student-number" name="number" required inputmode="numeric" maxlength="10"></label></div>
         <label>Startwachtwoord<input id="start-password" type="password" required autocomplete="off"></label>

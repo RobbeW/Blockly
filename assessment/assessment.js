@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   const config = window.ASSESSMENT_CONFIG;
+  const practice = window.AssessmentPractice?.create(config);
   const codingQuestionNumber=config.groups.findIndex(group=>group.type==='coding')+1;
   const markingQuestionNumber=config.groups.findIndex(group=>group.type==='marking')+1;
   const $ = id => document.getElementById(id);
@@ -9,7 +10,8 @@
   const points = n => Number(n).toLocaleString('nl-BE', {maximumFractionDigits:2});
   const pointText = n => `${points(n)} ${Number(n)===1?'punt':'punten'}`;
   const taalzorg = '<p class="taalzorg"><strong>Taalzorg</strong> · Gebruik hoofdletters en leestekens. Schrijf je uitleg in duidelijke, volledige zinnen.</p>';
-  const durationMs = (config.durationMinutes||45)*60*1000;
+  // Keep the revision-bound grading configuration intact. New attempts use the current test agreement.
+  const durationMs = 40*60*1000;
   const prefix = `blockly-assessment:${config.id}:${config.version}:`;
   let state = null, runtime = null, activeExercise = null, rendering = false, saveTimer = null;
   let currentGroup = 'q1', mazeIndex = 0, exporting = false;
@@ -69,7 +71,7 @@
     const phase=seconds===0?'expired':seconds<=300?'warning':'normal';
     if(phase!==timerPhase){
       timerPhase=phase;$('timer-warning').hidden=phase==='normal';
-      $('timer-warning-message').textContent=phase==='expired'?'De toetstijd is voorbij. Download nu je volledige toets als PDF en upload die in Smartschool. Controleer daar je indiening.':phase==='warning'?'Nog maximaal 5 minuten! Rond je antwoorden af en begin nu met indienen: download je volledige toets als PDF, upload die in Smartschool en controleer je indiening.':'';
+      $('timer-warning-message').textContent=phase==='expired'?'De toetstijd is voorbij. Steek je hand op en wacht op de docent.':phase==='warning'?'Nog maximaal 5 minuten. Rond je antwoorden af. Steek je hand op als je klaar bent.':'';
       $('timer-warning').classList.toggle('expired',phase==='expired');
     }
     if(seconds<=300&&!state.timerWarningShown){state.timerWarningShown=true;persist();}
@@ -173,7 +175,7 @@
   }
   function footer(group) {
     const i=config.groups.indexOf(group);
-    return `<div class="question-footer">${i?`<button data-group="${config.groups[i-1].id}" type="button">← Vorige vraag</button>`:'<span></span>'}${i<config.groups.length-1?`<button class="primary" data-group="${config.groups[i+1].id}" ${group.type==='coding'?'data-coding-next':''} type="button">Volgende vraag →</button>`:'<button class="primary" data-review type="button">Overzicht & PDF →</button>'}</div>`;
+    return `<div class="question-footer">${i?`<button data-group="${config.groups[i-1].id}" type="button">← Vorige vraag</button>`:'<span></span>'}${i<config.groups.length-1?`<button class="primary" data-group="${config.groups[i+1].id}" ${group.type==='coding'?'data-coding-next':''} type="button">Volgende vraag →</button>`:`<button class="primary" data-review data-final-question type="button">${practice?'Afronden & voorbeelden':'Overzicht & PDF'} →</button>`}</div>`;
   }
   function renderFields(group) {
     const answers=state.answers[group.id]; let html=heading(group);
@@ -313,7 +315,7 @@
     rendering=true;disposeRuntime();currentGroup='review';rendering=false;flush();updateNav();
     const missing=config.groups.filter(g=>!answered(g));
     const ceiling=config.totalPoints-config.exercises.reduce((n,e)=>n+(state.exercises[e.id].choice==='blocks'?e.points/2:0),0);
-    $('question-panel').innerHTML=`<div class="question-heading"><div><span class="eyebrow">OVERZICHT & INDIENEN</span><h1>Controleer je antwoorden</h1></div><span class="points">Toets op ${points(config.totalPoints)}</span></div><p>De vinkjes geven aan of je iets hebt ingevuld. Ze zeggen niet of je antwoord correct is.</p><div class="callout mint"><strong>Maximum met je huidige keuzes: ${points(ceiling)} / ${points(config.totalPoints)}</strong><p>${config.exercises.map(e=>{const ex=state.exercises[e.id];return `${e.title}: ${ex.choice==='blocks'?'blokken':ex.choice==='code'?'JavaScript':'nog geen keuze'} (max. ${points(ex.choice==='blocks'?e.points/2:e.points)} p.)`;}).join(' · ')}</p></div>${missing.length?`<p class="error">Nog niet volledig ingevuld: ${missing.map(g=>config.groups.indexOf(g)+1).join(', ')}. Je mag bewust een antwoord leeg laten.</p>`:''}<div class="review-list">${config.groups.map((g,i)=>`<div class="review-row"><div><strong>${i+1}. ${esc(g.title)}</strong><p>${answered(g)?'Ingevuld':'Nog nakijken'} · ${pointText(g.points)}</p></div><button type="button" data-group="${g.id}">Nakijken</button></div>`).join('')}</div><section class="card"><h2>1. Download je toets als PDF</h2><p>Je PDF bevat je antwoorden en je definitieve keuze per maze. Je andere ontwerp wordt niet ingediend.</p><button class="primary" type="button" id="export-pdf">${state.lastExport?'PDF opnieuw downloaden':'Download mijn volledige toets'}</button><p id="export-error" class="error" role="alert"></p><div id="completion" ${state.lastExport?'':'hidden'}></div></section>`;
+    $('question-panel').innerHTML=`<div class="question-heading"><div><span class="eyebrow">OVERZICHT & INDIENEN</span><h1>Controleer je antwoorden</h1></div><span class="points">Toets op ${points(config.totalPoints)}</span></div><p>De vinkjes geven aan of je iets hebt ingevuld. Ze zeggen niet of je antwoord correct is.</p><div class="callout mint"><strong>Maximum met je huidige keuzes: ${points(ceiling)} / ${points(config.totalPoints)}</strong><p>${config.exercises.map(e=>{const ex=state.exercises[e.id];return `${e.title}: ${ex.choice==='blocks'?'blokken':ex.choice==='code'?'JavaScript':'nog geen keuze'} (max. ${points(ex.choice==='blocks'?e.points/2:e.points)} p.)`;}).join(' · ')}</p></div>${missing.length?`<p class="error">Nog niet volledig ingevuld: ${missing.map(g=>config.groups.indexOf(g)+1).join(', ')}. Je mag bewust een antwoord leeg laten.</p>`:''}<div class="review-list">${config.groups.map((g,i)=>`<div class="review-row"><div><strong>${i+1}. ${esc(g.title)}</strong><p>${answered(g)?'Ingevuld':'Nog nakijken'} · ${pointText(g.points)}</p></div><button type="button" data-group="${g.id}">Nakijken</button></div>`).join('')}</div>${practice?.reviewButton || ''}<section class="card"><h2>1. Download je toets als PDF</h2><p>Je PDF bevat je antwoorden en je definitieve keuze per maze. Je andere ontwerp wordt niet ingediend.</p><button class="primary" type="button" id="export-pdf">${state.lastExport?'PDF opnieuw downloaden':'Download mijn volledige toets'}</button><p id="export-error" class="error" role="alert"></p><div id="completion" ${state.lastExport?'':'hidden'}></div></section>`;
     if(state.lastExport) renderCompletion();$('question-panel').focus();window.scrollTo(0,0);
     preparePDF();
   }
@@ -393,7 +395,11 @@
     else if(button.hasAttribute('data-continue-coding')){$('coding-review-dialog').close();render('q5');}
     else if(button.id==='dismiss-timer-warning')$('timer-warning').hidden=true;
     else if(button.dataset.group){if(button.hasAttribute('data-coding-next')&&checkCodingBeforeNext())return;flush();render(button.dataset.group);}
-    else if(button.matches('[data-review],#review-top,#review-side')) renderReview();
+    else if(button.matches('[data-review],#review-top,#review-side')) {
+      renderReview();
+      if(button.hasAttribute('data-final-question')) practice?.offer(state.attemptId);
+    }
+    else if(button.id==='practice-examples') practice?.open();
     else if(button.dataset.maze!==undefined){flush();mazeIndex=Number(button.dataset.maze);render('q4');}
     else if(button.dataset.openCoding!==undefined){mazeIndex=Number(button.dataset.openCoding);render('q4');}
     else if(button.dataset.branch){flush();const ex=state.exercises[config.exercises[mazeIndex].id];if(ex.choice!==button.dataset.branch){ex.choice=button.dataset.branch;ex.needsReview=Boolean(Object.keys(ex.drafts.blocks.markings).length||Object.keys(ex.drafts.code.blockMarking?.markings||{}).length);state.lastExport=null;}render('q4');}

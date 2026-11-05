@@ -41,7 +41,7 @@
     }
     const algorithmLines=(items,depth=0)=>items.flatMap(item=>typeof item==='string'?['  '.repeat(depth)+item]:['  '.repeat(depth)+`herhaal ${item.repeat} keer {`,...algorithmLines(item.body,depth+1),'  '.repeat(depth)+'}']);
     pdf.setProperties({title:`${config.title} - Hoofdstuk 2 - Versie ${config.version} - ${state.identity.name}`,author:'Robbe Wulgaert · AI in de Klas'});
-    heading(config.title);text(config.subtitle,{size:11});text(`Hoofdstuk 2 · versie ${config.version} · ${config.totalPoints} punten · maximaal 45 minuten`,{bold:true});
+    heading(config.title);text(config.subtitle,{size:11});text(`Hoofdstuk 2 · versie ${config.version} · ${config.totalPoints} punten · maximaal ${config.durationMinutes} minuten`,{bold:true});
     text(`Naam: ${state.identity.name}\nKlas: ${state.identity.className} · klasnummer: ${state.identity.number}\nLeerkracht: ${config.teacher}\nGestart: ${new Date(state.startedAt).toLocaleString('nl-BE',{timeZone:'Europe/Brussels'})}\nPDF gemaakt: ${new Date().toLocaleString('nl-BE',{timeZone:'Europe/Brussels'})}`);
     text(`Toets: ${config.id} · revisie ${config.revision}\nPoging: ${state.attemptId}`,{size:8,color:[98,91,112]});
     text('Dit bestand bevat de leerlingantwoorden. De leerkracht beoordeelt de toets. De codepreview is geen score. Er geldt geen blokkenfactor.',{size:9});

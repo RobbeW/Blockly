@@ -3,11 +3,11 @@ window.ASSESSMENT_CONFIG = {
   "id": "chapter-2",
   "chapter": 2,
   "version": "C",
-  "revision": "20261029-turtle-v3",
+  "revision": "20261105-turtle-v4",
   "title": "Toets Blockly · Turtle",
   "subtitle": "Begrensde herhaling · start, eindgrens en interval",
   "totalPoints": 23,
-  "durationMinutes": 45,
+  "durationMinutes": 40,
   "teacher": "Robbe Wulgaert",
   "startPassword": "Charles",
   "smartschoolUrl": "https://sintlievenscollege.smartschool.be/",
@@ -904,14 +904,14 @@ window.ASSESSMENT_CONFIG = {
       "title": "Van figuur naar JavaScript",
       "points": 5,
       "type": "turtle-code",
-      "prompt": "Programmeer beide figuren met JavaScript en for-lussen. Start bij (0, 0) en volg de pijl omhoog. Kies passende startwaarden, eindgrenzen en intervallen. Voer je code uit en vergelijk jouw tekening met het doel. De preview geeft geen punten.",
+      "prompt": "Programmeer beide figuren met JavaScript en for-lussen. Start bij (0, 0) en volg de pijl omhoog. Kies passende startwaarden, eindgrenzen en intervallen. Voer je code uit en vergelijk jouw tekening met het doel. De preview geeft geen punten. De kleur van de lijnen telt niet mee.",
       "tasks": [
         {
           "id": "q3a",
           "label": "3a · Twee losse vierkanten",
           "points": 2.5,
           "alt": "Twee losse vierkanten naar rechts, met een startpijl omhoog.",
-          "prompt": "Teken twee vierkanten in kleur #5200ff. Elke zijde is 40 pixels. De ruimte tussen de vierkanten is 20 pixels. Teken ze naar rechts van het startpunt. Er mag geen verbindingslijn zijn. Gebruik for-lussen voor de zijden en pen omhoog/omlaag om te verplaatsen.",
+          "prompt": "Teken twee vierkanten. Elke zijde is 40 pixels. De ruimte tussen de vierkanten is 20 pixels. Teken ze naar rechts van het startpunt. Er mag geen verbindingslijn zijn. Gebruik for-lussen voor de zijden en pen omhoog/omlaag om te verplaatsen.",
           "figure": {
             "segments": [
               {
@@ -919,56 +919,56 @@ window.ASSESSMENT_CONFIG = {
                 "y1": 0,
                 "x2": 0,
                 "y2": 40,
-                "color": "#5200ff"
+                "color": "#000000"
               },
               {
                 "x1": 0,
                 "y1": 40,
                 "x2": 40,
                 "y2": 40,
-                "color": "#5200ff"
+                "color": "#000000"
               },
               {
                 "x1": 40,
                 "y1": 40,
                 "x2": 40,
                 "y2": 0,
-                "color": "#5200ff"
+                "color": "#000000"
               },
               {
                 "x1": 40,
                 "y1": 0,
                 "x2": 0,
                 "y2": 0,
-                "color": "#5200ff"
+                "color": "#000000"
               },
               {
                 "x1": 60,
                 "y1": 0,
                 "x2": 60,
                 "y2": 40,
-                "color": "#5200ff"
+                "color": "#000000"
               },
               {
                 "x1": 60,
                 "y1": 40,
                 "x2": 100,
                 "y2": 40,
-                "color": "#5200ff"
+                "color": "#000000"
               },
               {
                 "x1": 100,
                 "y1": 40,
                 "x2": 100,
                 "y2": 0,
-                "color": "#5200ff"
+                "color": "#000000"
               },
               {
                 "x1": 100,
                 "y1": 0,
                 "x2": 60,
                 "y2": 0,
-                "color": "#5200ff"
+                "color": "#000000"
               }
             ],
             "turtle": {
@@ -976,85 +976,197 @@ window.ASSESSMENT_CONFIG = {
               "y": -1.2004014554190414e-14,
               "heading": 90,
               "pen": true,
-              "color": "#5200ff"
+              "color": "#000000"
             }
           },
           "inspiration": "Blockly Turtle: vierkant en meerdere vormen"
         },
         {
           "id": "q3b",
-          "label": "3b · Een groeiende trap",
+          "label": "3b · Vier zeshoeken",
           "points": 2.5,
-          "alt": "Vier traptreden met steeds langere verticale en horizontale lijnstukken, naar rechts.",
-          "prompt": "Teken in kleur #5200ff een trap van vier treden naar rechts. Elke trede gaat eerst omhoog en dan opzij. De twee lijnstukken van een trede zijn even lang: achtereenvolgens 15, 30, 45, 60 pixels. Gebruik één for-lus met een teller die begint op 15 en telkens met 15 stijgt. Gebruik de teller voor beide afstanden.",
+          "alt": "Vier losse regelmatige zeshoeken in een rooster van twee bij twee, met een startpijl omhoog.",
+          "prompt": "Teken vier losse regelmatige zeshoeken in een rooster van twee bij twee. Elke zijde is 30 pixels. Begin linksonder bij (0, 0), met de pijl omhoog. De startpunten liggen 100 pixels uit elkaar: twee naast elkaar en twee daarboven. Draai na elke zijde 60 graden naar rechts. Verplaats met de pen omhoog, zonder verbindingslijnen. Gebruik een for-lus voor de zes zijden en minstens één extra for-lus om zeshoeken te herhalen.",
           "figure": {
             "segments": [
               {
                 "x1": 0,
                 "y1": 0,
-                "x2": 0,
-                "y2": 15,
-                "color": "#5200ff"
+                "x2": 1.83697019872103e-15,
+                "y2": 30,
+                "color": "#000000"
               },
               {
-                "x1": 0,
-                "y1": 15,
-                "x2": 15,
-                "y2": 15,
-                "color": "#5200ff"
-              },
-              {
-                "x1": 15,
-                "y1": 15,
-                "x2": 15,
+                "x1": 1.83697019872103e-15,
+                "y1": 30,
+                "x2": 25.980762113533164,
                 "y2": 45,
-                "color": "#5200ff"
+                "color": "#000000"
               },
               {
-                "x1": 15,
+                "x1": 25.980762113533164,
                 "y1": 45,
-                "x2": 45,
-                "y2": 45,
-                "color": "#5200ff"
+                "x2": 51.96152422706632,
+                "y2": 30,
+                "color": "#000000"
               },
               {
-                "x1": 45,
-                "y1": 45,
-                "x2": 45,
-                "y2": 90,
-                "color": "#5200ff"
+                "x1": 51.96152422706632,
+                "y1": 30,
+                "x2": 51.96152422706632,
+                "y2": 0,
+                "color": "#000000"
               },
               {
-                "x1": 45,
-                "y1": 90,
-                "x2": 90,
-                "y2": 90,
-                "color": "#5200ff"
+                "x1": 51.96152422706632,
+                "y1": 0,
+                "x2": 25.98076211353316,
+                "y2": -14.999999999999998,
+                "color": "#000000"
               },
               {
-                "x1": 90,
-                "y1": 90,
-                "x2": 90,
-                "y2": 150,
-                "color": "#5200ff"
+                "x1": 25.98076211353316,
+                "y1": -14.999999999999998,
+                "x2": 3.552713678800501e-15,
+                "y2": 5.329070518200751e-15,
+                "color": "#000000"
               },
               {
-                "x1": 90,
-                "y1": 150,
-                "x2": 150,
-                "y2": 150,
-                "color": "#5200ff"
+                "x1": 100,
+                "y1": 5.329070518200751e-15,
+                "x2": 100,
+                "y2": 30.000000000000007,
+                "color": "#000000"
+              },
+              {
+                "x1": 100,
+                "y1": 30.000000000000007,
+                "x2": 125.98076211353316,
+                "y2": 45.00000000000001,
+                "color": "#000000"
+              },
+              {
+                "x1": 125.98076211353316,
+                "y1": 45.00000000000001,
+                "x2": 151.96152422706632,
+                "y2": 30.000000000000007,
+                "color": "#000000"
+              },
+              {
+                "x1": 151.96152422706632,
+                "y1": 30.000000000000007,
+                "x2": 151.96152422706632,
+                "y2": 7.105427357601002e-15,
+                "color": "#000000"
+              },
+              {
+                "x1": 151.96152422706632,
+                "y1": 7.105427357601002e-15,
+                "x2": 125.98076211353316,
+                "y2": -14.999999999999991,
+                "color": "#000000"
+              },
+              {
+                "x1": 125.98076211353316,
+                "y1": -14.999999999999991,
+                "x2": 100,
+                "y2": 1.2434497875801753e-14,
+                "color": "#000000"
+              },
+              {
+                "x1": 6.123233995736766e-15,
+                "y1": 100.00000000000004,
+                "x2": 7.960204194457796e-15,
+                "y2": 130.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 7.960204194457796e-15,
+                "y1": 130.00000000000006,
+                "x2": 25.980762113533167,
+                "y2": 145.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 25.980762113533167,
+                "y1": 145.00000000000006,
+                "x2": 51.96152422706633,
+                "y2": 130.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 51.96152422706633,
+                "y1": 130.00000000000006,
+                "x2": 51.96152422706633,
+                "y2": 100.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 51.96152422706633,
+                "y1": 100.00000000000006,
+                "x2": 25.980762113533167,
+                "y2": 85.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 25.980762113533167,
+                "y1": 85.00000000000006,
+                "x2": 1.0658141036401503e-14,
+                "y2": 100.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 100.00000000000001,
+                "y1": 100.00000000000006,
+                "x2": 100.00000000000001,
+                "y2": 130.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 100.00000000000001,
+                "y1": 130.00000000000006,
+                "x2": 125.98076211353317,
+                "y2": 145.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 125.98076211353317,
+                "y1": 145.00000000000006,
+                "x2": 151.96152422706632,
+                "y2": 130.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 151.96152422706632,
+                "y1": 130.00000000000006,
+                "x2": 151.96152422706632,
+                "y2": 100.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 151.96152422706632,
+                "y1": 100.00000000000006,
+                "x2": 125.98076211353316,
+                "y2": 85.00000000000006,
+                "color": "#000000"
+              },
+              {
+                "x1": 125.98076211353316,
+                "y1": 85.00000000000006,
+                "x2": 100,
+                "y2": 100.00000000000006,
+                "color": "#000000"
               }
             ],
             "turtle": {
-              "x": 150,
-              "y": 150,
+              "x": 6.123233995736766e-15,
+              "y": 200.00000000000009,
               "heading": 90,
               "pen": true,
-              "color": "#5200ff"
+              "color": "#000000"
             }
           },
-          "inspiration": "Blockly Turtle: trap en parameters"
+          "inspiration": "Blockly Turtle: zeshoeken en herhaling"
         }
       ]
     },
@@ -1068,7 +1180,7 @@ window.ASSESSMENT_CONFIG = {
         "Anders",
         "Zolang",
         "Draai naar rechts",
-        "In volgorde",
+        "In volgorde (programmeerconcept 1)",
         "Draai naar links",
         "Als"
       ]
@@ -1098,7 +1210,7 @@ window.ASSESSMENT_CONFIG = {
     },
     {
       "id": "q8",
-      "title": "Het stappenplan",
+      "title": "De stappen van het computationeel denken",
       "points": 5,
       "type": "ct-table",
       "prompt": "Noteer de volgorde (1 tot en met 5). Vul de twee ontbrekende namen en de vier ontbrekende beschrijvingen in. Volgorde: 1 punt; ontbrekende namen: samen 1 punt; ontbrekende uitleg: samen 3 punten.",
@@ -1136,5 +1248,5 @@ window.ASSESSMENT_CONFIG = {
       ]
     }
   ],
-  "configSha256": "6dbf2b3aad2b11927ae56724d35d856cf71521b3b3e46bb5315bf9a85c3242f9"
+  "configSha256": "6188f07f5cc42d5152f279cdb68c0c11ec1f9127b7fce364ebbbf898d50479b7"
 };
