@@ -133,7 +133,7 @@
     .replace('De turtle start met de pen omlaag en kijkt omhoog.', 'Begin bij Start (0, 0) en volg de pijl. De eerste beweging tekent meteen een lijn.')
     .replace('De startplaats op je blad is vrij.', 'Je mag je tekening verschuiven als je meer plaats nodig hebt.')
     .replace('Je turtle start omhoog.', 'Het startpunt (0, 0) en de startrichting staan op de gegeven figuur.');}
-  function draw(canvas, result, {background='#ffffff',cursor=true,start=true}={}) {
+  function draw(canvas, result, {background='#ffffff',cursor=true,start=true,labelSide='auto'}={}) {
     const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
     ctx.fillStyle=background;ctx.fillRect(0,0,w,h);
     const xs=[0],ys=[0];for(const s of result.segments||[]){xs.push(s.x1,s.x2);ys.push(s.y1,s.y2);}if(cursor&&result.turtle){xs.push(result.turtle.x);ys.push(result.turtle.y);}
@@ -141,7 +141,7 @@
     const point=(x,y)=>({x:w/2+(x-(minX+maxX)/2)*scale,y:h/2-(y-(minY+maxY)/2)*scale});
     ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=Math.max(2.5,Math.min(4,scale*1.5));
     for(const s of result.segments||[]){const a=point(s.x1,s.y1),b=point(s.x2,s.y2);ctx.strokeStyle=s.color;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
-    if(start){const origin=point(0,0);startMarker(ctx,origin.x,origin.y,{dark:background==='#111111'});}
+    if(start){const origin=point(0,0);startMarker(ctx,origin.x,origin.y,{dark:background==='#111111',labelSide});}
     if(cursor&&result.turtle){const p=point(result.turtle.x,result.turtle.y);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(-result.turtle.heading*Math.PI/180);ctx.fillStyle=background==='#111111'?'#ffffff':'#5200ff';ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-6,-5);ctx.lineTo(-6,5);ctx.closePath();ctx.fill();ctx.restore();}
     return canvas;
   }

@@ -3,7 +3,7 @@ window.ASSESSMENT_CONFIG = {
   "id": "chapter-2",
   "chapter": 2,
   "version": "A",
-  "revision": "20261105-turtle-v4",
+  "revision": "20261105-turtle-v5",
   "title": "Toets Blockly · Turtle",
   "subtitle": "Begrensde herhaling · start, eindgrens en interval",
   "totalPoints": 23,
@@ -904,14 +904,21 @@ window.ASSESSMENT_CONFIG = {
       "title": "Van figuur naar JavaScript",
       "points": 5,
       "type": "turtle-code",
-      "prompt": "Programmeer beide figuren met JavaScript en for-lussen. Start bij (0, 0) en volg de pijl omhoog. Kies passende startwaarden, eindgrenzen en intervallen. Voer je code uit en vergelijk jouw tekening met het doel. De preview geeft geen punten. De kleur van de lijnen telt niet mee.",
+      "prompt": "Programmeer beide figuren met JavaScript en for-lussen. Gebruik bij 3b één lus voor de zijden en één lus voor de zeshoeken. Voer je code uit en vergelijk je tekening met het doel. De kleur van de lijnen telt niet mee.",
       "tasks": [
         {
           "id": "q3a",
           "label": "3a · Twee losse vierkanten",
           "points": 2.5,
           "alt": "Twee losse vierkanten naar rechts, met een startpijl omhoog.",
-          "prompt": "Teken twee vierkanten. Elke zijde is 50 pixels. De ruimte tussen de vierkanten is 25 pixels. Teken ze naar rechts van het startpunt. Er mag geen verbindingslijn zijn. Gebruik for-lussen voor de zijden en pen omhoog/omlaag om te verplaatsen.",
+          "prompt": [
+            "Teken twee losse vierkanten.",
+            "Elke zijde is 50 pixels.",
+            "Laat 25 pixels vrij tussen de vierkanten.",
+            "Teken de vierkanten naar rechts van het startpunt.",
+            "Gebruik een for-lus voor de zijden.",
+            "Verplaats met de pen omhoog, zonder verbindingslijn."
+          ],
           "figure": {
             "segments": [
               {
@@ -986,181 +993,187 @@ window.ASSESSMENT_CONFIG = {
           "label": "3b · Vier zeshoeken",
           "points": 2.5,
           "alt": "Vier losse regelmatige zeshoeken in een rooster van twee bij twee, met een startpijl omhoog.",
-          "prompt": "Teken vier losse regelmatige zeshoeken in een rooster van twee bij twee. Elke zijde is 20 pixels. Begin linksonder bij (0, 0), met de pijl omhoog. De startpunten liggen 100 pixels uit elkaar: twee naast elkaar en twee daarboven. Draai na elke zijde 60 graden naar rechts. Verplaats met de pen omhoog, zonder verbindingslijnen. Gebruik een for-lus voor de zes zijden en minstens één extra for-lus om zeshoeken te herhalen.",
+          "prompt": [
+            "Teken vier losse regelmatige zeshoeken in een rooster van twee bij twee.",
+            "Elke zijde is 20 pixels.",
+            "Begin linksonder bij (0, 0).",
+            "De startpunten liggen 100 pixels uit elkaar.",
+            "Draai na elke zijde 60 graden naar rechts."
+          ],
           "figure": {
             "segments": [
               {
                 "x1": 0,
                 "y1": 0,
-                "x2": 1.2246467991473533e-15,
+                "x2": 0,
                 "y2": 20,
                 "color": "#000000"
               },
               {
-                "x1": 1.2246467991473533e-15,
+                "x1": 0,
                 "y1": 20,
-                "x2": 17.320508075688775,
+                "x2": 17.320508076,
                 "y2": 30,
                 "color": "#000000"
               },
               {
-                "x1": 17.320508075688775,
+                "x1": 17.320508076,
                 "y1": 30,
-                "x2": 34.64101615137755,
+                "x2": 34.641016151,
                 "y2": 20,
                 "color": "#000000"
               },
               {
-                "x1": 34.64101615137755,
+                "x1": 34.641016151,
                 "y1": 20,
-                "x2": 34.64101615137755,
+                "x2": 34.641016151,
                 "y2": 0,
                 "color": "#000000"
               },
               {
-                "x1": 34.64101615137755,
+                "x1": 34.641016151,
                 "y1": 0,
-                "x2": 17.320508075688775,
-                "y2": -9.999999999999998,
+                "x2": 17.320508076,
+                "y2": -10,
                 "color": "#000000"
               },
               {
-                "x1": 17.320508075688775,
-                "y1": -9.999999999999998,
-                "x2": 3.552713678800501e-15,
-                "y2": 3.552713678800501e-15,
-                "color": "#000000"
-              },
-              {
-                "x1": 100,
-                "y1": 3.552713678800501e-15,
-                "x2": 100,
-                "y2": 20.000000000000004,
-                "color": "#000000"
-              },
-              {
-                "x1": 100,
-                "y1": 20.000000000000004,
-                "x2": 117.32050807568878,
-                "y2": 30,
-                "color": "#000000"
-              },
-              {
-                "x1": 117.32050807568878,
-                "y1": 30,
-                "x2": 134.64101615137756,
-                "y2": 20,
-                "color": "#000000"
-              },
-              {
-                "x1": 134.64101615137756,
-                "y1": 20,
-                "x2": 134.64101615137756,
+                "x1": 17.320508076,
+                "y1": -10,
+                "x2": 0,
                 "y2": 0,
                 "color": "#000000"
               },
               {
-                "x1": 134.64101615137756,
+                "x1": 0,
+                "y1": 100,
+                "x2": 20,
+                "y2": 100,
+                "color": "#000000"
+              },
+              {
+                "x1": 20,
+                "y1": 100,
+                "x2": 30,
+                "y2": 82.679491924,
+                "color": "#000000"
+              },
+              {
+                "x1": 30,
+                "y1": 82.679491924,
+                "x2": 20,
+                "y2": 65.358983849,
+                "color": "#000000"
+              },
+              {
+                "x1": 20,
+                "y1": 65.358983849,
+                "x2": 0,
+                "y2": 65.358983849,
+                "color": "#000000"
+              },
+              {
+                "x1": 0,
+                "y1": 65.358983849,
+                "x2": -10,
+                "y2": 82.679491924,
+                "color": "#000000"
+              },
+              {
+                "x1": -10,
+                "y1": 82.679491924,
+                "x2": 0,
+                "y2": 100,
+                "color": "#000000"
+              },
+              {
+                "x1": 100,
+                "y1": 100,
+                "x2": 100,
+                "y2": 80,
+                "color": "#000000"
+              },
+              {
+                "x1": 100,
+                "y1": 80,
+                "x2": 82.679491924,
+                "y2": 70,
+                "color": "#000000"
+              },
+              {
+                "x1": 82.679491924,
+                "y1": 70,
+                "x2": 65.358983849,
+                "y2": 80,
+                "color": "#000000"
+              },
+              {
+                "x1": 65.358983849,
+                "y1": 80,
+                "x2": 65.358983849,
+                "y2": 100,
+                "color": "#000000"
+              },
+              {
+                "x1": 65.358983849,
+                "y1": 100,
+                "x2": 82.679491924,
+                "y2": 110,
+                "color": "#000000"
+              },
+              {
+                "x1": 82.679491924,
+                "y1": 110,
+                "x2": 100,
+                "y2": 100,
+                "color": "#000000"
+              },
+              {
+                "x1": 100,
                 "y1": 0,
-                "x2": 117.32050807568878,
-                "y2": -9.999999999999998,
+                "x2": 80,
+                "y2": 0,
                 "color": "#000000"
               },
               {
-                "x1": 117.32050807568878,
-                "y1": -9.999999999999998,
+                "x1": 80,
+                "y1": 0,
+                "x2": 70,
+                "y2": 17.320508076,
+                "color": "#000000"
+              },
+              {
+                "x1": 70,
+                "y1": 17.320508076,
+                "x2": 80,
+                "y2": 34.641016151,
+                "color": "#000000"
+              },
+              {
+                "x1": 80,
+                "y1": 34.641016151,
                 "x2": 100,
-                "y2": 3.552713678800501e-15,
+                "y2": 34.641016151,
                 "color": "#000000"
               },
               {
-                "x1": 6.123233995736766e-15,
-                "y1": 100.00000000000003,
-                "x2": 7.34788079488412e-15,
-                "y2": 120.00000000000003,
+                "x1": 100,
+                "y1": 34.641016151,
+                "x2": 110,
+                "y2": 17.320508076,
                 "color": "#000000"
               },
               {
-                "x1": 7.34788079488412e-15,
-                "y1": 120.00000000000003,
-                "x2": 17.32050807568878,
-                "y2": 130.00000000000003,
-                "color": "#000000"
-              },
-              {
-                "x1": 17.32050807568878,
-                "y1": 130.00000000000003,
-                "x2": 34.641016151377556,
-                "y2": 120.00000000000003,
-                "color": "#000000"
-              },
-              {
-                "x1": 34.641016151377556,
-                "y1": 120.00000000000003,
-                "x2": 34.641016151377556,
-                "y2": 100.00000000000003,
-                "color": "#000000"
-              },
-              {
-                "x1": 34.641016151377556,
-                "y1": 100.00000000000003,
-                "x2": 17.32050807568878,
-                "y2": 90.00000000000003,
-                "color": "#000000"
-              },
-              {
-                "x1": 17.32050807568878,
-                "y1": 90.00000000000003,
-                "x2": 1.0658141036401503e-14,
-                "y2": 100.00000000000003,
-                "color": "#000000"
-              },
-              {
-                "x1": 100.00000000000001,
-                "y1": 100.00000000000003,
-                "x2": 100.00000000000001,
-                "y2": 120.00000000000003,
-                "color": "#000000"
-              },
-              {
-                "x1": 100.00000000000001,
-                "y1": 120.00000000000003,
-                "x2": 117.32050807568879,
-                "y2": 130.00000000000003,
-                "color": "#000000"
-              },
-              {
-                "x1": 117.32050807568879,
-                "y1": 130.00000000000003,
-                "x2": 134.64101615137756,
-                "y2": 120.00000000000003,
-                "color": "#000000"
-              },
-              {
-                "x1": 134.64101615137756,
-                "y1": 120.00000000000003,
-                "x2": 134.64101615137756,
-                "y2": 100.00000000000003,
-                "color": "#000000"
-              },
-              {
-                "x1": 134.64101615137756,
-                "y1": 100.00000000000003,
-                "x2": 117.32050807568878,
-                "y2": 90.00000000000003,
-                "color": "#000000"
-              },
-              {
-                "x1": 117.32050807568878,
-                "y1": 90.00000000000003,
+                "x1": 110,
+                "y1": 17.320508076,
                 "x2": 100,
-                "y2": 100.00000000000003,
+                "y2": 0,
                 "color": "#000000"
               }
             ],
             "turtle": {
-              "x": 6.123233995736766e-15,
-              "y": 200.00000000000006,
+              "x": 0,
+              "y": 0,
               "heading": 90,
               "pen": true,
               "color": "#000000"
@@ -1248,5 +1261,5 @@ window.ASSESSMENT_CONFIG = {
       ]
     }
   ],
-  "configSha256": "fa69728396b4f862f478d6f6132d6a2faeb61642d3bdee168e0b4119fcdf7cf8"
+  "configSha256": "df02b46b5d8961b337df872461a1026366eb36fbe7119e9d4f32b8f10209cef7"
 };

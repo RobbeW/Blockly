@@ -29,10 +29,32 @@ for(const version of ['A','B','C']){
   const structure=config.groups.map(g=>[g.id,g.type,g.points]);if(skeleton)assert.deepEqual(structure,skeleton);else skeleton=structure;
   assert.equal(config.groups[1].traces.length,3);assert.equal(config.groups[2].tasks.length,2);assert.equal(config.groups.some(group=>group.id==='q5'),false);
   assert.equal(config.groups[6].rows.filter(row=>!row.name).length,2);assert.equal(config.groups[6].rows.filter(row=>!row.description).length,4);
-  assert.equal(config.revision,'20261105-turtle-v4');assert.equal(config.groups[1].type,'trace-choice');
+  assert.equal(config.revision,'20261105-turtle-v5');assert.equal(config.groups[1].type,'trace-choice');
   for(const trace of config.groups[1].traces){assert.deepEqual(trace.options.map(option=>option.id),['A','B','C','D']);assert.ok(trace.options.every(option=>option.figure.segments.length>0));}
-  const hex=config.groups[2].tasks[1]; assert.equal(hex.figure.segments.length,24); assert.ok(hex.figure.segments.every(s=>s.color==='#000000')); assert.ok(!config.groups[2].tasks.some(task=>/kleur|penColour/.test(task.prompt)));
-  for(const task of config.groups[2].tasks){assert.ok(task.figure.segments.length>0);assert.ok(task.inspiration.includes('Blockly Turtle'));}
+  const [squares, hex] = config.groups[2].tasks;
+  for(const task of [squares, hex]){
+    assert.ok(Array.isArray(task.prompt) && task.prompt.length > 1);
+    assert.ok(!task.prompt.some(line=>/kleur|penColour/.test(line)));
+    assert.ok(task.figure.segments.length>0);
+    assert.ok(task.inspiration.includes('Blockly Turtle'));
+  }
+  const side = {A:20, B:25, C:30}[version];
+  assert.ok(hex.prompt.includes(`Elke zijde is ${side} pixels.`));
+  const model = ok(`for (var teller2 = 0; teller2 < 4; teller2++) {
+  for (var teller = 0; teller < 6; teller++) {
+    moveForward(${side});
+    turnRight(60);
+  }
+  penUp();
+  moveForward(100);
+  turnRight(90);
+  penDown();
+}`);
+  const geometry = segments => segments.map(({x1,y1,x2,y2}) =>
+    [x1,y1,x2,y2].map(coordinate=>Number(coordinate.toFixed(9)) || 0));
+  assert.deepEqual(geometry(model.segments), geometry(hex.figure.segments));
+  assert.deepEqual(geometry(model.segments).filter((_, i) => i % 6 === 0).map(line => line.slice(0,2)),
+    [[0,0],[0,100],[100,100],[100,0]]);
   console.log(`PASS ${version}: 40 minutes, 7 questions, /23, 3 figure/count pairs and 2 platform-inspired for/Turtle code tasks.`);
 }
 console.log('PASS safe Turtle interpreter: parameter variants, nesting, pen state, limits and disallowed JavaScript.');

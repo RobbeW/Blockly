@@ -3,7 +3,7 @@ window.ASSESSMENT_CONFIG = {
   "id": "chapter-2",
   "chapter": 2,
   "version": "C",
-  "revision": "20261105-turtle-v4",
+  "revision": "20261105-turtle-v5",
   "title": "Toets Blockly · Turtle",
   "subtitle": "Begrensde herhaling · start, eindgrens en interval",
   "totalPoints": 23,
@@ -904,14 +904,21 @@ window.ASSESSMENT_CONFIG = {
       "title": "Van figuur naar JavaScript",
       "points": 5,
       "type": "turtle-code",
-      "prompt": "Programmeer beide figuren met JavaScript en for-lussen. Start bij (0, 0) en volg de pijl omhoog. Kies passende startwaarden, eindgrenzen en intervallen. Voer je code uit en vergelijk jouw tekening met het doel. De preview geeft geen punten. De kleur van de lijnen telt niet mee.",
+      "prompt": "Programmeer beide figuren met JavaScript en for-lussen. Gebruik bij 3b één lus voor de zijden en één lus voor de zeshoeken. Voer je code uit en vergelijk je tekening met het doel. De kleur van de lijnen telt niet mee.",
       "tasks": [
         {
           "id": "q3a",
           "label": "3a · Twee losse vierkanten",
           "points": 2.5,
           "alt": "Twee losse vierkanten naar rechts, met een startpijl omhoog.",
-          "prompt": "Teken twee vierkanten. Elke zijde is 40 pixels. De ruimte tussen de vierkanten is 20 pixels. Teken ze naar rechts van het startpunt. Er mag geen verbindingslijn zijn. Gebruik for-lussen voor de zijden en pen omhoog/omlaag om te verplaatsen.",
+          "prompt": [
+            "Teken twee losse vierkanten.",
+            "Elke zijde is 40 pixels.",
+            "Laat 20 pixels vrij tussen de vierkanten.",
+            "Teken de vierkanten naar rechts van het startpunt.",
+            "Gebruik een for-lus voor de zijden.",
+            "Verplaats met de pen omhoog, zonder verbindingslijn."
+          ],
           "figure": {
             "segments": [
               {
@@ -986,181 +993,187 @@ window.ASSESSMENT_CONFIG = {
           "label": "3b · Vier zeshoeken",
           "points": 2.5,
           "alt": "Vier losse regelmatige zeshoeken in een rooster van twee bij twee, met een startpijl omhoog.",
-          "prompt": "Teken vier losse regelmatige zeshoeken in een rooster van twee bij twee. Elke zijde is 30 pixels. Begin linksonder bij (0, 0), met de pijl omhoog. De startpunten liggen 100 pixels uit elkaar: twee naast elkaar en twee daarboven. Draai na elke zijde 60 graden naar rechts. Verplaats met de pen omhoog, zonder verbindingslijnen. Gebruik een for-lus voor de zes zijden en minstens één extra for-lus om zeshoeken te herhalen.",
+          "prompt": [
+            "Teken vier losse regelmatige zeshoeken in een rooster van twee bij twee.",
+            "Elke zijde is 30 pixels.",
+            "Begin linksonder bij (0, 0).",
+            "De startpunten liggen 100 pixels uit elkaar.",
+            "Draai na elke zijde 60 graden naar rechts."
+          ],
           "figure": {
             "segments": [
               {
                 "x1": 0,
                 "y1": 0,
-                "x2": 1.83697019872103e-15,
+                "x2": 0,
                 "y2": 30,
                 "color": "#000000"
               },
               {
-                "x1": 1.83697019872103e-15,
+                "x1": 0,
                 "y1": 30,
-                "x2": 25.980762113533164,
+                "x2": 25.980762114,
                 "y2": 45,
                 "color": "#000000"
               },
               {
-                "x1": 25.980762113533164,
+                "x1": 25.980762114,
                 "y1": 45,
-                "x2": 51.96152422706632,
+                "x2": 51.961524227,
                 "y2": 30,
                 "color": "#000000"
               },
               {
-                "x1": 51.96152422706632,
+                "x1": 51.961524227,
                 "y1": 30,
-                "x2": 51.96152422706632,
+                "x2": 51.961524227,
                 "y2": 0,
                 "color": "#000000"
               },
               {
-                "x1": 51.96152422706632,
+                "x1": 51.961524227,
                 "y1": 0,
-                "x2": 25.98076211353316,
-                "y2": -14.999999999999998,
+                "x2": 25.980762114,
+                "y2": -15,
                 "color": "#000000"
               },
               {
-                "x1": 25.98076211353316,
-                "y1": -14.999999999999998,
-                "x2": 3.552713678800501e-15,
-                "y2": 5.329070518200751e-15,
+                "x1": 25.980762114,
+                "y1": -15,
+                "x2": 0,
+                "y2": 0,
+                "color": "#000000"
+              },
+              {
+                "x1": 0,
+                "y1": 100,
+                "x2": 30,
+                "y2": 100,
+                "color": "#000000"
+              },
+              {
+                "x1": 30,
+                "y1": 100,
+                "x2": 45,
+                "y2": 74.019237886,
+                "color": "#000000"
+              },
+              {
+                "x1": 45,
+                "y1": 74.019237886,
+                "x2": 30,
+                "y2": 48.038475773,
+                "color": "#000000"
+              },
+              {
+                "x1": 30,
+                "y1": 48.038475773,
+                "x2": 0,
+                "y2": 48.038475773,
+                "color": "#000000"
+              },
+              {
+                "x1": 0,
+                "y1": 48.038475773,
+                "x2": -15,
+                "y2": 74.019237886,
+                "color": "#000000"
+              },
+              {
+                "x1": -15,
+                "y1": 74.019237886,
+                "x2": 0,
+                "y2": 100,
                 "color": "#000000"
               },
               {
                 "x1": 100,
-                "y1": 5.329070518200751e-15,
+                "y1": 100,
                 "x2": 100,
-                "y2": 30.000000000000007,
+                "y2": 70,
                 "color": "#000000"
               },
               {
                 "x1": 100,
-                "y1": 30.000000000000007,
-                "x2": 125.98076211353316,
-                "y2": 45.00000000000001,
+                "y1": 70,
+                "x2": 74.019237886,
+                "y2": 55,
                 "color": "#000000"
               },
               {
-                "x1": 125.98076211353316,
-                "y1": 45.00000000000001,
-                "x2": 151.96152422706632,
-                "y2": 30.000000000000007,
+                "x1": 74.019237886,
+                "y1": 55,
+                "x2": 48.038475773,
+                "y2": 70,
                 "color": "#000000"
               },
               {
-                "x1": 151.96152422706632,
-                "y1": 30.000000000000007,
-                "x2": 151.96152422706632,
-                "y2": 7.105427357601002e-15,
+                "x1": 48.038475773,
+                "y1": 70,
+                "x2": 48.038475773,
+                "y2": 100,
                 "color": "#000000"
               },
               {
-                "x1": 151.96152422706632,
-                "y1": 7.105427357601002e-15,
-                "x2": 125.98076211353316,
-                "y2": -14.999999999999991,
+                "x1": 48.038475773,
+                "y1": 100,
+                "x2": 74.019237886,
+                "y2": 115,
                 "color": "#000000"
               },
               {
-                "x1": 125.98076211353316,
-                "y1": -14.999999999999991,
+                "x1": 74.019237886,
+                "y1": 115,
                 "x2": 100,
-                "y2": 1.2434497875801753e-14,
+                "y2": 100,
                 "color": "#000000"
               },
               {
-                "x1": 6.123233995736766e-15,
-                "y1": 100.00000000000004,
-                "x2": 7.960204194457796e-15,
-                "y2": 130.00000000000006,
+                "x1": 100,
+                "y1": 0,
+                "x2": 70,
+                "y2": 0,
                 "color": "#000000"
               },
               {
-                "x1": 7.960204194457796e-15,
-                "y1": 130.00000000000006,
-                "x2": 25.980762113533167,
-                "y2": 145.00000000000006,
+                "x1": 70,
+                "y1": 0,
+                "x2": 55,
+                "y2": 25.980762114,
                 "color": "#000000"
               },
               {
-                "x1": 25.980762113533167,
-                "y1": 145.00000000000006,
-                "x2": 51.96152422706633,
-                "y2": 130.00000000000006,
+                "x1": 55,
+                "y1": 25.980762114,
+                "x2": 70,
+                "y2": 51.961524227,
                 "color": "#000000"
               },
               {
-                "x1": 51.96152422706633,
-                "y1": 130.00000000000006,
-                "x2": 51.96152422706633,
-                "y2": 100.00000000000006,
-                "color": "#000000"
-              },
-              {
-                "x1": 51.96152422706633,
-                "y1": 100.00000000000006,
-                "x2": 25.980762113533167,
-                "y2": 85.00000000000006,
-                "color": "#000000"
-              },
-              {
-                "x1": 25.980762113533167,
-                "y1": 85.00000000000006,
-                "x2": 1.0658141036401503e-14,
-                "y2": 100.00000000000006,
-                "color": "#000000"
-              },
-              {
-                "x1": 100.00000000000001,
-                "y1": 100.00000000000006,
-                "x2": 100.00000000000001,
-                "y2": 130.00000000000006,
-                "color": "#000000"
-              },
-              {
-                "x1": 100.00000000000001,
-                "y1": 130.00000000000006,
-                "x2": 125.98076211353317,
-                "y2": 145.00000000000006,
-                "color": "#000000"
-              },
-              {
-                "x1": 125.98076211353317,
-                "y1": 145.00000000000006,
-                "x2": 151.96152422706632,
-                "y2": 130.00000000000006,
-                "color": "#000000"
-              },
-              {
-                "x1": 151.96152422706632,
-                "y1": 130.00000000000006,
-                "x2": 151.96152422706632,
-                "y2": 100.00000000000006,
-                "color": "#000000"
-              },
-              {
-                "x1": 151.96152422706632,
-                "y1": 100.00000000000006,
-                "x2": 125.98076211353316,
-                "y2": 85.00000000000006,
-                "color": "#000000"
-              },
-              {
-                "x1": 125.98076211353316,
-                "y1": 85.00000000000006,
+                "x1": 70,
+                "y1": 51.961524227,
                 "x2": 100,
-                "y2": 100.00000000000006,
+                "y2": 51.961524227,
+                "color": "#000000"
+              },
+              {
+                "x1": 100,
+                "y1": 51.961524227,
+                "x2": 115,
+                "y2": 25.980762114,
+                "color": "#000000"
+              },
+              {
+                "x1": 115,
+                "y1": 25.980762114,
+                "x2": 100,
+                "y2": 0,
                 "color": "#000000"
               }
             ],
             "turtle": {
-              "x": 6.123233995736766e-15,
-              "y": 200.00000000000009,
+              "x": 0,
+              "y": 0,
               "heading": 90,
               "pen": true,
               "color": "#000000"
@@ -1248,5 +1261,5 @@ window.ASSESSMENT_CONFIG = {
       ]
     }
   ],
-  "configSha256": "6188f07f5cc42d5152f279cdb68c0c11ec1f9127b7fce364ebbbf898d50479b7"
+  "configSha256": "9d593e0dd9f642879368daf68e75e258ed7e9aaf6fc6b496d2cf9459fe637f19"
 };

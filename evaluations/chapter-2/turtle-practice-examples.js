@@ -59,8 +59,8 @@
     const gap = mirrored ? 90 : 75;
     const hexSide = mirrored ? 25 : 20;
     const square = penUp => lines([
-      'for (let vierkant = 0; vierkant < 2; vierkant++) {',
-      '  for (let zijde = 0; zijde < 4; zijde++) {',
+      'for (var vierkant = 0; vierkant < 2; vierkant++) {',
+      '  for (var zijde = 0; zijde < 4; zijde++) {',
       `    moveForward(${side});`, `    ${turn}(90);`, '  }',
       ...(penUp ? ['  penUp();'] : []),
       `  ${turn}(90);`, `  moveForward(${gap});`, `  ${back}(90);`,
@@ -68,13 +68,10 @@
       '}',
     ]);
     const hexagons = distance => lines([
-      'for (let rij = 0; rij < 2; rij++) {',
-      '  for (let kolom = 0; kolom < 2; kolom++) {',
-      '    for (let zijde = 0; zijde < 6; zijde++) {',
-      `      moveForward(${hexSide});`, '      turnRight(60);', '    }',
-      '    penUp();', '    turnRight(90);', `    moveForward(${distance});`, '    turnLeft(90);', '    penDown();', '  }',
-      '  penUp();', '  turnRight(90);', `  moveBackward(${2 * distance});`, '  turnLeft(90);',
-      `  moveForward(${distance});`, '  penDown();', '}',
+      'for (var teller2 = 0; teller2 < 4; teller2++) {',
+      '  for (var teller = 0; teller < 6; teller++) {',
+      `    moveForward(${hexSide});`, '    turnRight(60);', '  }',
+      '  penUp();', `  moveForward(${distance});`, '  turnRight(90);', '  penDown();', '}',
     ]);
     const makeCode = (answer, scores, mathsLabel, comments) => AssessmentPractice.scored(answer, [
       ['Functioneel', scores[0], 0.5, comments[0]],
@@ -106,11 +103,11 @@
       [
         hexCode(hexagons(100), [0.5, 0.5, 1, 0.5],
           'De vier zeshoeken staan los van elkaar in het gevraagde rooster.',
-          'Rij, kolom en zijde maken zichtbaar wat elke lus herhaalt.',
-          'De lussen herhalen de zes zijden en de zeshoeken zelf.',
-          'De zijlengte en 60°-draai kloppen. De startpunten staan 100 pixels uit elkaar en de verplaatsingen tekenen niets.'),
+          'Door de inspringing zie je meteen welke opdrachten bij de binnenste lus horen.',
+          'De binnenste lus tekent zes zijden. De buitenste lus herhaalt de figuur vier keer.',
+          'Draai 60° na elke zijde. Spring met de pen omhoog 100 pixels vooruit en draai dan 90° naar de volgende richting.'),
         hexCode(hexagons(80), [0, 0.5, 1, 0],
-          'Er staan vier losse zeshoeken. Hun startpunten liggen te dicht bij elkaar.',
+          'De code maakt vier zeshoeken. Hun startpunten liggen te dicht bij elkaar.',
           'De lusstructuur is duidelijk en consequent ingesprongen.',
           'De lussen voor de zijden en voor de zeshoeken zijn bruikbaar.',
           'De hoeken en zijden kloppen. Voor de plaatsing is 100 pixels nodig tussen de startpunten.'),
@@ -128,6 +125,7 @@
       prompt: task.prompt,
       figure: task.figure,
       figureLabel: task.alt,
+      labelSide: task.id === 'q3b' ? 'left' : 'auto',
       referenceLabel: 'Bekijk de doelfiguur',
       max: task.points,
       examples: examples[i],
@@ -190,12 +188,12 @@
         prompt: group('q1').prompt,
         max: 2,
         examples: [
-          sample(`for (let teller = ${start}; teller < ${end}; teller++) {\n}`, 2,
+          sample(`for (var teller = ${start}; teller < ${end}; teller++) {}`, 2,
             'De teller start juist, stopt vóór de eindgrens en gaat telkens één omhoog. De lege lus is geldig.'),
-          sample(`for (let teller = ${start}; teller <= ${end}; teller++) {\n}`, 1.5,
+          sample(`for (var teller = ${start}; teller <= ${end}; teller++) {}`, 1.5,
             'De start, stap en schrijfwijze kloppen. Met <= loopt de teller ook op de eindgrens. Gebruik < om die waarde uit te sluiten.'),
-          sample(`for (let teller = 0; teller > ${end}; teller--) {\n}`, 0.5,
-            'De teller start verkeerd, de voorwaarde is meteen onwaar en de teller zou omlaag gaan. Controleer start, voorwaarde en verhoging apart.'),
+          sample(`for (var teller = 0; teller < ${end + 2}; teller += 2) {}`, 0.5,
+            `De lus is geldig geschreven. Gebruik ${start} als startgetal, ${end} als exclusieve eindgrens en teller++ voor een stap van 1.`),
         ],
       },
       ...traceExamples(group('q2'), mirrored),

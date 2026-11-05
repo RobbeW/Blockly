@@ -70,13 +70,14 @@
         text('Per figuur: 0,5 punt werking, 0,5 punt leesbaarheid, 1,5 punt for-concepten en parameters.',{size:9});
         for(const [i,task] of group.tasks.entries()){
           if(i){page(task.label);heading(`${task.label} · ${label(task.points)} punten`);}else text(`${task.label} · ${label(task.points)} punten`,{bold:true});
-          text(task.prompt);
+          for(const line of task.prompt)text('• '+line,{gap:1});
           const result=a[task.id].trim()?Chapter2Turtle.run(a[task.id]):null;
           space(65);const figureTop=y;
           text('Gegeven figuur',{bold:true,size:9});y=figureTop;
           font(false,true,9);pdf.text('Jouw definitieve code · uitvoer',110,y);y+=4;
-          const reference=document.createElement('canvas');reference.width=500;reference.height=320;Chapter2Turtle.draw(reference,task.figure,{cursor:false});pdf.addImage(reference.toDataURL('image/png'),'PNG',margin,y,80,51.2);
-          if(result){const canvas=document.createElement('canvas');canvas.width=500;canvas.height=320;Chapter2Turtle.draw(canvas,result,{cursor:false});pdf.addImage(canvas.toDataURL('image/png'),'PNG',110,y,80,51.2);box(task.id+'-output',y,51.2);}
+          const drawOptions={cursor:false,labelSide:task.id==='q3b'?'left':'auto'};
+          const reference=document.createElement('canvas');reference.width=500;reference.height=320;Chapter2Turtle.draw(reference,task.figure,drawOptions);pdf.addImage(reference.toDataURL('image/png'),'PNG',margin,y,80,51.2);
+          if(result){const canvas=document.createElement('canvas');canvas.width=500;canvas.height=320;Chapter2Turtle.draw(canvas,result,drawOptions);pdf.addImage(canvas.toDataURL('image/png'),'PNG',110,y,80,51.2);box(task.id+'-output',y,51.2);}
           else {font(false,false,9);pdf.text('[Geen code]',110,y+12);}
           y+=59;
           if(result)text(result.status==='ok'?`Uitvoering gestopt na ${result.actions.length} acties. Vergelijking en score door de leerkracht.`:`Uitvoering vraagt controle: ${result.message}`,{id:task.id+'-execution',size:8,gap:3});

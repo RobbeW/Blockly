@@ -46,8 +46,11 @@
           ? 'Je koos het voorbeeld met de hoogste score. Bekijk waarom het meer punten krijgt.'
           : 'Een ander voorbeeld scoort hoger. Vergelijk de punten en lees de feedback.')
         : 'Welk antwoord zou volgens jou de hoogste score krijgen?';
+      const prompt = Array.isArray(item.prompt)
+        ? `<ul>${item.prompt.map(line => `<li>${esc(line)}</li>`).join('')}</ul>`
+        : `<p>${esc(item.prompt)}</p>`;
       const reference = revealed || item.reference || item.image || item.figure ? `<details class="practice-reference"><summary>${revealed ? 'Bekijk de opgave' : esc(item.referenceLabel || 'Bekijk het gegeven voorbeeld')}</summary>
-        ${revealed ? `<p>${esc(item.prompt)}</p>` : ''}
+        ${revealed ? prompt : ''}
         ${item.image ? `<img src="${esc(item.image.src)}" alt="${esc(item.image.alt)}">` : ''}
         ${item.figure ? figure(item.figureLabel, 'practice-target') : ''}
         ${item.reference ? `<pre>${esc(item.reference)}</pre>` : ''}
@@ -60,7 +63,7 @@
           <p id="practice-guide" tabindex="-1">${guide}</p>
         </header>
         <div class="practice-body">
-          ${revealed ? '' : `<p>${esc(item.prompt)}</p>`}
+          ${revealed ? '' : prompt}
           ${reference}
           <div class="practice-cards">
             ${examples.map((example, position) => {
@@ -95,7 +98,7 @@
             : onContinue ? '<button type="button" data-practice-skip>Overslaan →</button>' : ''}
         </footer>`;
 
-      if (item.figure) Chapter2Turtle.draw(dialog.querySelector('.practice-target'), item.figure, { cursor: false });
+      if (item.figure) Chapter2Turtle.draw(dialog.querySelector('.practice-target'), item.figure, { cursor: false, labelSide: item.labelSide });
       const canvases = dialog.querySelectorAll('.practice-option');
       examples.filter(example => example.figure).forEach((example, i) => {
         Chapter2Turtle.draw(canvases[i], example.figure, { cursor: false });
