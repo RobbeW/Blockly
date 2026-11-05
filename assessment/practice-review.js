@@ -27,7 +27,7 @@
     dialog.className = 'practice-dialog';
     dialog.setAttribute('aria-labelledby', 'practice-title');
     document.body.append(dialog);
-    let stages, index, offeredAttempt;
+    let stages, index, offeredAttempt, returnFocus, onContinue;
 
     function figure(label, className) {
       return `<canvas class="${className}" width="400" height="230" role="img" aria-label="${esc(label)}"></canvas>`;
@@ -36,6 +36,10 @@
     function render() {
       const { item, examples, selection } = stages[index];
       const revealed = selection !== undefined;
+      const last = index === stages.length - 1;
+      const nextLabel = onContinue
+        ? (last ? 'Verder →' : 'Volgend voorbeeld →')
+        : (last ? 'Afronden' : 'Volgende →');
       const best = Math.max(...examples.map(example => example.score));
       const guide = revealed
         ? (examples[selection].score === best
@@ -85,8 +89,10 @@
           </div>
         </div>
         <footer class="practice-footer">
-          <button type="button" data-practice-close>Naar overzicht</button>
-          ${revealed ? `<button type="button" class="primary" data-practice-next>${index === stages.length - 1 ? 'Afronden' : 'Volgende →'}</button>` : ''}
+          <button type="button" data-practice-close>${onContinue ? 'Terug naar de vraag' : 'Naar overzicht'}</button>
+          ${revealed
+            ? `<button type="button" class="primary" data-practice-next>${nextLabel}</button>`
+            : onContinue ? '<button type="button" data-practice-skip>Overslaan →</button>' : ''}
         </footer>`;
 
       if (item.figure) Chapter2Turtle.draw(dialog.querySelector('.practice-target'), item.figure, { cursor: false });
@@ -99,9 +105,12 @@
     dialog.addEventListener('click', event => {
       const button = event.target.closest('button');
       if (!button) return;
-      if (button.hasAttribute('data-practice-close') ||
+      if (button.hasAttribute('data-practice-close')) {
+        dialog.close();
+      } else if (button.hasAttribute('data-practice-skip') ||
           (button.hasAttribute('data-practice-next') && index === stages.length - 1)) {
         dialog.close();
+        onContinue?.();
       } else if (button.hasAttribute('data-practice-next')) {
         index++;
         render();
@@ -112,20 +121,28 @@
         dialog.querySelector('#practice-guide').focus();
       }
     });
-    dialog.addEventListener('close', () => document.getElementById('practice-examples')?.focus());
+    dialog.addEventListener('close', () => {
+      if (!dialog.open && returnFocus?.isConnected) returnFocus.focus();
+    });
 
-    function open() {
-      if (dialog.open) return;
-      stages = items.map(item => ({ item, examples: shuffle(item.examples) }));
+    function open({ groupId, trigger = document.getElementById('practice-examples'), proceed } = {}) {
+      if (dialog.open) return true;
+      const selected = groupId ? items.filter(item => item.groupId === groupId) : items;
+      if (!selected.length) return false;
+      returnFocus = trigger;
+      onContinue = proceed;
+      stages = selected.map(item => ({ item, examples: shuffle(item.examples) }));
       index = 0;
       render();
       dialog.showModal();
       dialog.querySelector('#practice-title').focus();
+      return true;
     }
 
     return {
       reviewButton,
       open,
+      close: () => dialog.close(),
       offer(attemptId) {
         if (offeredAttempt === attemptId) return;
         offeredAttempt = attemptId;

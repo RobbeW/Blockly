@@ -34,6 +34,7 @@
       ],
     ];
     return group.traces.map((trace, index) => ({
+      groupId: group.id,
       title: `Vraag 2${'abc'[index]} · Lees de blokken`,
       prompt: 'Kies de figuur die bij de blokken hoort en tel de lijnstukken die de pen tekent.',
       reference: lines(blockLines(trace.instructions)),
@@ -122,6 +123,7 @@
     ];
 
     return group.tasks.map((task, i) => ({
+      groupId: group.id,
       title: `Vraag ${task.label}`,
       prompt: task.prompt,
       figure: task.figure,
@@ -147,6 +149,7 @@
         .filter(Boolean).join('\n'),
     ]);
     return {
+      groupId: group.id,
       title: 'Vraag 7 · De stappen van het computationeel denken',
       prompt: group.prompt,
       reference: lines(group.rows.map((row, i) =>
@@ -182,6 +185,7 @@
 
     return [
       {
+        groupId: 'q1',
         title: 'Vraag 1 · Schrijf een for-lus',
         prompt: group('q1').prompt,
         max: 2,
@@ -197,6 +201,7 @@
       ...traceExamples(group('q2'), mirrored),
       ...coding(group('q3'), mirrored),
       {
+        groupId: 'q4',
         title: 'Vraag 4 · Herhaling van termen',
         prompt: group('q4').prompt,
         max: 3,
@@ -210,6 +215,7 @@
         ],
       },
       {
+        groupId: 'q6',
         title: 'Vraag 5 · Verbeter de code',
         prompt: group('q6').prompt,
         max: 3,
@@ -223,6 +229,7 @@
         ],
       },
       {
+        groupId: 'q7',
         title: 'Vraag 6 · Leg de begrippen uit',
         prompt: group('q7').prompt,
         max: 2,
