@@ -672,8 +672,10 @@
   </style>
 
   <!-- Blockly core + Dutch locale -->
-  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
-  <script src="https://unpkg.com/blockly/msg/nl.js"></script>
+  <script src="assessment/vendor/blockly/blockly_compressed.js"></script>
+  <script src="assessment/vendor/blockly/blocks_compressed.js"></script>
+  <script src="assessment/vendor/blockly/javascript_compressed.js"></script>
+  <script src="assessment/vendor/blockly/nl.js"></script>
 
   <!-- Optional libs -->
   <script src="rgbcolor.js"></script>
@@ -683,8 +685,8 @@
   <script src="maze/generated.js"></script>
 
   <!-- jsPDF / html2canvas -->
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="assessment/vendor/jspdf/jspdf.umd.min.js"></script>
+  <script src="vendor/html2canvas/html2canvas.min.js"></script>
   <style id="platform-language-toggle-styles">
 .language-toggle {
   display: inline-flex;
@@ -3169,6 +3171,8 @@ _setGenStmt('turtle_set_color', (b, g) => {
 
       workspace = Blockly.inject('blocklyDiv', {
         toolbox: $('toolbox-maze'),
+        media: 'assessment/vendor/blockly/media/',
+        sounds: location.protocol !== 'file:', // Blockly fetches its audio over HTTP.
         trashcan: true,
         renderer: 'zelos',
         grid: { spacing: 20, length: 3, colour: '#eee', snap: true },

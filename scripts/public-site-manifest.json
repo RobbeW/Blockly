@@ -179,6 +179,8 @@
     "test_maze_version_B.html",
     "test_maze_version_C.html",
     "turtlelib.js",
+    "vendor/html2canvas/LICENSE",
+    "vendor/html2canvas/html2canvas.min.js",
     "vendor/pdfjs/LICENSE",
     "vendor/pdfjs/pdf.min.mjs",
     "vendor/pdfjs/pdf.worker.min.mjs"

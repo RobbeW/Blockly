@@ -84,9 +84,12 @@
     button:focus-visible,
     select:focus-visible,
     input:focus-visible,
-    textarea:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(61, 255, 208, .42);
+    textarea:focus-visible,
+    .splitter:focus-visible,
+    .protocol-warning-action:focus-visible {
+      outline: 3px solid var(--brand-dark);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 2px var(--surface);
     }
 
     button[disabled] { cursor: not-allowed; opacity: .45; }
@@ -218,14 +221,20 @@
     .compact-button { min-width: 36px; padding-inline: 9px; }
 
     .workspace {
+      --book-min: 430px;
+      --platform-min: 570px;
+      --splitter-size: 8px;
       min-height: 0;
       display: grid;
-      grid-template-columns: minmax(430px, var(--book-width)) 8px minmax(570px, 1fr);
+      grid-template-columns:
+        clamp(var(--book-min), var(--book-width), calc(100% - var(--platform-min) - var(--splitter-size)))
+        var(--splitter-size) minmax(0, 1fr);
       overflow: hidden;
     }
 
-    .workspace[data-layout="book"] { grid-template-columns: minmax(0, 1fr); }
+    .workspace[data-layout="book"],
     .workspace[data-layout="platform"] { grid-template-columns: minmax(0, 1fr); }
+    .workspace.is-resizing .platform-frame { pointer-events: none; }
     .workspace[data-layout="book"] .platform-shell,
     .workspace[data-layout="book"] .splitter,
     .workspace[data-layout="platform"] .book-shell,
@@ -520,8 +529,9 @@
     .text-box-resize { right: 2px; bottom: 2px; cursor: nwse-resize; touch-action: none; }
 
     .text-box-control:focus-visible {
-      outline: 2px solid var(--mint);
+      outline: 2px solid var(--brand-dark);
       outline-offset: 1px;
+      box-shadow: 0 0 0 1px var(--surface);
     }
 
     .tool-button .compact-label { display: none; }
@@ -612,30 +622,16 @@
     .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
     .protocol-warning {
-      position: fixed;
-      inset: 0;
-      z-index: 1000;
-      display: grid;
-      place-items: center;
+      width: min(620px, calc(100vw - 28px));
       padding: 24px;
-      background: rgba(22, 0, 51, .72);
-      backdrop-filter: blur(8px);
     }
 
-    .protocol-warning[hidden] { display: none; }
+    .protocol-warning::backdrop { background: rgba(22, 0, 51, .72); }
 
-    .protocol-warning-card {
-      width: min(620px, 100%);
-      padding: 28px;
-      border: 1px solid rgba(82, 0, 255, .18);
-      border-radius: 22px;
-      background: white;
-      box-shadow: 0 30px 90px rgba(22, 0, 51, .34);
-    }
-
-    .protocol-warning-card h2 { margin: 4px 0 10px; color: var(--brand-dark); font-size: 24px; }
-    .protocol-warning-card p { margin: 0 0 14px; color: var(--muted); line-height: 1.55; }
-    .protocol-warning-card ol { margin: 0 0 20px; padding-left: 22px; line-height: 1.7; }
+    .protocol-warning h2 { margin: 4px 0 10px; color: var(--brand-dark); font-size: 24px; }
+    .protocol-warning p { margin: 0 0 14px; color: var(--muted); line-height: 1.55; }
+    .protocol-warning ol { margin: 0 0 20px; padding-left: 22px; line-height: 1.7; }
+    .protocol-warning code { overflow-wrap: anywhere; }
 
     .protocol-warning-kicker {
       color: var(--brand);
@@ -697,7 +693,7 @@
     }
 
     @media (max-width: 1240px) {
-      .workspace { grid-template-columns: minmax(390px, 45%) 8px minmax(520px, 1fr); }
+      .workspace { --book-min: 390px; --platform-min: 520px; }
       .tool-button .wide-label { display: none; }
       .tool-button .compact-label { display: inline; }
     }
@@ -776,7 +772,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
     }
 
     @media print {
@@ -832,7 +828,7 @@
     </header>
 
     <main id="workspace" class="workspace" data-layout="split">
-      <section class="book-shell" aria-label="Digitaal bordboek">
+      <section id="book-pane" class="book-shell" aria-label="Digitaal bordboek">
         <div class="book-toolbar">
           <button id="toggle-thumbnails" class="tool-button thumbnail-toggle" type="button" aria-expanded="true" aria-controls="thumbnail-rail" aria-label="Paginaoverzicht verbergen" title="Paginaoverzicht verbergen">‹</button>
           <div class="page-heading">
@@ -881,7 +877,7 @@
         </div>
       </section>
 
-      <div id="splitter" class="splitter" role="separator" aria-orientation="vertical" aria-label="Breedte van boek en platform aanpassen" tabindex="0"></div>
+      <div id="splitter" class="splitter" role="separator" aria-orientation="vertical" aria-controls="book-pane" aria-label="Breedte van boek en platform aanpassen" aria-valuenow="46" tabindex="0"></div>
 
       <section class="platform-shell" aria-label="Blockly-platform">
         <div class="platform-toolbar">
@@ -894,9 +890,9 @@
     </main>
   </div>
 
-  <dialog id="class-dialog">
+  <dialog id="class-dialog" aria-labelledby="class-dialog-title">
     <form id="class-form" class="dialog-body" method="dialog">
-      <h2>Nieuwe klas</h2>
+      <h2 id="class-dialog-title">Nieuwe klas</h2>
       <p>Elke klas krijgt een eigen platformvoortgang, lespagina en schrijflagen. De gegevens blijven in deze browser.</p>
       <label for="class-name">Naam van de klas</label>
       <input id="class-name" type="text" maxlength="60" autocomplete="off" placeholder="Bijvoorbeeld 1A" required>
@@ -909,28 +905,26 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <div id="protocol-warning" class="protocol-warning" role="alertdialog" aria-modal="true" aria-labelledby="protocol-warning-title" hidden>
-    <div class="protocol-warning-card">
+  <dialog id="protocol-warning" class="protocol-warning" role="alertdialog" aria-labelledby="protocol-warning-title" aria-describedby="protocol-warning-message">
       <span class="protocol-warning-kicker">Lokaal bordboek</span>
       <h2 id="protocol-warning-title">Open het bordboek via een webadres</h2>
       <p id="protocol-warning-message">
-        Edge blokkeert PDF.js en de koppeling met het leerplatform wanneer <strong>teacher.html</strong>
-        rechtstreeks als bestand wordt geopend.
+        Het bordboek gebruikt een lokaal of online webadres om de syllabus en het leerplatform te laden.
       </p>
       <ol id="protocol-warning-steps">
-        <li>Sluit dit tabblad.</li>
-        <li>Dubbelklik in de projectmap op <strong>start_teacher.bat</strong>.</li>
-        <li>Laat het geminimaliseerde servervenster open zolang je het bordboek gebruikt.</li>
+        <li>Open een terminal in de projectmap en voer <code>python3 -m http.server 8000 --bind 127.0.0.1</code> uit. Gebruik op Windows <code>py -3</code> in plaats van <code>python3</code>.</li>
+        <li>Open <a href="http://127.0.0.1:8000/teacher.html">het lokale bordboek</a> en laat de terminal open.</li>
       </ol>
-      <a class="protocol-warning-action" href="https://robbew.github.io/Blockly/teacher.html">Open online bordboek</a>
-    </div>
-  </div>
+      <a class="protocol-warning-action" href="https://robbew.github.io/Blockly/teacher.html" autofocus>Open online bordboek</a>
+  </dialog>
 
   <script>
-    if (window.location.protocol === 'file:') {
-      document.getElementById('protocol-warning').hidden = false;
-      document.querySelector('.app').setAttribute('aria-hidden', 'true');
+    function showBoardbookWarning() {
+      const warning = document.getElementById('protocol-warning');
+      warning.showModal();
     }
+    document.getElementById('protocol-warning').addEventListener('cancel', event => event.preventDefault());
+    if (window.location.protocol === 'file:') showBoardbookWarning();
   </script>
 
   <script type="module">
@@ -1023,6 +1017,7 @@
 
       const $ = (id) => document.getElementById(id);
       const workspaceEl = $('workspace');
+      const splitter = $('splitter');
       const classSelect = $('class-select');
       const modeSelect = $('mode-select');
       const levelSelect = $('level-select');
@@ -1838,7 +1833,7 @@
           const targetPage = mappedPage();
           showPage(targetPage);
           if (modeSelect.value.startsWith('maze') && Number(levelSelect.value) === 11) {
-            showToast('Random level 11 heeft nog geen eigen syllabuspagina. Pagina 34 blijft open.');
+            showToast(`Random level 11 heeft nog geen eigen syllabuspagina. Pagina ${targetPage} blijft open.`);
           }
         }
         applyPlatformContext();
@@ -1887,8 +1882,9 @@
             }
             .teacher-panel-switch:hover { background: #3700b3; }
             .teacher-panel-switch:focus-visible {
-              outline: 3px solid rgba(61, 255, 208, .72);
+              outline: 3px solid #3700b3;
               outline-offset: 2px;
+              box-shadow: 0 0 0 2px #fff;
             }
             .teacher-panel-switch svg {
               width: 24px;
@@ -2862,8 +2858,37 @@
         scheduleAnnotationPersist();
       }
 
+      function splitGeometry() {
+        if (!splitter.offsetWidth) return null;
+        const { left, width } = workspaceEl.getBoundingClientRect();
+        const style = getComputedStyle(workspaceEl);
+        const bookMin = parseFloat(style.getPropertyValue('--book-min'));
+        const platformMin = parseFloat(style.getPropertyValue('--platform-min'));
+        return {
+          left, width,
+          min: Math.max(30, bookMin / width * 100),
+          max: Math.min(68, (width - platformMin - splitter.offsetWidth) / width * 100),
+          current: (splitter.getBoundingClientRect().left - left) / width * 100
+        };
+      }
+
+      function updateSplitter() {
+        const split = splitGeometry();
+        if (!split) return;
+        splitter.setAttribute('aria-valuemin', Math.round(split.min));
+        splitter.setAttribute('aria-valuemax', Math.round(split.max));
+        splitter.setAttribute('aria-valuenow', Math.round(split.current));
+      }
+
+      function resizeSplit(percentage, split) {
+        document.documentElement.style.setProperty('--book-width', `${clamp(percentage, split.min, split.max)}%`);
+        updateSplitter();
+        fitPaper();
+      }
+
       function applyLayout(save = true) {
         workspaceEl.dataset.layout = layoutSelect.value;
+        updateSplitter();
         fitPaper();
         window.requestAnimationFrame(() => {
           fitPaper();
@@ -3080,37 +3105,38 @@
           waitForPlatformReady();
         });
 
-        const splitter = $('splitter');
         splitter.addEventListener('pointerdown', (event) => {
-          if (workspaceEl.dataset.layout !== 'split' || getComputedStyle(splitter).display === 'none') return;
+          if (event.button !== 0 || !event.isPrimary || !splitGeometry()) return;
+          const grabOffset = event.clientX - splitter.getBoundingClientRect().left;
           splitter.setPointerCapture(event.pointerId);
+          workspaceEl.classList.add('is-resizing');
           const move = (moveEvent) => {
-            const rect = workspaceEl.getBoundingClientRect();
-            const percentage = clamp(((moveEvent.clientX - rect.left) / rect.width) * 100, 30, 68);
-            document.documentElement.style.setProperty('--book-width', `${percentage}%`);
-            fitPaper();
+            const split = splitGeometry();
+            if (moveEvent.pointerId !== event.pointerId || !split) return;
+            resizeSplit((moveEvent.clientX - grabOffset - split.left) / split.width * 100, split);
           };
           const end = () => {
             splitter.removeEventListener('pointermove', move);
-            splitter.removeEventListener('pointerup', end);
-            splitter.removeEventListener('pointercancel', end);
+            workspaceEl.classList.remove('is-resizing');
             markSessionDirty();
           };
           splitter.addEventListener('pointermove', move);
-          splitter.addEventListener('pointerup', end);
-          splitter.addEventListener('pointercancel', end);
+          splitter.addEventListener('lostpointercapture', end, { once: true });
         });
         splitter.addEventListener('keydown', (event) => {
-          if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+          const split = splitGeometry();
+          if (!split) return;
           event.preventDefault();
-          const current = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--book-width')) || 46;
-          const next = clamp(current + (event.key === 'ArrowLeft' ? -2 : 2), 30, 68);
-          document.documentElement.style.setProperty('--book-width', `${next}%`);
-          fitPaper();
+          const next = { ArrowLeft: split.current - 2, ArrowRight: split.current + 2, Home: split.min, End: split.max };
+          resizeSplit(next[event.key], split);
           markSessionDirty();
         });
 
-        window.addEventListener('resize', fitPaper);
+        window.addEventListener('resize', () => {
+          updateSplitter();
+          fitPaper();
+        });
         window.visualViewport?.addEventListener('resize', fitPaper);
         window.addEventListener('pagehide', () => {
           finishActiveStroke();
@@ -3188,12 +3214,10 @@
         })();
       }).catch((error) => {
         console.error(error);
-        const warning = document.getElementById('protocol-warning');
         document.getElementById('protocol-warning-title').textContent = 'PDF-renderer kon niet worden geladen';
         document.getElementById('protocol-warning-message').textContent = 'Controleer of de map vendor/pdfjs samen met teacher.html is gepubliceerd.';
         document.getElementById('protocol-warning-steps').hidden = true;
-        document.querySelector('.app').setAttribute('aria-hidden', 'true');
-        warning.hidden = false;
+        showBoardbookWarning();
       });
     }
   </script>
