@@ -3,12 +3,18 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const {webcrypto} = require('node:crypto');
 
 const root = path.resolve(__dirname, '..');
 function configFor(version) {
   const context = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(root, `evaluations/chapter-2/versions/${version}/config.js`), 'utf8'), context);
   return context.window.ASSESSMENT_CONFIG;
+}
+async function currentConfigFor(version, delivery = 'assessment') {
+  const context = { window: {}, crypto: webcrypto, TextEncoder };
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'evaluations/chapter-2/turtle-answer-modes.js'), 'utf8'), context);
+  return context.window.Chapter2AnswerModes.prepare(configFor(version), delivery);
 }
 const number = value => ({ type: 'math_number', fields: { NUM: value } });
 const shadow = value => ({ shadow: number(value) });
@@ -24,25 +30,39 @@ const loop = (id, from, to, body, step = 1) => ({
 const state = (blocks, variables = []) => ({ blocks: { languageVersion: 0, blocks }, ...(variables.length ? { variables } : {}) });
 const vars = (...names) => names.map(name => ({ id: name, name }));
 
-function modelWorkspace(version, taskId) {
+function modelWorkspace(version, taskId, current = false) {
   if (taskId === 'q3b') {
     const side = { A: 20, B: 25, C: 30 }[version];
     const body = chain(loop('zijde', 0, 5, chain(forward(side), turn('right', 60))),
       pen('up'), forward(100), turn('right', 90), pen('down'));
     return state([loop('zeshoek', 0, 3, body)], vars('zijde', 'zeshoek'));
   }
-  const side = { A: 50, B: 60, C: 40 }[version];
+  if (taskId === 'q3c') {
+    const side = version === 'C' ? 32 : 45;
+    const angle = version === 'C' ? 72 : 144;
+    const figure = () => loop('zijde', 0, 4, chain(forward(side), turn('right', angle)));
+    const distance = version === 'A' ? 100 : 120;
+    const right = () => [pen('up'), turn('right', 90), forward(distance), turn('left', 90), pen('down')];
+    const diagonal = [pen('up'), turn('left', 30), forward(120), turn('right', 30), pen('down')];
+    return state([chain(figure(), ...right(), figure(), ...(version === 'A' ? right() : diagonal), figure())], vars('zijde'));
+  }
+  const side = current ? 50 : { A: 50, B: 60, C: 40 }[version];
   const direction = version === 'B' ? 'left' : 'right';
   const back = version === 'B' ? 'right' : 'left';
   const square = () => loop('zijde', 0, 3, chain(forward(side), turn(direction, 90)));
   return state([chain(square(), pen('up'), turn(direction, 90), forward(side * 1.5), turn(back, 90), pen('down'), square())], vars('zijde'));
 }
 
-function geometry(segments) {
-  return Array.from(segments, ({ x1, y1, x2, y2 }) => [x1, y1, x2, y2].map(value => +value.toFixed(8) || 0));
+function assertGeometry(actual, expected) {
+  assert.equal(actual.length, expected.length);
+  for (const [index, segment] of actual.entries()) {
+    for (const axis of ['x1', 'y1', 'x2', 'y2']) {
+      assert.ok(Math.abs(segment[axis] - expected[index][axis]) < 1e-7, `Segment ${index} ${axis}`);
+    }
+  }
 }
 
-if (require.main === module) {
+async function main() {
   const Blockly = require('../assessment/vendor/blockly/blockly_compressed.js');
   require('../assessment/vendor/blockly/blocks_compressed.js');
   Blockly.setLocale(require('../assessment/vendor/blockly/nl.js'));
@@ -50,18 +70,19 @@ if (require.main === module) {
   const adapter = require('../evaluations/chapter-2/turtle-blocks.js');
   adapter.install(Blockly);
   for (const version of 'ABC') {
-    const config = configFor(version);
-    for (const task of config.groups.find(group => group.id === 'q3').tasks) {
+    const configs = [configFor(version), await currentConfigFor(version)];
+    for (const [index, config] of configs.entries()) for (const task of config.groups.find(group => group.id === 'q3').tasks) {
       const workspace = new Blockly.Workspace();
-      const model = modelWorkspace(version, task.id);
-      assert.deepEqual(geometry(adapter.run(model).segments), geometry(task.figure.segments));
+      const model = modelWorkspace(version, task.id, Boolean(index));
+      assertGeometry(adapter.run(model).segments, task.figure.segments);
       // The headless Node Blockly build has no XML DOM for storing shadows.
       const explicitNumbers = JSON.parse(JSON.stringify(model), (_key, value) => value?.shadow ? { block: value.shadow } : value);
       Blockly.serialization.workspaces.load(explicitNumbers, workspace);
       const saved = Blockly.serialization.workspaces.save(workspace);
       const result = adapter.run(saved);
       assert.equal(result.status, 'ok', result.message);
-      assert.deepEqual(geometry(result.segments), geometry(task.figure.segments));
+      assertGeometry(result.segments, task.figure.segments);
+      assertGeometry(Chapter2Turtle.run(adapter.inspect(saved).source).segments, task.figure.segments);
       assert.match(adapter.inspect(saved).lines.join('\n'), /tot en met/);
       workspace.dispose();
     }
@@ -90,6 +111,7 @@ if (require.main === module) {
   ]) assert.equal(adapter.run(invalid).status, 'invalid');
   assert.equal(adapter.inspect(null).status, 'empty');
   assert.notEqual(adapter.run(state([loop('i', 0, 100000, pen('down'))], vars('i'))).status, 'ok');
-  console.log('PASS Turtle blocks: real Blockly serialization, all six target figures, nesting, inclusive bounds, variables and invalid/limited evidence.');
+  console.log('PASS Turtle blocks and JavaScript: legacy and current target figures, Blockly serialization, nesting, variables and invalid/limited evidence.');
 }
-module.exports = { configFor, modelWorkspace };
+if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });
+module.exports = { configFor, currentConfigFor, modelWorkspace };

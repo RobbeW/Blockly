@@ -17,6 +17,11 @@ function resolve(relative, directory = false) {
   return real;
 }
 const readJson = relative => JSON.parse(fs.readFileSync(resolve(relative), 'utf8'));
+function readConfig(relative) {
+  const context = {window: {}};
+  vm.runInNewContext(fs.readFileSync(resolve(relative), 'utf8'), context, {timeout: 1000});
+  return context.window.ASSESSMENT_CONFIG;
+}
 const catalog = readJson('evaluations/catalog.json');
 assert.equal(catalog.schemaVersion, 1);
 assert.ok(Array.isArray(catalog.chapters) && catalog.chapters.length > 0);
@@ -59,9 +64,7 @@ for (const manifest of catalog.chapters) {
       const entryPath = resolve(variant.entry);
       assert.ok(!entries.has(entryPath), 'Variants must have separate entry pages');
       entries.add(entryPath);
-      const context = {window: {}};
-      vm.runInNewContext(fs.readFileSync(resolve(variant.config), 'utf8'), context, {timeout: 1000});
-      config = context.window.ASSESSMENT_CONFIG;
+      config = readConfig(variant.config);
       assert.equal(config.id, chapter.examId);
       assert.equal(config.version, variant.version);
       const html = fs.readFileSync(entryPath, 'utf8');
@@ -84,10 +87,17 @@ for (const manifest of catalog.chapters) {
       assert.ok(!rubrics.has(rubricPath), 'Do not reuse another variant rubric');
       rubrics.add(rubricPath);
       const rubric = readJson(grading.rubric);
+      const boundConfig = grading.config ? readConfig(grading.config) : config;
       assert.equal(rubric.id, grading.rubricId);
       assert.equal(rubric.version, variant.version);
-      assert.equal(rubric.exam_revision, config.revision);
-      assert.equal(rubric.total, config.totalPoints);
+      assert.equal(rubric.exam_revision, boundConfig.revision);
+      assert.equal(rubric.total, boundConfig.totalPoints);
+      if (grading.config) {
+        assert.equal(boundConfig.id, config.id);
+        assert.equal(boundConfig.version, config.version);
+        assert.equal(boundConfig.totalPoints, chapter.totalPoints);
+        assert.equal(boundConfig.configSha256, rubric.configSha256);
+      }
       if (chapter.chapter === 1 && variant.version !== 'C') {
         assert.equal(rubric.examId, chapter.examId);
         assert.equal(rubric.configSha256, require('node:crypto').createHash('sha256')

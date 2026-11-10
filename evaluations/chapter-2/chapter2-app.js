@@ -7,11 +7,14 @@
   const delivery=modes?.requested(location.search,config.version);
   const choiceEnabled=Boolean(delivery);
   const blocksPilot=delivery==='practice';
-  const legacyLink=$('legacy-attempt-link');
-  if(legacyLink&&!choiceEnabled){
-    legacyLink.hidden=true;
+  const legacy=new URLSearchParams(location.search).get('legacy');
+  const previous=legacy==='v6';
+  if(legacy==='v5'||previous){
+    $('legacy-attempt-link').hidden=true;
     $('new-attempt').defaultChecked=false;
     $('new-attempt').checked=false;
+  }else if(config.version==='C'&&blocksPilot){
+    $('legacy-v6-link').href='?practice=blocks&legacy=v6';
   }
   if(choiceEnabled){
     document.title=(blocksPilot?'Oefenversie':'Toets')+' Turtle · '+config.version+' · Blokken of JavaScript';
@@ -21,13 +24,13 @@
     }else{
       const note=document.createElement('p');
       note.className='callout';
-      note.textContent='Toets met blokkenkeuze · Kies bij vraag 3a en 3b voor blokken of JavaScript.';
+      note.textContent='Toets met blokkenkeuze · Kies bij vraag 3 voor blokken of JavaScript.';
       $('gate-title').after(note);
     }
     submit.disabled=true;
     $('gate-error').textContent='Blokkeneditor laden…';
     try{
-      config=await modes.prepare(config,delivery);
+      config=await modes.prepare(config,delivery,previous);
       await modes.loadEditor();
     }catch(error){
       $('gate-error').textContent='De blokkenversie kon niet worden geladen. Open de pagina opnieuw of vraag je leerkracht om hulp.';
@@ -40,13 +43,16 @@
   const practice=window.AssessmentPractice?.create(config);
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const points=n=>Number(n).toLocaleString('nl-BE');
-  const prefix=`blockly-assessment:${config.id}:${config.version}:${choiceEnabled?delivery+'-blocks:':''}`;
+  const drawings=config.groups.find(group=>group.id==='q3').tasks.map(task=>task.id);
+  const storageTrack=choiceEnabled?`${delivery}-blocks${previous?'':'-v7'}:`:'';
+  const prefix=`blockly-assessment:${config.id}:${config.version}:${storageTrack}`;
   const blockEditors=new Map();
+  const playbacks=new Map();
   let state=null,current='q1',saveTimer,timer,expired=false,lastWarning='',exporting=false,downloadUrl=null;
-  function blankAnswers(){return {q1:'',q2a:{choice:'',count:''},q2b:{choice:'',count:''},q2c:{choice:'',count:''},q3a:choiceEnabled?modes.blankDraft():'',q3b:choiceEnabled?modes.blankDraft():'',q4:Array(6).fill(''),q6:Array(3).fill(''),q7:Array(2).fill(''),q8:Array.from({length:5},()=>({order:'',name:'',description:''})),reflection:'',estimate:''};}
+  function blankAnswers(){return {q1:'',q2a:{choice:'',count:''},q2b:{choice:'',count:''},q2c:{choice:'',count:''},...Object.fromEntries(drawings.map(id=>[id,choiceEnabled?modes.blankDraft():''])),q4:Array(6).fill(''),q6:Array(3).fill(''),q7:Array(2).fill(''),q8:Array.from({length:5},()=>({order:'',name:'',description:''})),reflection:'',estimate:''};}
   function fresh(identity){const now=Date.now();return {schemaVersion:1,examId:config.id,version:config.version,revision:config.revision,sourceSha256:config.sourceSha256,configSha256:config.configSha256,attemptId:crypto.randomUUID(),identity,startedAt:new Date(now).toISOString(),expiresAt:now+config.durationMinutes*60000,answers:blankAnswers(),lastExport:null};}
   function valid(saved,identity){
-    return saved&&saved.schemaVersion===1&&saved.examId===config.id&&saved.version===config.version&&saved.revision===config.revision&&saved.sourceSha256===config.sourceSha256&&saved.configSha256===config.configSha256&&saved.attemptId&&Number.isFinite(saved.expiresAt)&&JSON.stringify(saved.identity)===JSON.stringify(identity)&&saved.answers&&Object.keys(blankAnswers()).every(key=>Object.hasOwn(saved.answers,key))&&['q2a','q2b','q2c'].every(key=>['','A','B','C','D'].includes(saved.answers[key]?.choice)&&typeof saved.answers[key]?.count==='string')&&saved.answers.q4?.length===6&&saved.answers.q6?.length===3&&saved.answers.q7?.length===2&&saved.answers.q8?.length===5&&(!choiceEnabled||modes.ids.every(id=>modes.validDraft(saved.answers[id])));
+    return saved&&saved.schemaVersion===1&&saved.examId===config.id&&saved.version===config.version&&saved.revision===config.revision&&saved.sourceSha256===config.sourceSha256&&saved.configSha256===config.configSha256&&saved.attemptId&&Number.isFinite(saved.expiresAt)&&JSON.stringify(saved.identity)===JSON.stringify(identity)&&saved.answers&&Object.keys(blankAnswers()).every(key=>Object.hasOwn(saved.answers,key))&&['q2a','q2b','q2c'].every(key=>['','A','B','C','D'].includes(saved.answers[key]?.choice)&&typeof saved.answers[key]?.count==='string')&&saved.answers.q4?.length===6&&saved.answers.q6?.length===3&&saved.answers.q7?.length===2&&saved.answers.q8?.length===5&&(!choiceEnabled||drawings.every(id=>modes.validDraft(saved.answers[id])));
   }
   function storeBlocks(id,workspace){
     const draft=state.answers[id];
@@ -72,7 +78,7 @@
   function filled(value){return typeof value==='string'&&value.trim().length>0;}
   function answered(group){const a=state.answers;switch(group.id){case 'q1':return filled(a.q1);case 'q2':return ['q2a','q2b','q2c'].every(id=>filled(a[id].choice)&&filled(a[id].count));case 'q3':return group.tasks.every(task=>choiceEnabled?!modes.selected(task.id,a[task.id]).blank:filled(a[task.id]));case 'q4':case 'q6':case 'q7':return a[group.id].every(filled);case 'q8':return a.q8.every((row,i)=>filled(row.order)&&(group.rows[i].name||filled(row.name))&&(group.rows[i].description||filled(row.description)));default:return false;}}
   function updateNav(){if(!state)return;$('question-nav').innerHTML=config.groups.map((g,i)=>`<button type="button" class="nav-button" data-go="${g.id}" ${current===g.id?'aria-current="step"':''}><span class="nav-number">${i+1}</span><span>${esc(g.title)}</span>${answered(g)?'<span class="done" aria-label="Ingevuld">✓</span>':''}</button>`).join('');$('progress-label').textContent=`${config.groups.filter(answered).length} / ${config.groups.length} onderdelen ingevuld`;}
-  function heading(group){return `<div class="question-heading"><div><span class="eyebrow">VRAAG ${config.groups.indexOf(group)+1} VAN ${config.groups.length}</span><h1>${esc(group.title)}</h1></div><span class="points">${points(group.points)} punten</span></div><p class="instructions">${esc(Chapter2Turtle.instructions(group))}</p>`;}
+  function heading(group){return `<div class="question-heading"><div><span class="eyebrow">VRAAG ${config.groups.indexOf(group)+1} VAN ${config.groups.length}</span><h1>${esc(group.title)}</h1></div><span class="points">${points(group.points)} punten</span></div>${group.prompt?`<p class="instructions">${esc(Chapter2Turtle.instructions(group))}</p>`:''}`;}
   function footer(group){
     const i=config.groups.indexOf(group), next=config.groups[i+1];
     return `<div class="question-footer">${i?`<button type="button" data-go="${config.groups[i-1].id}">← Vorige vraag</button>`:'<span></span>'}<button type="button" class="primary" data-next="${next?.id||'review'}">${next?'Volgende vraag':practice?'Afronden & voorbeelden':'Overzicht & PDF'} →</button></div>`;
@@ -97,7 +103,7 @@
     return `<p class="callout">${explanation}</p>`+group.tasks.map(task=>{
       const id=task.id;
       const mode=choiceEnabled?state.answers[id].mode:'code';
-      const actions=mode?`<div class="button-row"><button type="button" class="primary" data-run="${id}" aria-controls="output-${id}" aria-label="Voer ${mode==='blocks'?'blokken':'code'} van ${id.slice(1)} uit">▶ Voer mijn ${mode==='blocks'?'blokken':'code'} uit</button><button type="button" data-reset-output="${id}">Wis uitvoer</button></div>`:'';
+      const actions=mode?`<div class="button-row"><button type="button" class="primary" data-run="${id}" aria-controls="output-${id}" aria-label="Voer ${mode==='blocks'?'blokken':'code'} van ${id.slice(1)} uit">▶ Voer mijn ${mode==='blocks'?'blokken':'code'} uit</button><button type="button" data-reset-output="${id}">Wis uitvoer</button><button type="button" data-finish-playback="${id}" hidden>Toon volledige tekening</button></div>`:'';
       return `<section class="card turtle-task"><h2>${esc(task.label)} <small>(${points(task.points)} punten)</small></h2>
         <ul class="reference-summary">${task.prompt.map(line=>`<li>${esc(line)}</li>`).join('')}</ul>
         <div class="code-workbench"><div class="editor-pane">${taskEditor(task)}${actions}
@@ -108,6 +114,8 @@
     }).join('');
   }
   function paintPreview(id,scroll=false){
+    playbacks.get(id)?.();
+    playbacks.delete(id);
     const saved=state.previews?.[id];
     const selected=choiceEnabled?modes.selected(id,state.answers[id]):null;
     const mode=choiceEnabled?selected.mode:'code';
@@ -115,13 +123,36 @@
     const blank={status:'empty',segments:[],turtle:{x:0,y:0,heading:90},message:emptyMessage};
     const result=choiceEnabled?(saved?.mode===mode&&saved?modes.run(saved):null)||blank:
       filled(saved?.source)?Chapter2Turtle.run(saved.source):blank;
-    Chapter2Turtle.draw($('output-'+id),result,{labelSide:id==='q3b'?'left':'auto'});
+    const canvas=$('output-'+id);
+    const labelSide=id==='q3b'?'left':'auto';
+    const finishButton=document.querySelector(`[data-finish-playback="${id}"]`);
     const stale=choiceEnabled?Boolean(saved&&JSON.stringify(saved)!==JSON.stringify(selected)):
       typeof saved?.source==='string'&&saved.source!==state.answers[id];
     const status=$('result-'+id);
-    status.dataset.status=stale?'stale':result.status;
     const answerName=mode==='blocks'?'blokken':'code';
-    status.textContent=stale?`Je ${mode==='blocks'?'blokken zijn':'code is'} gewijzigd. Je ziet de laatste uitvoering; klik opnieuw op uitvoeren.`:result.status==='ok'?`Uitgevoerd · ${result.segments.length} getekende lijnstukken · ${result.actions.length} acties. Vergelijk jouw tekening met het doel.`:result.status==='empty'?result.message:`Controleer je ${answerName}: ${result.message}${result.segments.length?' Je ziet de tekening tot aan de fout.':''}`;
+    let completed=false;
+    function finish(){
+      completed=true;
+      playbacks.delete(id);
+      if(finishButton){
+        if(document.activeElement===finishButton)document.querySelector(`[data-run="${id}"]`).focus();
+        finishButton.hidden=true;
+      }
+      status.dataset.status=stale?'stale':result.status;
+      status.textContent=stale?`Je ${mode==='blocks'?'blokken zijn':'code is'} gewijzigd. Je ziet de laatste uitvoering; klik opnieuw op uitvoeren.`:result.status==='ok'?`Uitgevoerd · ${result.segments.length} getekende lijnstukken · ${result.actions.length} acties. Vergelijk jouw tekening met het doel.`:result.status==='empty'?result.message:`Controleer je ${answerName}: ${result.message}${result.segments.length?' Je ziet de tekening tot aan de fout.':''}`;
+    }
+    if(scroll){
+      const cancel=Chapter2Turtle.play(canvas,result,{labelSide,onComplete:finish});
+      if(!completed){
+        playbacks.set(id,cancel);
+        finishButton.hidden=false;
+        status.dataset.status='running';
+        status.textContent='Turtle tekent…';
+      }
+    }else{
+      Chapter2Turtle.draw(canvas,result,{labelSide});
+      finish();
+    }
     if(scroll)$('preview-'+id).scrollIntoView({block:'nearest',behavior:'instant'});
   }
   function mountBlocks(id){
@@ -143,14 +174,14 @@
     if(group.id==='q1')return `<section class="card">${textarea('q1',state.answers.q1,'Jouw for-lus','code-input',6)}</section>`;
     if(group.id==='q4'||group.id==='q6'||group.id==='q7'){
       const terms=group.terms||group.rows;
-      return `<section class="card">${terms.map((term,i)=>textarea(group.id+'-'+i,state.answers[group.id][i],term,group.id==='q6'?'code-input':'',group.id==='q7'?5:2)).join('')}</section>`;
+      return `<section class="card turtle-fields">${terms.map((term,i)=>`<div class="turtle-field">${textarea(group.id+'-'+i,state.answers[group.id][i],term,group.id==='q6'?'code-input':'',group.id==='q7'?5:2)}</div>`).join('')}</section>`;
     }
     if(group.id==='q8')return `<section class="card ct-scroll"><table class="answer-table ct-table"><thead><tr><th scope="col">Volgorde</th><th scope="col">Naam</th><th scope="col">Korte uitleg</th></tr></thead><tbody>${group.rows.map((row,i)=>`<tr><td><label class="sr-only" for="q8-${i}-order">Volgorde rij ${i+1}</label><select class="ct-order" id="q8-${i}-order" data-answer="q8-${i}-order"><option value="">Kies…</option>${[1,2,3,4,5].map(n=>`<option value="${n}" ${state.answers.q8[i].order===String(n)?'selected':''}>${n}</option>`).join('')}</select></td><td ${row.name?'class="given-cell"':''}>${row.name?esc(row.name):textarea(`q8-${i}-name`,state.answers.q8[i].name,`Ontbrekende naam rij ${i+1}`,'',2)}</td><td ${row.description?'class="given-cell"':''}>${row.description?esc(row.description):textarea(`q8-${i}-description`,state.answers.q8[i].description,`Korte uitleg rij ${i+1}`,'',4)}</td></tr>`).join('')}</tbody></table></section><section class="card"><h2>Terugblik <small>(geen punten)</small></h2>${textarea('reflection',state.answers.reflection,'Wat vond je van de toets? Welke leerstrategie gebruikte je?', '',3)}<label for="estimate">Hoeveel denk je te halen op ${points(config.totalPoints)}?</label><input id="estimate" data-answer="estimate" class="estimate-input" inputmode="decimal" maxlength="10" value="${esc(state.answers.estimate)}"></section>`;
     return '';
   }
   function lock(){if(!expired)return;$('question-panel').querySelectorAll('input,select,textarea,[data-run],[data-reset-output],[data-clear-choice]').forEach(input=>input.disabled=true);}
   function render(id,focus=true){
-    persist();disposeBlocks();current=id;if(id==='review'){renderReview(focus);return;}
+    persist();disposeBlocks();playbacks.forEach(cancel=>cancel());playbacks.clear();current=id;if(id==='review'){renderReview(focus);return;}
     const group=config.groups.find(g=>g.id===id);if(!group)return;
     $('question-panel').innerHTML=(expired?'<p class="expired-banner">De toetstijd is voorbij. Je antwoorden zijn bewaard. Steek je hand op en wacht op de docent.</p>':'')+heading(group)+(group.id==='q2'?traceChoices(group):group.id==='q3'?codeTasks(group):simple(group))+footer(group);
     if(group.id==='q2')group.traces.forEach(trace=>trace.options.forEach(option=>Chapter2Turtle.draw($('figure-'+trace.id+'-'+option.id),option.figure,{cursor:false})));
@@ -206,9 +237,9 @@
     if(/^q[467]-\d$/.test(id)){const [key,index]=id.split('-');state.answers[key][Number(index)]=value;}
     else if(/^q8-\d-(order|name|description)$/.test(id)){const [,index,key]=id.split('-');state.answers.q8[Number(index)][key]=value;}
     else if(/^q2[abc]-count$/.test(id))state.answers[id.split('-')[0]].count=value;
-    else if(choiceEnabled&&modes.ids.includes(id))state.answers[id].code=value;
+    else if(choiceEnabled&&drawings.includes(id))state.answers[id].code=value;
     else state.answers[id]=value;
-    if(/^q3[ab]$/.test(id)&&state.previews?.[id])paintPreview(id);
+    if(drawings.includes(id)&&state.previews?.[id])paintPreview(id);
     changed();
   });
   document.addEventListener('change',event=>{
@@ -244,6 +275,7 @@
     if(button.id==='export-pdf'){download();return;}
     if(expired||exporting)return;
     if(button.dataset.run){const id=button.dataset.run;state.previews??={};captureBlocks();state.previews[id]=choiceEnabled?modes.selected(id,state.answers[id]):{source:state.answers[id]};paintPreview(id,true);persist();}
+    else if(button.dataset.finishPlayback)paintPreview(button.dataset.finishPlayback);
     else if(button.dataset.resetOutput){const id=button.dataset.resetOutput;if(state.previews)delete state.previews[id];paintPreview(id);$('result-'+id).textContent='Uitvoer gewist. Je antwoord blijft bewaard.';persist();}
     else if(button.dataset.clearChoice){const id=button.dataset.clearChoice;state.answers[id].choice='';document.querySelectorAll(`[name="${id}"]`).forEach(input=>input.checked=false);changed();}
 

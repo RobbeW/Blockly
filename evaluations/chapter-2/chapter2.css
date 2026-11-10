@@ -37,6 +37,9 @@
   border: 0;
 }
 .turtle-mode legend { margin-bottom: 8px; font-weight: 750; }
+.turtle-fields { display: grid; gap: 20px; }
+.turtle-field label { margin: 0 0 5px; }
+.turtle-field textarea { margin: 0; }
 .turtle-mode label {
   display: flex;
   align-items: center;

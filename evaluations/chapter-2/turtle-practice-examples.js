@@ -55,8 +55,8 @@
   function coding(group, mirrored, blocksPilot) {
     const turn = mirrored ? 'turnLeft' : 'turnRight';
     const back = mirrored ? 'turnRight' : 'turnLeft';
-    const side = mirrored ? 60 : 50;
-    const gap = mirrored ? 90 : 75;
+    const side = group.tasks.length === 3 ? 50 : mirrored ? 60 : 50;
+    const gap = side * 1.5;
     const hexSide = mirrored ? 25 : 20;
     const square = penUp => lines([
       'for (var vierkant = 0; vierkant < 2; vierkant++) {',
@@ -81,6 +81,15 @@
     ]);
     const squareCode = (code, scores, ...comments) => makeCode(code, scores, 'Wiskundeconcepten', comments);
     const hexCode = (code, scores, ...comments) => makeCode(code, scores, 'Wiskundeconcepten en verplaatsing', comments);
+    const star = lines(['for (var punt = 0; punt < 5; punt++) {', '  moveForward(45);', '  turnRight(144);', '}']);
+    const starPattern = penUp => {
+      const jump = (turnOut, distance, turnBack) => [
+        ...(penUp ? ['penUp();'] : []), turnOut, `moveForward(${distance});`, turnBack, ...(penUp ? ['penDown();'] : []),
+      ];
+      const right = jump('turnRight(90);', mirrored ? 120 : 100, 'turnLeft(90);');
+      const next = mirrored ? jump('turnLeft(30);', 120, 'turnRight(30);') : right;
+      return lines([star, ...right, star, ...next, star]);
+    };
 
     const examples = [
       [
@@ -116,6 +125,23 @@
           'Je herkent de opdrachten. Eén opdracht per regel is makkelijker te lezen.',
           'Herhaal de zes zijden met for en gebruik een extra lus voor de zeshoeken.',
           'Draai na elke zijde 60°. Verplaats met de pen omhoog tussen de startpunten.'),
+      ],
+      [
+        squareCode(starPattern(true), [0.5, 0.5, 1, 0.5],
+          'De drie sterren staan los van elkaar op de gevraagde plaatsen.',
+          'Elke lus voor een ster en elke verplaatsing zijn goed te herkennen.',
+          'Elke lus herhaalt de vijf stappen van een ster. Tussen de sterren staat de pen omhoog.',
+          'De lengtes, draaihoeken en afstanden kloppen.'),
+        squareCode(starPattern(false), [0, 0.5, 0.5, 0.5],
+          'De drie sterren zijn zichtbaar. De verplaatsingen tekenen verbindingslijnen.',
+          'De drie lussen en de verplaatsingen zijn goed te onderscheiden.',
+          'Gebruik pen omhoog tijdens de verplaatsingen en pen omlaag vóór de volgende ster.',
+          'De draaihoeken en de afstanden tussen de startpunten kloppen.'),
+        squareCode(star, [0, 0.5, 0.5, 0],
+          'Het programma tekent één ster.',
+          'Je ziet meteen welke twee opdrachten worden herhaald.',
+          'De lus voor één ster klopt. Herhaal ook de figuur en verplaats tussendoor.',
+          'Gebruik de opgegeven afstand tussen de startpunten.'),
       ],
     ];
 

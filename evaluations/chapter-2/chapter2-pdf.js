@@ -44,14 +44,14 @@
     }
     const algorithmLines=(items,depth=0)=>items.flatMap(item=>typeof item==='string'?['  '.repeat(depth)+item]:['  '.repeat(depth)+`herhaal ${item.repeat} keer {`,...algorithmLines(item.body,depth+1),'  '.repeat(depth)+'}']);
     pdf.setProperties({title:`${pilot?'Oefenversie - ':''}${config.title} - Hoofdstuk 2 - Versie ${config.version} - ${state.identity.name}`,author:'Robbe Wulgaert · AI in de Klas'});
-    heading(pilot?'Oefenversie · Turtle':config.title);text(config.subtitle,{size:11});text(`Hoofdstuk 2 · versie ${config.version} · ${config.totalPoints} punten · maximaal ${config.durationMinutes} minuten`,{bold:true});
+    heading(pilot?'Oefenversie · Turtle':config.title);if(config.subtitle)text(config.subtitle,{size:11});text(`Hoofdstuk 2 · versie ${config.version} · ${label(config.totalPoints)} punten · maximaal ${config.durationMinutes} minuten`,{bold:true});
     text(`Naam: ${state.identity.name}\nKlas: ${state.identity.className} · klasnummer: ${state.identity.number}\nLeerkracht: ${config.teacher}\nGestart: ${new Date(state.startedAt).toLocaleString('nl-BE',{timeZone:'Europe/Brussels'})}\nPDF gemaakt: ${new Date().toLocaleString('nl-BE',{timeZone:'Europe/Brussels'})}`);
     text(`Toets: ${config.id} · revisie ${config.revision}\nPoging: ${state.attemptId}`,{size:8,color:[98,91,112]});
     text(choiceEnabled?`${pilot?'Oefen-PDF':'Toets-PDF'} · Maximum met jouw keuzes: ${label(modes.ceiling(config,state.answers))} / ${label(config.totalPoints)}. Bij vraag 3 telt een blokkenantwoord voor de helft.`:
       'Dit bestand bevat de leerlingantwoorden. De leerkracht beoordeelt de toets. De codepreview is geen score. Er geldt geen blokkenfactor.',{size:9});
     for(const [index,group] of config.groups.entries()){
       if(index===0){y+=6;section='1. '+group.title;}else page(`${index+1}. ${group.title}`);
-      heading(`${index+1}. ${group.title} · ${label(group.points)} punten`);text(Chapter2Turtle.instructions(group));
+      heading(`${index+1}. ${group.title} · ${label(group.points)} punten`);if(group.prompt)text(Chapter2Turtle.instructions(group));
       const a=state.answers;
       if(group.id==='q1')answer(a.q1,'q1',true);
       else if(group.id==='q2'){

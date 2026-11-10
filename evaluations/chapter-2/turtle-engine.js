@@ -133,19 +133,77 @@
     .replace('De turtle start met de pen omlaag en kijkt omhoog.', 'Begin bij Start (0, 0) en volg de pijl. De eerste beweging tekent meteen een lijn.')
     .replace('De startplaats op je blad is vrij.', 'Je mag je tekening verschuiven als je meer plaats nodig hebt.')
     .replace('Je turtle start omhoog.', 'Het startpunt (0, 0) en de startrichting staan op de gegeven figuur.');}
-  function draw(canvas, result, {background='#ffffff',cursor=true,start=true,labelSide='auto'}={}) {
-    const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
-    ctx.fillStyle=background;ctx.fillRect(0,0,w,h);
+  function viewport(canvas,result,cursor){
+    const w=canvas.width,h=canvas.height;
     const xs=[0],ys=[0];for(const s of result.segments||[]){xs.push(s.x1,s.x2);ys.push(s.y1,s.y2);}if(cursor&&result.turtle){xs.push(result.turtle.x);ys.push(result.turtle.y);}
     const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),scale=Math.min((w-65)/Math.max(100,maxX-minX),(h-65)/Math.max(100,maxY-minY));
     const point=(x,y)=>({x:w/2+(x-(minX+maxX)/2)*scale,y:h/2-(y-(minY+maxY)/2)*scale});
-    ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=Math.max(2.5,Math.min(4,scale*1.5));
-    for(const s of result.segments||[]){const a=point(s.x1,s.y1),b=point(s.x2,s.y2);ctx.strokeStyle=s.color;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+    return {point,lineWidth:Math.max(2.5,Math.min(4,scale*1.5))};
+  }
+  function stroke(ctx,point,segment){
+    const a=point(segment.x1,segment.y1),b=point(segment.x2,segment.y2);
+    ctx.strokeStyle=segment.color;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  }
+  function drawCursor(ctx,point,turtle,color){
+    const p=point(turtle.x,turtle.y);
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(-turtle.heading*Math.PI/180);ctx.fillStyle=color;
+    ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-6,-5);ctx.lineTo(-6,5);ctx.closePath();ctx.fill();ctx.restore();
+  }
+  function draw(canvas, result, {background='#ffffff',cursor=true,start=true,labelSide='auto'}={}) {
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle=background;ctx.fillRect(0,0,canvas.width,canvas.height);
+    const {point,lineWidth}=viewport(canvas,result,cursor);
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=lineWidth;
+    for(const segment of result.segments||[])stroke(ctx,point,segment);
     if(start){const origin=point(0,0);startMarker(ctx,origin.x,origin.y,{dark:background==='#111111',labelSide});}
-    if(cursor&&result.turtle){const p=point(result.turtle.x,result.turtle.y);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(-result.turtle.heading*Math.PI/180);ctx.fillStyle=background==='#111111'?'#ffffff':'#5200ff';ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-6,-5);ctx.lineTo(-6,5);ctx.closePath();ctx.fill();ctx.restore();}
+    if(cursor&&result.turtle)drawCursor(ctx,point,result.turtle,background==='#111111'?'#ffffff':'#5200ff');
     return canvas;
   }
-  const exported={parse,run,draw,startMarker,drawingStart,referenceStart,instructions};
+  function play(canvas,result,{labelSide='auto',onComplete}={}) {
+    const {actions,segments}=result;
+    if(!actions?.length||matchMedia('(prefers-reduced-motion: reduce)').matches){
+      draw(canvas,result,{labelSide});onComplete?.();return ()=>{};
+    }
+    const {width,height}=canvas;
+    const ctx=canvas.getContext('2d');
+    const layer=Object.assign(document.createElement('canvas'),{width,height});
+    const ink=layer.getContext('2d');
+    const {point,lineWidth}=viewport(canvas,result,true);
+    ink.fillStyle='#ffffff';ink.fillRect(0,0,width,height);
+    ink.lineCap='round';ink.lineJoin='round';ink.lineWidth=lineWidth;
+    const origin=point(0,0);
+    const turtle={x:0,y:0,heading:90,pen:true};
+    let completed=0,drawn=0,timer;
+    // Match the lesson's default delay, batching longer programs into at most 30 seconds.
+    const interval=Math.min(410,30000/actions.length);
+    const started=performance.now();
+    function advance(){
+      const elapsed=performance.now()-started;
+      const count=Math.min(actions.length,1+Math.floor(elapsed/interval));
+      for(;completed<count;completed++){
+        const {name,args:[value]}=actions[completed];
+        if(name==='moveForward'||name==='moveBackward'){
+          const distance=name==='moveForward'?value:-value;
+          const radians=turtle.heading*Math.PI/180;
+          turtle.x+=Math.cos(radians)*distance;
+          turtle.y+=Math.sin(radians)*distance;
+          if(turtle.pen&&Math.abs(distance)>1e-9&&segments[drawn])stroke(ink,point,segments[drawn++]);
+        }else if(name==='turnLeft'||name==='turnRight'){
+          turtle.heading=(turtle.heading+(name==='turnLeft'?value:-value))%360;
+        }else if(name==='penUp'||name==='penDown'){
+          turtle.pen=name==='penDown';
+        }
+      }
+      if(completed===actions.length){draw(canvas,result,{labelSide});onComplete?.();return;}
+      ctx.drawImage(layer,0,0);
+      startMarker(ctx,origin.x,origin.y,{labelSide});
+      drawCursor(ctx,point,turtle,'#5200ff');
+      timer=setTimeout(advance,Math.max(16,completed*interval-(performance.now()-started)));
+    }
+    timer=setTimeout(advance,0);
+    return ()=>clearTimeout(timer);
+  }
+  const exported={parse,run,draw,play,startMarker,drawingStart,referenceStart,instructions};
   if(typeof module==='object'&&module.exports)module.exports=exported;
   else root.Chapter2Turtle=exported;
 })(typeof globalThis==='object'?globalThis:this);
