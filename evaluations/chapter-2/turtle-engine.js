@@ -161,9 +161,10 @@
   }
   function play(canvas,result,{labelSide='auto',onComplete}={}) {
     const {actions,segments}=result;
-    if(!actions?.length||matchMedia('(prefers-reduced-motion: reduce)').matches){
+    if(!actions?.length){
       draw(canvas,result,{labelSide});onComplete?.();return ()=>{};
     }
+    const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
     const {width,height}=canvas;
     const ctx=canvas.getContext('2d');
     const layer=Object.assign(document.createElement('canvas'),{width,height});
@@ -176,10 +177,14 @@
     let completed=0,drawn=0,timer;
     // Match the lesson's default delay, batching longer programs into at most 30 seconds.
     const interval=Math.min(410,30000/actions.length);
-    const started=performance.now();
+    function paintFrame(){
+      ctx.drawImage(layer,0,0);
+      startMarker(ctx,origin.x,origin.y,{labelSide});
+      if(!reducedMotion)drawCursor(ctx,point,turtle,'#5200ff');
+    }
     function advance(){
       const elapsed=performance.now()-started;
-      const count=Math.min(actions.length,1+Math.floor(elapsed/interval));
+      const count=Math.min(actions.length,Math.floor(elapsed/interval));
       for(;completed<count;completed++){
         const {name,args:[value]}=actions[completed];
         if(name==='moveForward'||name==='moveBackward'){
@@ -195,12 +200,12 @@
         }
       }
       if(completed===actions.length){draw(canvas,result,{labelSide});onComplete?.();return;}
-      ctx.drawImage(layer,0,0);
-      startMarker(ctx,origin.x,origin.y,{labelSide});
-      drawCursor(ctx,point,turtle,'#5200ff');
-      timer=setTimeout(advance,Math.max(16,completed*interval-(performance.now()-started)));
+      paintFrame();
+      timer=setTimeout(advance,Math.max(16,(completed+1)*interval-(performance.now()-started)));
     }
-    timer=setTimeout(advance,0);
+    paintFrame();
+    const started=performance.now();
+    timer=setTimeout(advance,interval);
     return ()=>clearTimeout(timer);
   }
   const exported={parse,run,draw,play,startMarker,drawingStart,referenceStart,instructions};

@@ -36,6 +36,10 @@ async function unlock(page, resume = false) {
 }
 const pick = (page, id, mode) => page.locator(`[name=mode-${id}][value=${mode}]`).check();
 const question = (page, id) => page.locator(`.nav-button[data-go=${id}]`).click();
+async function runDrawing(page, id) {
+  await page.locator(`[data-run=${id}]`).click();
+  await page.locator(`[data-finish-playback=${id}]`).click();
+}
 async function putBlocks(page, version, taskId) {
   const current = await page.evaluate(() => Chapter2App.config.revision.includes('-v7'));
   await page.evaluate(({taskId, state}) => {
@@ -44,6 +48,26 @@ async function putBlocks(page, version, taskId) {
     Blockly.serialization.workspaces.load(state, workspace);
   }, {taskId, state: modelWorkspace(version, taskId, current)});
   await page.waitForFunction(taskId => Chapter2App.getState().answers[taskId].blocks?.blocks?.blocks.length === 1, taskId);
+}
+
+async function checkPlayback(page, version) {
+  for (const reducedMotion of version === 'A' ? ['no-preference', 'reduce'] : ['reduce']) {
+    await page.emulateMedia({reducedMotion});
+    const steps = await page.evaluate(async () => {
+      const canvas = document.querySelector('#output-q3c');
+      const status = document.querySelector('#result-q3c');
+      document.querySelector('[data-run=q3c]').click();
+      const initial = canvas.toDataURL();
+      await new Promise(resolve => setTimeout(resolve, 120));
+      const firstStepPending = canvas.toDataURL() === initial && status.dataset.status === 'running';
+      await new Promise(resolve => setTimeout(resolve, 470));
+      return {firstStepPending, firstStepDrawn: canvas.toDataURL() !== initial, status: status.dataset.status};
+    });
+    assert.deepEqual(steps, {firstStepPending:true, firstStepDrawn:true, status:'running'});
+    if (version === 'A') await page.locator('#output-q3c').screenshot({path:path.join(out,`playback-${reducedMotion}.png`)});
+    await page.locator('[data-finish-playback=q3c]').press('Enter');
+    assert.match(await page.locator('#result-q3c').textContent(), /15 getekende lijnstukken/);
+  }
 }
 
 async function formalFixtures(page, origin) {
@@ -163,7 +187,7 @@ async function main() {
         await page.waitForFunction(() => Chapter2App.getState().answers.q3a.blocks?.blocks.blocks.length > 0);
       }
       await putBlocks(page,version,'q3a');
-      await page.locator('[data-run=q3a]').click();
+      await runDrawing(page,'q3a');
       assert.match(await page.locator('#result-q3a').textContent(), /8 getekende lijnstukken/);
       await page.evaluate(() => {
         const ws = Blockly.common.getAllWorkspaces().find(ws => !ws.isFlyout && ws.getInjectionDiv?.()?.closest('#blocks-q3a'));
@@ -176,29 +200,17 @@ async function main() {
       await page.locator('#q3a').fill('moveForward(999); // DRAFT_ONLY');
       await pick(page,'q3a','blocks');
       assert.ok(await page.locator('#blocks-q3a .blocklySvg').isVisible());
-      await page.locator('[data-run=q3a]').click();
+      await runDrawing(page,'q3a');
       assert.match(await page.locator('#result-q3a').textContent(), /8 getekende lijnstukken/);
       await pick(page,'q3b','code');
       const side = {A:20,B:25,C:30}[version];
       const code = `for (var figuur = 0; figuur < 4; figuur++) {\n  for (var zijde = 0; zijde < 6; zijde++) { moveForward(${side}); turnRight(60); }\n  penUp(); moveForward(100); turnRight(90); penDown();\n}`;
       await page.locator('#q3b').fill(code);
-      await page.locator('[data-run=q3b]').click();
+      await runDrawing(page,'q3b');
       assert.match(await page.locator('#result-q3b').textContent(), /24 getekende lijnstukken/);
       await pick(page,'q3c','blocks');
       await putBlocks(page,version,'q3c');
-      await page.locator('[data-run=q3c]').click();
-      assert.match(await page.locator('#result-q3c').textContent(), /15 getekende lijnstukken/);
-      if (version === 'A') {
-        await page.emulateMedia({reducedMotion:'no-preference'});
-        await page.locator('[data-run=q3c]').click();
-        assert.equal(await page.locator('#result-q3c').getAttribute('data-status'), 'running');
-        const canvas = page.locator('#output-q3c');
-        const initial = await canvas.evaluate(element=>element.toDataURL());
-        await page.waitForFunction(image=>document.querySelector('#output-q3c').toDataURL()!==image, initial);
-        await page.locator('[data-finish-playback=q3c]').click();
-        assert.match(await page.locator('#result-q3c').textContent(), /15 getekende lijnstukken/);
-        await page.emulateMedia({reducedMotion:'reduce'});
-      }
+      await checkPlayback(page,version);
       await page.locator('#target-q3c').screenshot({path:path.join(out,`q3c-${version}.png`)});
       await page.evaluate(() => Chapter2App.flush());
       if (version === 'C') await page.reload();
@@ -251,7 +263,7 @@ async function main() {
       await pick(page,'q3b','blocks');
       assert.equal(await page.evaluate(async () => (await Chapter2App.exportPDF()).payload.answers.q3b.blank), true);
       await putBlocks(page,version,'q3b');
-      await page.locator('[data-run=q3b]').click();
+      await runDrawing(page,'q3b');
       assert.match(await page.locator('#result-q3b').textContent(), /24 getekende lijnstukken/);
       await page.locator('#review-top').click();
       assert.match(await page.locator('.turtle-choice-summary').textContent(), /21,75 \/ 25,5/);
@@ -304,7 +316,7 @@ async function main() {
       await question(page,'q3');
       await pick(page,'q3a','blocks');
       await putBlocks(page,version,'q3a');
-      await page.locator('[data-run=q3a]').click();
+      await runDrawing(page,'q3a');
       assert.match(await page.locator('#result-q3a').textContent(), /8 getekende lijnstukken/);
       assert.deepEqual(failures, []);
       console.log(`PASS Turtle ${version}: current/legacy routes, label spacing, Q3c preview and PDF, draft recovery and timer lock (${width}px).`);
