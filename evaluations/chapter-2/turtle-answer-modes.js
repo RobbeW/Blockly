@@ -1,4 +1,4 @@
-/* Draft and submission contracts for the Turtle blocks practice revision. */
+/* Draft and submission contracts for the Turtle blocks revisions. */
 (function () {
   'use strict';
 
@@ -10,8 +10,10 @@
   const enabled = config => Boolean(config.answerModes);
   function requested(search, variant) {
     const query = new URLSearchParams(search);
+    if (query.get('legacy') === 'v5') return null;
     if (query.get('practice') === 'blocks') return 'practice';
     if (variant === 'C' && query.get('assessment') === 'blocks') return 'assessment';
+    if (variant === 'A' || variant === 'B') return 'practice';
     return null;
   }
 

@@ -7,6 +7,12 @@
   const delivery=modes?.requested(location.search,config.version);
   const choiceEnabled=Boolean(delivery);
   const blocksPilot=delivery==='practice';
+  const legacyLink=$('legacy-attempt-link');
+  if(legacyLink&&!choiceEnabled){
+    legacyLink.hidden=true;
+    $('new-attempt').defaultChecked=false;
+    $('new-attempt').checked=false;
+  }
   if(choiceEnabled){
     document.title=(blocksPilot?'Oefenversie':'Toets')+' Turtle · '+config.version+' · Blokken of JavaScript';
     const submit=$('start-form').querySelector('button[type="submit"]');

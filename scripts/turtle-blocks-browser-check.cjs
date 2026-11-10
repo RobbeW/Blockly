@@ -97,8 +97,10 @@ async function main() {
       page.on('pageerror', error => failures.push(error.message));
       page.on('response', response => { if (response.status() >= 400) failures.push(response.url()); });
       const entry = `evaluations/chapter-2/versions/${version}/index.html`;
-      const legacy = origin + prefix + entry;
+      const student = origin + prefix + entry;
+      const legacy = version === 'C' ? student : student + '?legacy=v5';
       await page.goto(legacy);
+      if (version !== 'C') await page.locator('#new-attempt').check();
       await unlock(page);
       const legacyId = await page.evaluate(() => Chapter2App.getState().attemptId);
       await page.locator('#q1').fill('for (var i = 0; i < 4; i++) {}');
@@ -109,6 +111,7 @@ async function main() {
       await page.goto(origin + prefix + 'evaluations/chapter-2/blocks-practice.html');
       await page.getByRole('link',{name:'Oefenversie '+version}).click();
       await unlock(page);
+      if (version !== 'C') assert.equal(page.url(), student);
       assert.match(await page.title(), /Oefenversie/);
       assert.equal(await page.evaluate(() => Chapter2App.config.practice), 'blocks');
       assert.notEqual(await page.evaluate(() => Chapter2App.getState().attemptId), legacyId);
@@ -155,7 +158,8 @@ async function main() {
       await page.locator('[data-run=q3b]').click();
       assert.match(await page.locator('#result-q3b').textContent(), /24 getekende lijnstukken/);
       await page.evaluate(() => Chapter2App.flush());
-      await page.reload();
+      if (version === 'C') await page.reload();
+      else await page.goto(student + '?practice=blocks');
       await unlock(page,true);
       await question(page,'q3');
       assert.equal(await page.locator('#q3b').inputValue(), code);
@@ -210,7 +214,16 @@ async function main() {
       await question(page,'q3');
       assert.equal(await page.locator('[name=mode-q3a][value=blocks]').isDisabled(), true);
       assert.equal(await page.locator('#blocks-q3a .blocklyToolboxDiv').count(), 0);
-      await page.goto(legacy);
+      await page.goto(student);
+      if (version !== 'C') {
+        const link = page.getByRole('link', {name:'Hervat een oudere JavaScript-poging (v5)'});
+        await page.waitForFunction(() => window.Chapter2App);
+        await link.focus();
+        await page.locator('.gate-card').screenshot({path:path.join(out,`start-${version}.png`)});
+        await Promise.all([page.waitForURL(legacy), page.keyboard.press('Enter')]);
+        await page.waitForFunction(() => window.Chapter2App);
+        assert.equal(await page.locator('#new-attempt').isChecked(), false);
+      }
       await unlock(page,true);
       assert.equal(await page.evaluate(() => Chapter2App.getState().attemptId), legacyId);
       assert.equal(await page.locator('#q1').inputValue(), 'for (var i = 0; i < 4; i++) {}');
@@ -231,7 +244,7 @@ async function main() {
         await (await legacyDownload).saveAs(path.join(out,'legacy-C.pdf'));
         await formalFixtures(page, origin);
       }
-      await page.goto(pathToFileURL(path.join(root,entry)).href+'?practice=blocks');
+      await page.goto(pathToFileURL(path.join(root,entry)).href+(version === 'C' ? '?practice=blocks' : ''));
       await unlock(page);
       await question(page,'q3');
       await pick(page,'q3a','blocks');
