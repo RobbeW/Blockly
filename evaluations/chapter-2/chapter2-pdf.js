@@ -5,6 +5,9 @@
   function base64(value){const bytes=new TextEncoder().encode(value);let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(binary);}
   async function create(config,state){
     if(!state||state.examId!==config.id||state.version!==config.version||state.revision!==config.revision||state.configSha256!==config.configSha256)throw new Error('De opgeslagen poging hoort niet bij deze toets.');
+    const modes=window.Chapter2AnswerModes;
+    const pilot=modes?.pilot(config),choiceEnabled=modes?.enabled(config);
+    const answers=choiceEnabled?{...state.answers}:state.answers;
     const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4',compress:true});
     for(const [filename,family,style] of [['NotoSans-Regular.ttf','Noto','normal'],['NotoSans-Bold.ttf','Noto','bold'],['NotoSansMono-Regular.ttf','Code','normal']]){
       const inline=window.ASSESSMENT_ASSETS?.['assessment/vendor/fonts/'+filename];if(!inline)throw new Error('Een PDF-lettertype ontbreekt.');
@@ -40,11 +43,12 @@
       let h=w*image.naturalHeight/image.naturalWidth;if(h>190){w*=190/h;h=190;}space(h+8);pdf.addImage(image,'PNG',margin,y,w,h);box(id,y,h);y+=h+6;
     }
     const algorithmLines=(items,depth=0)=>items.flatMap(item=>typeof item==='string'?['  '.repeat(depth)+item]:['  '.repeat(depth)+`herhaal ${item.repeat} keer {`,...algorithmLines(item.body,depth+1),'  '.repeat(depth)+'}']);
-    pdf.setProperties({title:`${config.title} - Hoofdstuk 2 - Versie ${config.version} - ${state.identity.name}`,author:'Robbe Wulgaert · AI in de Klas'});
-    heading(config.title);text(config.subtitle,{size:11});text(`Hoofdstuk 2 · versie ${config.version} · ${config.totalPoints} punten · maximaal ${config.durationMinutes} minuten`,{bold:true});
+    pdf.setProperties({title:`${pilot?'Oefenversie - ':''}${config.title} - Hoofdstuk 2 - Versie ${config.version} - ${state.identity.name}`,author:'Robbe Wulgaert · AI in de Klas'});
+    heading(pilot?'Oefenversie · Turtle':config.title);text(config.subtitle,{size:11});text(`Hoofdstuk 2 · versie ${config.version} · ${config.totalPoints} punten · maximaal ${config.durationMinutes} minuten`,{bold:true});
     text(`Naam: ${state.identity.name}\nKlas: ${state.identity.className} · klasnummer: ${state.identity.number}\nLeerkracht: ${config.teacher}\nGestart: ${new Date(state.startedAt).toLocaleString('nl-BE',{timeZone:'Europe/Brussels'})}\nPDF gemaakt: ${new Date().toLocaleString('nl-BE',{timeZone:'Europe/Brussels'})}`);
     text(`Toets: ${config.id} · revisie ${config.revision}\nPoging: ${state.attemptId}`,{size:8,color:[98,91,112]});
-    text('Dit bestand bevat de leerlingantwoorden. De leerkracht beoordeelt de toets. De codepreview is geen score. Er geldt geen blokkenfactor.',{size:9});
+    text(choiceEnabled?`${pilot?'Oefen-PDF':'Toets-PDF'} · Maximum met jouw keuzes: ${label(modes.ceiling(config,state.answers))} / ${label(config.totalPoints)}. Bij vraag 3 telt een blokkenantwoord voor de helft.`:
+      'Dit bestand bevat de leerlingantwoorden. De leerkracht beoordeelt de toets. De codepreview is geen score. Er geldt geen blokkenfactor.',{size:9});
     for(const [index,group] of config.groups.entries()){
       if(index===0){y+=6;section='1. '+group.title;}else page(`${index+1}. ${group.title}`);
       heading(`${index+1}. ${group.title} · ${label(group.points)} punten`);text(Chapter2Turtle.instructions(group));
@@ -71,17 +75,31 @@
         for(const [i,task] of group.tasks.entries()){
           if(i){page(task.label);heading(`${task.label} · ${label(task.points)} punten`);}else text(`${task.label} · ${label(task.points)} punten`,{bold:true});
           for(const line of task.prompt)text('• '+line,{gap:1});
-          const result=a[task.id].trim()?Chapter2Turtle.run(a[task.id]):null;
+          const selected=choiceEnabled?modes.selected(task.id,a[task.id]):null;
+          const result=choiceEnabled?modes.run(selected):a[task.id].trim()?Chapter2Turtle.run(a[task.id]):null;
+          if(choiceEnabled){
+            const mode=selected.mode;
+            answers[task.id]={...selected,execution:result?{status:result.status,message:result.message??''}:null};
+            text(mode?`Gekozen antwoordtype: ${modes.labels[mode]} · maximum ${label(modes.maximum(task,mode))} / ${label(task.points)}`:
+              'Gekozen antwoordtype: geen keuze',{bold:true,id:task.id+'-mode'});
+          }
           space(65);const figureTop=y;
           text('Gegeven figuur',{bold:true,size:9});y=figureTop;
-          font(false,true,9);pdf.text('Jouw definitieve code · uitvoer',110,y);y+=4;
+          font(false,true,9);pdf.text(choiceEnabled?'Jouw definitieve uitvoer':'Jouw definitieve code · uitvoer',110,y);y+=4;
           const drawOptions={cursor:false,labelSide:task.id==='q3b'?'left':'auto'};
           const reference=document.createElement('canvas');reference.width=500;reference.height=320;Chapter2Turtle.draw(reference,task.figure,drawOptions);pdf.addImage(reference.toDataURL('image/png'),'PNG',margin,y,80,51.2);
           if(result){const canvas=document.createElement('canvas');canvas.width=500;canvas.height=320;Chapter2Turtle.draw(canvas,result,drawOptions);pdf.addImage(canvas.toDataURL('image/png'),'PNG',110,y,80,51.2);box(task.id+'-output',y,51.2);}
-          else {font(false,false,9);pdf.text('[Geen code]',110,y+12);}
+          else {font(false,false,9);pdf.text(choiceEnabled?'[Geen uitvoer]':'[Geen code]',110,y+12);}
           y+=59;
-          if(result)text(result.status==='ok'?`Uitvoering gestopt na ${result.actions.length} acties. Vergelijking en score door de leerkracht.`:`Uitvoering vraagt controle: ${result.message}`,{id:task.id+'-execution',size:8,gap:3});
-          text('Jouw definitieve JavaScript',{bold:true});answer(a[task.id],task.id,true);
+          if(result)text(result.status==='ok'?`Uitvoering gestopt na ${result.actions.length} acties. ${pilot?'Vergelijk je tekening met de doelfiguur.':'Vergelijking en score door de leerkracht.'}`:`Uitvoering vraagt controle: ${result.message}`,{id:task.id+'-execution',size:8,gap:3});
+          const blocks=selected?.mode==='blocks';
+          space(15);
+          text(blocks?'Jouw definitieve blokken':choiceEnabled&&!selected.mode?'Jouw definitieve antwoord':'Jouw definitieve JavaScript',{bold:true});
+          if(blocks&&!selected.blank){
+            const lines=Chapter2Blocks.inspect(selected.workspace.state).lines;
+            if(lines.length)code(lines.join('\n'),task.id);
+            else text('[Blokken aanwezig · weergave vraagt controle]',{id:task.id});
+          }else answer(choiceEnabled?selected.code:a[task.id],task.id,true);
         }
       }else if(['q4','q6','q7'].includes(group.id)){
         const rows=group.terms||group.rows;for(const [i,row] of rows.entries()){space(23);text(`${index+1}${String.fromCharCode(97+i)}. ${row}`,{bold:true});answer(a[group.id][i],`${group.id}-${i}`,group.id==='q6');}
@@ -97,9 +115,10 @@
     const count=pdf.getNumberOfPages();for(let i=1;i<=count;i++){
       pdf.setPage(i);font(false,false,8);pdf.setTextColor(98,91,112);pdf.text(`${state.identity.name} · ${state.identity.className} · Hoofdstuk 2 · ${config.version}`,margin,12);pdf.setDrawColor(226,221,234);pdf.line(margin,16,192,16);pdf.text('© 2026 Robbe Wulgaert · AI in de Klas · robbewulgaert.be',margin,287);pdf.text(`${i} / ${count}`,192,287,{align:'right'});
     }
-    const payload={schemaVersion:1,examId:config.id,version:config.version,revision:config.revision,attemptId:state.attemptId,identity:state.identity,answers:state.answers,sourceSha256:config.sourceSha256,configSha256:config.configSha256,startedAt:state.startedAt,expiresAt:state.expiresAt,evidence};
-    pdf.setProperties({subject:'BLOCKLY-CH2-V1:'+base64(JSON.stringify(payload))});
-    const blob=pdf.output('blob'),filename=`${safe(state.identity.name)}-${safe(state.identity.className)}-Toets_Turtle_H2_${config.version}.pdf`;
+    const payload={schemaVersion:choiceEnabled?2:1,examId:config.id,version:config.version,revision:config.revision,attemptId:state.attemptId,identity:state.identity,answers,sourceSha256:config.sourceSha256,configSha256:config.configSha256,startedAt:state.startedAt,expiresAt:state.expiresAt,evidence};
+    if(pilot)payload.practice='blocks';
+    pdf.setProperties({subject:`BLOCKLY-CH2-V${payload.schemaVersion}:`+base64(JSON.stringify(payload))});
+    const blob=pdf.output('blob'),filename=`${safe(state.identity.name)}-${safe(state.identity.className)}-${pilot?'Oefenversie':choiceEnabled?'Toets_Blokken':'Toets'}_Turtle_H2_${config.version}.pdf`;
     return {blob,filename,payload};
   }
   window.Chapter2PDF={create};

@@ -128,9 +128,9 @@
       if (!dialog.open && returnFocus?.isConnected) returnFocus.focus();
     });
 
-    function open({ groupId, trigger = document.getElementById('practice-examples'), proceed } = {}) {
+    function open({ groupId, trigger = document.getElementById('practice-examples'), proceed, include } = {}) {
       if (dialog.open) return true;
-      const selected = groupId ? items.filter(item => item.groupId === groupId) : items;
+      const selected = items.filter(item => (!groupId || item.groupId === groupId) && (!include || include(item)));
       if (!selected.length) return false;
       returnFocus = trigger;
       onContinue = proceed;

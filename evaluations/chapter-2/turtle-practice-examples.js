@@ -52,7 +52,7 @@
     }));
   }
 
-  function coding(group, mirrored) {
+  function coding(group, mirrored, blocksPilot) {
     const turn = mirrored ? 'turnLeft' : 'turnRight';
     const back = mirrored ? 'turnRight' : 'turnLeft';
     const side = mirrored ? 60 : 50;
@@ -119,7 +119,7 @@
       ],
     ];
 
-    return group.tasks.map((task, i) => ({
+    const codeItems = group.tasks.map((task, i) => ({
       groupId: group.id,
       title: `Vraag ${task.label}`,
       prompt: task.prompt,
@@ -130,6 +130,33 @@
       max: task.points,
       examples: examples[i],
     }));
+    if (!blocksPilot) return codeItems;
+
+    const moves = {
+      moveForward: 'ga vooruit', turnRight: 'draai rechts', turnLeft: 'draai links',
+      penUp: 'pen omhoog', penDown: 'pen omlaag',
+    };
+    function asBlocks(answer) {
+      return answer.replace(/; +(?=\w+\()/g, ';\n').split('\n').flatMap(line => {
+        const loop = line.match(/^(\s*)for \(var (\w+) = 0; \w+ < (\d+); \w+\+\+\) \{$/);
+        if (loop) return [`${loop[1]}tel met ${loop[2]} van 0 tot en met ${Number(loop[3]) - 1} met stap 1`];
+        const call = line.match(/^(\s*)(\w+)\((\d*)\);$/);
+        if (call) return [`${call[1]}${moves[call[2]]}${call[3] ? ' ' + call[3] : ''}`];
+        return [];
+      }).join('\n');
+    }
+    return codeItems.flatMap((item, i) => {
+      const taskId = group.tasks[i].id;
+      const blocks = item.examples.map((example, level) => AssessmentPractice.scored(asBlocks(example.answer),
+        example.criteria.map(([name, earned, max, comment]) => [name, earned / 2, max / 2,
+          name === 'Leesbaar'
+            ? level < 2 ? 'De blokken zijn verbonden en de nesting maakt de lussen herkenbaar.' : 'Verbind de opdrachten in één overzichtelijke reeks.'
+            : comment.replaceAll('De code', 'De blokken')])));
+      return [
+        { ...item, taskId, answerMode: 'code', title: item.title + ' · JavaScript' },
+        { ...item, taskId, answerMode: 'blocks', title: item.title + ' · Blokken', max: item.max / 2, examples: blocks },
+      ];
+    });
   }
 
   function thinkingSteps(group) {
@@ -199,7 +226,7 @@
         ],
       },
       ...traceExamples(group('q2'), mirrored),
-      ...coding(group('q3'), mirrored),
+      ...coding(group('q3'), mirrored, config.practice === 'blocks'),
       {
         groupId: 'q4',
         title: 'Vraag 4 · Herhaling van termen',
