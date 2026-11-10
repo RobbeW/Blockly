@@ -16,12 +16,14 @@
   if(choiceEnabled){
     document.title=(blocksPilot?'Oefenversie':'Toets')+' Turtle · '+config.version+' · Blokken of JavaScript';
     const submit=$('start-form').querySelector('button[type="submit"]');
-    const note=document.createElement('p');
-    note.className='callout';
-    note.textContent=blocksPilot?'Oefenversie · Kies bij vraag 3a en 3b voor blokken of JavaScript. Je PDF is bedoeld om te oefenen.':
-      'Toets met blokkenkeuze · Kies bij vraag 3a en 3b voor blokken of JavaScript.';
-    $('gate-title').after(note);
-    if(blocksPilot)$('gate').querySelector('li:last-child').textContent='Bewaar je oefen-PDF op dit toestel.';
+    if(blocksPilot){
+      $('gate').querySelector('li:last-child').textContent='Bewaar je oefen-PDF op dit toestel.';
+    }else{
+      const note=document.createElement('p');
+      note.className='callout';
+      note.textContent='Toets met blokkenkeuze · Kies bij vraag 3a en 3b voor blokken of JavaScript.';
+      $('gate-title').after(note);
+    }
     submit.disabled=true;
     $('gate-error').textContent='Blokkeneditor laden…';
     try{

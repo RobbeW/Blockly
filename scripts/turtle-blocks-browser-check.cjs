@@ -50,6 +50,7 @@ async function formalFixtures(page, origin) {
   await page.getByRole('link', {name:'Open de toets met blokkenkeuze'}).click();
   await unlock(page);
   assert.equal(await page.evaluate(() => Chapter2App.config.revision), '20261110-turtle-v6');
+  assert.equal(await page.locator('#gate p.callout').count(), 1);
   await question(page, 'q3');
   async function download(name) {
     await page.locator('#review-top').click();
@@ -114,6 +115,7 @@ async function main() {
       if (version !== 'C') assert.equal(page.url(), student);
       assert.match(await page.title(), /Oefenversie/);
       assert.equal(await page.evaluate(() => Chapter2App.config.practice), 'blocks');
+      assert.equal(await page.locator('#gate p.callout').count(), 0);
       assert.notEqual(await page.evaluate(() => Chapter2App.getState().attemptId), legacyId);
       await question(page,'q3');
       assert.match(await page.locator('h1:visible').textContent(), /Van figuur naar programma/);
