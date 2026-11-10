@@ -17,9 +17,12 @@ assert.equal(ok('/* function is mentioned only in a comment */ for(var i=0;i<2;i
 for(const code of ['fetch("https://example.com")','constructor("return globalThis")','window.location="x"','moveForward.constructor("x")','while(true){}','if(1){}','for(var i=0;i<4;i++){moveForward(1)','penColour(#ff0000);','for(const i=0;i<2;i++){moveForward(1)}','moveForward(1/0)','__proto__(1)','for(var i=0;i<5;i--){moveForward(1)}','for(var i=0;i<5;i+=0){}'])assert.notEqual(turtle.run(code).status,'ok',`Unsafe/nonworking input accepted: ${code}`);
 assert.notEqual(turtle.run('('.repeat(100)+'1'+')'.repeat(100)).status,'ok');
 assert.notEqual(turtle.run('x'.repeat(40001)).status,'ok');
+const practiceReview = fs.readFileSync(path.join(root, 'assessment/practice-review.js'), 'utf8');
+const practiceSource = fs.readFileSync(path.join(root, 'evaluations/chapter-2/turtle-practice-examples.js'), 'utf8');
 let skeleton;
 for(const version of ['A','B','C']){
-  const context={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,`evaluations/chapter-2/versions/${version}/config.js`),'utf8'),context);
+  const context={};context.window=context;
+  vm.runInNewContext(fs.readFileSync(path.join(root,`evaluations/chapter-2/versions/${version}/config.js`),'utf8'),context);
   const config=JSON.parse(JSON.stringify(context.window.ASSESSMENT_CONFIG));
   const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
   const content=Object.fromEntries(Object.entries(config).filter(([key])=>!['configSha256','startPassword','smartschoolUrl','teacher'].includes(key)));
@@ -55,6 +58,20 @@ for(const version of ['A','B','C']){
   assert.deepEqual(geometry(model.segments), geometry(hex.figure.segments));
   assert.deepEqual(geometry(model.segments).filter((_, i) => i % 6 === 0).map(line => line.slice(0,2)),
     [[0,0],[0,100],[100,100],[100,0]]);
+  if (version !== 'C') {
+    vm.runInNewContext(practiceReview, context);
+    vm.runInNewContext(practiceSource, context);
+    const question = config.groups.find(group => group.id === 'q6');
+    const comparison = context.window.AssessmentPracticeExamples(config).find(item => item.groupId === question.id);
+    assert.equal(comparison.reference, question.rows.join('\n'));
+    const best = comparison.examples.find(example => example.score === question.points);
+    const [[, forward], [, turn], [loopLabel, loop]] = best.answer;
+    assert.equal(forward, `moveForward(${version === 'A' ? 100 : 90});`);
+    assert.equal(turn, 'turnRight(144);');
+    assert.equal(loopLabel, 'For-lus');
+    assert.equal(loop, 'for (var teller = 0; teller < 6; teller++)');
+    assert.equal(ok(`${loop} { moveForward(1); }`).segments.length, 6);
+  }
   console.log(`PASS ${version}: 40 minutes, 7 questions, /23, 3 figure/count pairs and 2 platform-inspired for/Turtle code tasks.`);
 }
 console.log('PASS safe Turtle interpreter: parameter variants, nesting, pen state, limits and disallowed JavaScript.');

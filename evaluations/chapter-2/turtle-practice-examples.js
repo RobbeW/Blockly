@@ -174,6 +174,8 @@
     const start = mirrored ? 4 : 5;
     const end = mirrored ? 16 : 17;
     const distance = mirrored ? 90 : 100;
+    const correction = group('q6');
+    const correctionLabels = ['Vooruitgaan', 'Rechts draaien', 'For-lus'];
     const terms = group('q4').terms;
     const translated = map => terms.map(term => [term, map[term.split(' (')[0]]]);
     const translations = {
@@ -215,15 +217,17 @@
       {
         groupId: 'q6',
         title: 'Vraag 5 · Verbeter de code',
-        prompt: group('q6').prompt,
+        prompt: correction.prompt,
+        reference: lines(correction.rows),
+        referenceLabel: 'Bekijk de te verbeteren code',
         max: 3,
         examples: [
-          sample(fields(group('q6').rows, [`moveForward(${distance});`, 'turnRight(144);', 'for (var teller = 0; teller < 6; teller++)']),
-            3, 'De afstand is een getal, de functienaam klopt en de teller loopt van 0 tot en met 5.'),
-          sample(fields(group('q6').rows, [`moveForward(${distance});`, 'turnRight(144);', 'for (var teller = 0; teller < 5; teller++)']),
-            2, 'De twee Turtle-opdrachten kloppen. De lus met < 5 voert de herhaling voor teller 5 niet uit.'),
-          sample(fields(group('q6').rows, [`moveForward(${distance} pixels);`, 'turnright(144);', 'for (var teller 0; teller > 5; teller+)']),
-            0, 'Laat de eenheid uit het getalargument, schrijf turnRight met een hoofdletter R en verbeter de drie onderdelen van de for-lus.'),
+          sample(fields(correctionLabels, [`moveForward(${distance});`, 'turnRight(144);', 'for (var teller = 0; teller < 6; teller++)']),
+            3, 'Geef de afstand als getal en schrijf turnRight met een hoofdletter R. Met = 0 start de teller op nul. Met < 6 en teller++ telt de lus van 0 tot en met 5, dus zes keer.'),
+          sample(fields(correctionLabels, [`moveForward(${distance});`, 'turnRight(144);', 'for (var teller = 0; teller < 5; teller++)']),
+            2, 'De twee Turtle-opdrachten kloppen. Met < 5 loopt de teller van 0 tot en met 4. Gebruik < 6 voor zes herhalingen.'),
+          sample(fields(correctionLabels, [`moveForward(${distance} pixels);`, 'turnright(144);', 'for (var teller 0; teller > 5; teller+)']),
+            0, 'Laat pixels weg uit het argument en schrijf turnRight met een hoofdletter R. Start met var teller = 0, controleer teller < 6 en verhoog met teller++.'),
         ],
       },
       {

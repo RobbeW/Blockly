@@ -68,7 +68,22 @@
 .practice-score span { border-radius: 8px; padding: 3px 7px; background: var(--soft); font-size: 12px; font-weight: 750; }
 .practice-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--border); }
 #practice-examples { margin: 0 0 12px; }
+
+.save-status {
+  display: grid;
+  place-items: center;
+  inline-size: min(14rem, 40vw);
+  max-inline-size: 100%;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 760px) {
+  .topbar .brand { white-space: normal; }
+  .header-actions { min-inline-size: 0; }
+  .header-actions #review-top { max-inline-size: 100%; }
+  .save-status { min-block-size: calc(2lh + 16px); }
   .practice-cards { grid-template-columns: minmax(0, 1fr); }
   .practice-option { max-width: 260px; }
 }
